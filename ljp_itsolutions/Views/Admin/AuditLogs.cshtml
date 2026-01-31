@@ -1,0 +1,247 @@
+@{
+    ViewData["Title"] = "Audit Logs";
+    ViewData["PageTitle"] = "View Audit Logs";
+    ViewBag.ModuleCount = 4;
+}
+
+@section Navigation {
+    <ul class="nav flex-column gap-2">
+        <li class="nav-item">
+            <a class="nav-link" href="@Url.Action("Index", "Admin")">
+                <i class="fas fa-th-large"></i>
+                <span>View Dashboard</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="@Url.Action("ManageUsers", "Admin")">
+                <i class="fas fa-users"></i>
+                <span>Manage Users</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="@Url.Action("AuditLogs", "Admin")">
+                <i class="fas fa-file-alt"></i>
+                <span>View Audit Logs</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="@Url.Action("Reports", "Admin")">
+                <i class="fas fa-chart-bar"></i>
+                <span>View Reports</span>
+            </a>
+        </li>
+    </ul>
+}
+
+<div class="container-fluid">
+    <!-- Filter Bar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card-custom">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label small">Date Range</label>
+                            <input type="date" class="form-control" value="2024-01-31">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">User Role</label>
+                            <select class="form-select">
+                                <option selected>All Roles</option>
+                                <option>Admin</option>
+                                <option>Manager</option>
+                                <option>Cashier</option>
+                                <option>Marketing Staff</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Action Type</label>
+                            <select class="form-select">
+                                <option selected>All Actions</option>
+                                <option>Login</option>
+                                <option>Logout</option>
+                                <option>Create</option>
+                                <option>Update</option>
+                                <option>Delete</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Status</label>
+                            <select class="form-select">
+                                <option selected>All Status</option>
+                                <option>Success</option>
+                                <option>Failed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button class="btn btn-amber me-2">
+                                <i class="fas fa-filter me-2"></i>Apply Filters
+                            </button>
+                            <button class="btn btn-outline-secondary">
+                                <i class="fas fa-redo me-2"></i>Reset
+                            </button>
+                            <button class="btn btn-outline-success ms-auto float-end">
+                                <i class="fas fa-download me-2"></i>Export Logs
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Logs Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card-custom">
+                <div class="card-header">
+                    <h5 class="fw-bold mb-0">System Audit Logs</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-custom mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Log ID</th>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>Role</th>
+                                    <th>Action</th>
+                                    <th>Description</th>
+                                    <th>IP Address</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>#LOG-1429</td>
+                                    <td>2024-01-31 10:30:45</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar-sm bg-amber">
+                                                <i class="fas fa-user text-white small"></i>
+                                            </div>
+                                            <span class="fw-semibold">John Doe</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-amber">Admin</span></td>
+                                    <td><span class="badge bg-primary">Create</span></td>
+                                    <td>Created new user account for Jane Smith</td>
+                                    <td>192.168.1.100</td>
+                                    <td><span class="badge badge-success">Success</span></td>
+                                </tr>
+                                <tr>
+                                    <td>#LOG-1428</td>
+                                    <td>2024-01-31 10:25:12</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar-sm bg-amber">
+                                                <i class="fas fa-user text-white small"></i>
+                                            </div>
+                                            <span class="fw-semibold">Jane Smith</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-amber">Manager</span></td>
+                                    <td><span class="badge bg-warning">Update</span></td>
+                                    <td>Updated product inventory for Espresso</td>
+                                    <td>192.168.1.105</td>
+                                    <td><span class="badge badge-success">Success</span></td>
+                                </tr>
+                                <tr>
+                                    <td>#LOG-1427</td>
+                                    <td>2024-01-31 10:20:33</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar-sm bg-amber">
+                                                <i class="fas fa-user text-white small"></i>
+                                            </div>
+                                            <span class="fw-semibold">Mike Wilson</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-amber">Cashier</span></td>
+                                    <td><span class="badge bg-success">Payment</span></td>
+                                    <td>Processed payment for Order #12543</td>
+                                    <td>192.168.1.110</td>
+                                    <td><span class="badge badge-success">Success</span></td>
+                                </tr>
+                                <tr>
+                                    <td>#LOG-1426</td>
+                                    <td>2024-01-31 10:15:08</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar-sm bg-amber">
+                                                <i class="fas fa-user text-white small"></i>
+                                            </div>
+                                            <span class="fw-semibold">Sarah Johnson</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-amber">Marketing Staff</span></td>
+                                    <td><span class="badge bg-primary">Create</span></td>
+                                    <td>Created new promotion: 20% Off Weekend Special</td>
+                                    <td>192.168.1.115</td>
+                                    <td><span class="badge badge-success">Success</span></td>
+                                </tr>
+                                <tr>
+                                    <td>#LOG-1425</td>
+                                    <td>2024-01-31 10:10:22</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar-sm bg-secondary">
+                                                <i class="fas fa-user-slash text-white small"></i>
+                                            </div>
+                                            <span class="fw-semibold">Unknown User</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-secondary">N/A</span></td>
+                                    <td><span class="badge bg-danger">Login Attempt</span></td>
+                                    <td>Failed login attempt with invalid credentials</td>
+                                    <td>192.168.1.200</td>
+                                    <td><span class="badge badge-danger">Failed</span></td>
+                                </tr>
+                                <tr>
+                                    <td>#LOG-1424</td>
+                                    <td>2024-01-31 10:05:17</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar-sm bg-amber">
+                                                <i class="fas fa-user text-white small"></i>
+                                            </div>
+                                            <span class="fw-semibold">John Doe</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-amber">Admin</span></td>
+                                    <td><span class="badge bg-info">Login</span></td>
+                                    <td>User logged into system</td>
+                                    <td>192.168.1.100</td>
+                                    <td><span class="badge badge-success">Success</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">Showing 1 to 8 of 1,429 entries</span>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0">
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#">Previous</a>
+                                </li>
+                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                <li class="page-item"><a class="page-link" href="#">...</a></li>
+                                <li class="page-item"><a class="page-link" href="#">179</a></li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

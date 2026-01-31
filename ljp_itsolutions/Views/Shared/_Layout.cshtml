@@ -1,0 +1,109 @@
+﻿@using System.Security.Claims
+@* Default application layout (authenticated) *@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coffee ERP - @ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <style>
+        /* Sidebar layout styles */
+        .app { min-height:100vh; }
+        .sidebar { width:260px; background: linear-gradient(180deg,#6f2b00,#a14a00); color:white; }
+        .sidebar .brand { color: #fff; }
+        .sidebar .nav-link { color: rgba(255,255,255,0.9); padding: 12px 16px; }
+        .sidebar .nav-link.active, .sidebar .nav-link:hover { background: rgba(255,255,255,0.06); border-radius:8px; }
+        .content { background:#f7f8fa; }
+        .kpi-card { background:white; border-radius:12px; padding:18px; box-shadow:0 6px 18px rgba(31,45,61,0.06); }
+        .recent { background:white; border-radius:12px; padding:18px; box-shadow:0 6px 18px rgba(31,45,61,0.06); }
+    </style>
+</head>
+<body>
+    @{
+        var username = Context.Session.GetString("Username") ?? User.Identity?.Name ?? "guest";
+        var userRole = Context.Session.GetString("UserRole") ?? User.FindFirst(ClaimTypes.Role)?.Value ?? "-";
+    }
+    <div class="app d-flex">
+        <aside class="sidebar p-4 d-flex flex-column">
+            <div class="brand mb-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3" style="font-size:28px">☕</div>
+                    <div>
+                        <div class="h5 mb-0">Coffee ERP</div>
+                        <div class="small text-amber-light">@userRole</div>
+                    </div>
+                </div>
+            </div>
+            <nav class="nav flex-column">
+                @if (IsSectionDefined("Navigation"))
+                {
+                    @RenderSection("Navigation")
+                }
+                else
+                {
+                    <a class="nav-link active" href="/Admin/Dashboard">Dashboard</a>
+                    <a class="nav-link" href="/Admin/Users">User & Access Management</a>
+                    <a class="nav-link" href="/Admin/Reports">CRM</a>
+                    <a class="nav-link" href="/Cashier/CreateOrder">POS & Orders</a>
+                    <a class="nav-link" href="/Manager/Products">Product & Menu</a>
+                    <a class="nav-link" href="/Marketing/Promotions">Marketing Automation</a>
+                    <a class="nav-link" href="/Manager/Reports">Business Intelligence</a>
+                    <a class="nav-link" href="/Admin/Reports">Finance & Budget</a>
+                    <a class="nav-link" href="/Manager/Products">Inventory Management</a>
+                }
+            </nav>
+        </aside>
+
+        <main class="content flex-fill p-4">
+            <header class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-0">Welcome, @username</h2>
+                    <div class="text-muted">Role: @userRole</div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Sidebar toggle for small screens -->
+                    <button id="sidebarToggle" class="btn btn-light d-md-none" aria-label="Toggle sidebar">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
+                    <button class="btn btn-light position-relative" data-bs-toggle="tooltip" title="Notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-dot"></span>
+                    </button>
+
+                    <div class="d-flex align-items-center">
+                        <div class="me-3 text-end">
+                            <div class="fw-semibold">@username</div>
+                            <div class="small text-muted">@userRole</div>
+                        </div>
+                    </div>
+
+                    @if (User?.Identity?.IsAuthenticated == true)
+                    {
+                        <form method="post" asp-controller="Account" asp-action="Logout">
+                            <button class="btn btn-logout">Logout</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a class="btn btn-primary" href="/Account/Login">Login</a>
+                    }
+                </div>
+            </header>
+
+            <section>
+                @RenderBody()
+            </section>
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/dashboard.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

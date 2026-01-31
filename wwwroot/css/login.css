@@ -1,0 +1,36 @@
+/* Styles for Login page and guest layout */
+*{box-sizing:border-box;margin:0;padding:0}
+.login-container{min-height:100vh;display:flex;flex-wrap:nowrap}
+.cafe-panel{flex:0 0 45%;min-width:320px;position:relative;background-image:url('https://images.unsplash.com/photo-1642647916129-3909c75c0267?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080');background-size:cover;background-position:center}
+.cafe-overlay{position:absolute;inset:0;background:linear-gradient(135deg, rgba(120,53,15,0.85) 0%, rgba(194,65,12,0.65) 100%);display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff;padding:2.5rem;z-index:0}
+.cafe-logo{width:96px;height:96px;background:rgba(255,255,255,0.08);backdrop-filter:blur(8px);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.18);margin-bottom:1rem}
+.cafe-title{font-size:2rem;font-weight:700;margin-bottom:0.5rem;text-align:center}
+.cafe-subtitle{color:#fde68a;text-align:center}
+.form-panel{flex:1 1 55%;min-width:300px;display:flex;align-items:center;justify-content:center;padding:2.5rem;background-color:#f9fafb;position:relative;z-index:1}
+.form-wrapper{width:100%;max-width:36rem}
+.login-card{background:#fff;border-radius:1rem;padding:2rem;box-shadow:0 20px 25px rgba(0,0,0,0.06);position:relative;z-index:2}
+.login-header h2{font-size:1.5rem;margin-bottom:0.25rem}
+.login-header p{color:#6b7280;margin-bottom:1rem}
+.input-group-custom{position:relative;margin-bottom:1rem}
+.input-icon{position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);color:#9ca3af;pointer-events:none}
+.form-control-custom{width:100%;padding:0.75rem 0.75rem 0.75rem 2.5rem;border:1px solid #e5e7eb;border-radius:0.5rem}
+.remember-forgot{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.btn-signin{width:100%;padding:0.75rem;background:linear-gradient(90deg,#d97706 0%,#c2410c 100%);color:#fff;border:0;border-radius:0.5rem;font-weight:600}
+.footer-text{margin-top:1rem;text-align:center;color:#6b7280}
+.mobile-logo{display:none}
+
+/* Mobile responsive: stack and hide image panel */
+@media (max-width:991px){
+    .login-container{flex-direction:column}
+    .cafe-panel{display:none}
+    .form-panel{flex-basis:100%;width:100%;padding:1.5rem}
+    .form-wrapper{max-width:100%}
+    .mobile-logo{display:flex;margin-bottom:1rem;align-items:center;justify-content:center;width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#d97706,#c2410c);color:#fff}
+}
+
+/* Small tweaks for very small screens */
+@media (max-width:480px){
+    .form-wrapper{padding:0 0.5rem}
+    .login-card{padding:1.25rem}
+    .cafe-title{font-size:1.5rem}
+}

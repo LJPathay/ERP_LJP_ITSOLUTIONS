@@ -1,0 +1,37 @@
+@{
+    ViewData["Title"] = "Manager Dashboard";
+}
+
+@section Navigation {
+    <ul class="nav flex-column gap-2">
+        <li class="nav-item">
+            <a class="nav-link active" href="@Url.Action("Index", "Manager")">
+                <i class="fas fa-th-large"></i>
+                <span>View Dashboard</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="@Url.Action("ManageProducts", "Manager")">
+                <i class="fas fa-mug-hot"></i>
+                <span>Manage Products</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="@Url.Action("ManageInventory", "Manager")">
+                <i class="fas fa-boxes"></i>
+                <span>Manage Inventory</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="@Url.Action("Reports", "Manager")">
+                <i class="fas fa-chart-bar"></i>
+                <span>View Reports</span>
+            </a>
+        </li>
+    </ul>
+}
+
+<div class="container-fluid">
+    <h3>Manager Dashboard</h3>
+    <p>Placeholder for manager KPIs and product management.</p>
+</div>

@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "POS";
+}
+
+@section Navigation {
+    <ul class="nav flex-column gap-2">
+        <li class="nav-item">
+            <a class="nav-link active" href="@Url.Action("Index", "Cashier")">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Create Order</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="@Url.Action("TransactionHistory", "Cashier")">
+                <i class="fas fa-file-invoice"></i>
+                <span>Transaction History</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="@Url.Action("ProcessPayment", "Cashier")">
+                <i class="fas fa-credit-card"></i>
+                <span>Process Payment</span>
+            </a>
+        </li>
+    </ul>
+}
+
+<div class="container-fluid">
+    <h3>POS - Cashier Interface</h3>
+    <p>This is a placeholder for the POS / Create Order interface.</p>
+</div>

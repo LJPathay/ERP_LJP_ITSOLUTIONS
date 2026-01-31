@@ -1,0 +1,25 @@
+@{
+    ViewData["Title"] = "Marketing Dashboard";
+}
+
+@section Navigation {
+    <ul class="nav flex-column gap-2">
+        <li class="nav-item">
+            <a class="nav-link active" href="@Url.Action("Index", "Marketing")">
+                <i class="fas fa-th-large"></i>
+                <span>View Dashboard</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="@Url.Action("ManagePromotions", "Marketing")">
+                <i class="fas fa-bullhorn"></i>
+                <span>Manage Promotions</span>
+            </a>
+        </li>
+    </ul>
+}
+
+<div class="container-fluid">
+    <h3>Marketing Dashboard</h3>
+    <p>Placeholder for marketing campaigns and analytics.</p>
+</div>
