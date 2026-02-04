@@ -1,0 +1,40 @@
+/* Enhanced Sign In button with hover call-to-action */
+.btn-signin {
+    width: 100%;
+    padding: 0.75rem;
+    background: linear-gradient(90deg, #d97706 0%, #c2410c 100%);
+    color: #fff;
+    border: 0;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-signin:hover {
+    background: linear-gradient(90deg, #c2410c 0%, #9a2c0a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(217, 119, 6, 0.3);
+}
+
+.btn-signin::after {
+    content: 'Get Started →';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.btn-signin:hover::after {
+    opacity: 1;
+}
+
+.btn-signin:hover {
+    color: transparent;
+}

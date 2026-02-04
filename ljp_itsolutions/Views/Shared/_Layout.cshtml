@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin-dashboard.css" asp-append-version="true" />
     <style>
         /* Sidebar layout styles */
         .app { min-height:100vh; }
@@ -61,8 +61,15 @@
         <main class="content flex-fill p-4">
             <header class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2 class="mb-0">Welcome, @username</h2>
-                    <div class="text-muted">Role: @userRole</div>
+                    <h1 class="h3 mb-1 fw-bold">Welcome back, @username</h1>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-amber text-white">
+                            <i class="fas fa-user-tag me-1"></i>@userRole
+                        </span>
+                        <span class="text-muted small">
+                            <i class="fas fa-clock me-1"></i>@DateTime.Now.ToString("dddd, MMMM d, yyyy")
+                        </span>
+                    </div>
                 </div>
                 <div class="d-flex align-items-center gap-3">
                     <!-- Sidebar toggle for small screens -->
@@ -70,28 +77,97 @@
                         <i class="fas fa-bars"></i>
                     </button>
 
-                    <button class="btn btn-light position-relative" data-bs-toggle="tooltip" title="Notifications">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-dot"></span>
-                    </button>
-
-                    <div class="d-flex align-items-center">
-                        <div class="me-3 text-end">
-                            <div class="fw-semibold">@username</div>
-                            <div class="small text-muted">@userRole</div>
-                        </div>
+                    <!-- Notifications -->
+                    <div class="dropdown">
+                        <button class="btn btn-light position-relative" data-bs-toggle="dropdown" aria-expanded="false" data-bs-toggle="tooltip" title="Notifications">
+                            <i class="fas fa-bell"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                3
+                                <span class="visually-hidden">unread notifications</span>
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg" style="min-width: 320px;">
+                            <li class="dropdown-header d-flex justify-content-between align-items-center">
+                                <span>Notifications</span>
+                                <a href="#" class="text-decoration-none small">Mark all as read</a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li class="dropdown-item notification-item">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-blue-light text-primary rounded-circle p-2">
+                                            <i class="fas fa-user-plus small"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <p class="mb-1 small fw-semibold">New user registered</p>
+                                        <p class="mb-0 small text-muted">Jane Doe joined the system</p>
+                                        <small class="text-muted"><i class="fas fa-clock me-1"></i>5 minutes ago</small>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="dropdown-item notification-item">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-green-light text-success rounded-circle p-2">
+                                            <i class="fas fa-chart-line small"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <p class="mb-1 small fw-semibold">Sales report ready</p>
+                                        <p class="mb-0 small text-muted">Monthly sales report is available</p>
+                                        <small class="text-muted"><i class="fas fa-clock me-1"></i>1 hour ago</small>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="dropdown-item notification-item">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-amber-light text-warning rounded-circle p-2">
+                                            <i class="fas fa-exclamation-triangle small"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <p class="mb-1 small fw-semibold">System maintenance</p>
+                                        <p class="mb-0 small text-muted">Scheduled for tonight at 2 AM</p>
+                                        <small class="text-muted"><i class="fas fa-clock me-1"></i>3 hours ago</small>
+                                    </div>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-center" href="#">View all notifications</a></li>
+                        </ul>
                     </div>
 
-                    @if (User?.Identity?.IsAuthenticated == true)
-                    {
-                        <form method="post" asp-controller="Account" asp-action="Logout">
-                            <button class="btn btn-logout">Logout</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <a class="btn btn-primary" href="/Account/Login">Login</a>
-                    }
+                    <!-- User Profile -->
+                    <div class="dropdown">
+                        <button class="btn btn-light d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="user-avatar-sm bg-amber">
+                                <i class="fas fa-user text-white small"></i>
+                            </div>
+                            <div class="text-start d-none d-md-block">
+                                <div class="fw-semibold small">@username</div>
+                                <div class="small text-muted">@userRole</div>
+                            </div>
+                            <i class="fas fa-chevron-down small text-muted"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-key me-2"></i>Change Password</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            @if (User?.Identity?.IsAuthenticated == true)
+                            {
+                                <li>
+                                    <form method="post" asp-controller="Account" asp-action="Logout">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            }
+                        </ul>
+                    </div>
                 </div>
             </header>
 
