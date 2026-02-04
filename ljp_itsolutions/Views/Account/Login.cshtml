@@ -10,13 +10,17 @@
 <style>
 /* Responsive login layout */
 *{box-sizing:border-box;margin:0;padding:0}
+html, body { height: 100%; margin-bottom: 0; }
 .login-container{min-height:100vh;display:flex;flex-wrap:nowrap}
-.cafe-panel{flex:0 0 45%;min-width:320px;position:relative;background-image:url('https://images.unsplash.com/photo-1642647916129-3909c75c0267?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080');background-size:cover;background-position:center}
-.cafe-overlay{position:absolute;inset:0;background:linear-gradient(135deg, rgba(120,53,15,0.85) 0%, rgba(194,65,12,0.65) 100%);display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff;padding:2.5rem;z-index:0}
-.cafe-logo{width:96px;height:96px;background:rgba(255,255,255,0.08);backdrop-filter:blur(8px);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.18);margin-bottom:1rem}
+/* Left panel: use background image directly and center content */
+.cafe-panel{flex:0 0 45%;min-width:320px;position:relative;background-image:url('https://images.unsplash.com/photo-1642647916129-3909c75c0267?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080');background-size:cover;background-position:center;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2.5rem}
+.cafe-logo{display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.cafe-logo img{max-width:384px;height:auto;display:block;filter:brightness(0) invert(1)}
+/* Tagline under logo */
+.cafe-tagline{margin-top:8px;color:rgba(255,255,255,0.9);font-size:14px;font-weight:300;letter-spacing:1px;text-align:center}
 .cafe-title{font-size:2rem;font-weight:700;margin-bottom:0.5rem;text-align:center}
 .cafe-subtitle{color:#fde68a;text-align:center}
-.form-panel{flex:1 1 55%;min-width:300px;display:flex;align-items:center;justify-content:center;padding:2.5rem;background-color:#f9fafb;position:relative;z-index:1}
+.form-panel{flex:1 1 55%;min-width:300px;display:flex;align-items:center;justify-content:center;padding:2.5rem;background-color:#fbfbf9;position:relative;z-index:1}
 .form-wrapper{width:100%;max-width:36rem}
 .login-card{background:#fff;border-radius:1rem;padding:2rem;box-shadow:0 20px 25px rgba(0,0,0,0.06);position:relative;z-index:2}
 .login-header h2{font-size:1.5rem;margin-bottom:0.25rem}
@@ -28,6 +32,8 @@
 .btn-signin{width:100%;padding:0.75rem;background:linear-gradient(90deg,#d97706 0%,#c2410c 100%);color:#fff;border:0;border-radius:0.5rem;font-weight:600}
 .footer-text{margin-top:1rem;text-align:center;color:#6b7280}
 .mobile-logo{display:none}
+.validation-summary{font-weight:700;margin-bottom:1rem}
+.validation-message{font-weight:600;color:#b91c1c}
 
 /* Mobile responsive: stack and hide image panel */
 @@media (max-width:991px){
@@ -35,22 +41,25 @@
     .cafe-panel{display:none}
     .form-panel{flex-basis:100%;width:100%;padding:1.5rem}
     .form-wrapper{max-width:100%}
-    .mobile-logo{display:flex;margin-bottom:1rem;align-items:center;justify-content:center;width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#d97706,#c2410c);color:#fff}
+    .mobile-logo{display:flex;margin-bottom:1rem;align-items:center;justify-content:center;width:140px;height:140px}
+    .mobile-logo img{width:100%;height:auto;display:block;filter:brightness(0) invert(1)}
+}
 }
 </style>
 
 <div class="login-container">
     <div class="cafe-panel">
-        <div class="cafe-overlay">
-            <div class="cafe-logo"><i class="fas fa-mug-hot"></i></div>
-            <h1 class="cafe-title">Coffee Shop ERP</h1>
-            <p class="cafe-subtitle">Customer Engagement & Marketing Analytics</p>
-        </div>
+            <div class="cafe-logo">
+                <img src="@(Url.Content("~/images/logo.png"))" alt="Coffee Shop ERP" />
+            </div>
+            <div class="cafe-tagline">Smart Customer Engagement &amp; Marketing Analytics</div>
     </div>
 
     <div class="form-panel">
         <div class="form-wrapper">
-            <div class="mobile-logo" style="display:none"><i class="fas fa-mug-hot"></i></div>
+            <div class="mobile-logo">
+                <img src="@(Url.Content("~/images/logo.png"))" alt="Coffee Shop ERP" />
+            </div>
 
             <div class="login-card">
                 <div class="login-header text-center mb-3">
@@ -66,13 +75,15 @@
                 <form asp-action="Login" method="post" novalidate>
                     @Html.AntiForgeryToken()
 
+                    <div asp-validation-summary="ModelOnly" class="text-danger validation-summary"></div>
+
                     <div class="form-group mb-3">
                         <label for="UsernameOrEmail" class="form-label">Username or Email</label>
                         <div class="input-group-custom">
                             <i class="fas fa-user input-icon"></i>
                             <input asp-for="UsernameOrEmail" id="UsernameOrEmail" name="UsernameOrEmail" class="form-control-custom" placeholder="Enter your username or email" />
                         </div>
-                        <span asp-validation-for="UsernameOrEmail" class="text-danger small"></span>
+                        <span asp-validation-for="UsernameOrEmail" class="text-danger validation-message"></span>
                     </div>
 
                     <div class="form-group mb-3">
@@ -81,7 +92,7 @@
                             <i class="fas fa-lock input-icon"></i>
                             <input asp-for="Password" id="Password" name="Password" class="form-control-custom" placeholder="Enter your password" />
                         </div>
-                        <span asp-validation-for="Password" class="text-danger small"></span>
+                        <span asp-validation-for="Password" class="text-danger validation-message"></span>
                     </div>
 
                     <div class="remember-forgot d-flex justify-content-between align-items-center mb-3">
