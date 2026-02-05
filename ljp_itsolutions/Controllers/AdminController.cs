@@ -95,6 +95,21 @@ namespace ljp_itsolutions.Controllers
             return View();
         }
 
+        public IActionResult Reports_Cashier()
+        {
+            return View("Reports_Cashier");
+        }
+
+        public IActionResult Reports_Marketing()
+        {
+            return View("Reports_Marketing");
+        }
+
+        public IActionResult Reports_Manager()
+        {
+            return View("Reports_Manager");
+        }
+
         // Admin dashboard showing KPIs
         public IActionResult Dashboard()
         {
@@ -119,6 +134,21 @@ namespace ljp_itsolutions.Controllers
             };
 
             return View(model);
+        }
+
+        public IActionResult Transactions()
+        {
+            return View();
+        }
+
+        public IActionResult SystemSettings()
+        {
+            return View();
+        }
+
+        public IActionResult Backups()
+        {
+            return View();
         }
     }
 }

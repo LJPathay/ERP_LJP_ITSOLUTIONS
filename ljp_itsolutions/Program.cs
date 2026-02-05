@@ -76,8 +76,8 @@ END");
 
             db.Database.ExecuteSqlRaw(@"IF COL_LENGTH('dbo.Users', 'PasswordHash') IS NOT NULL
 BEGIN
-    UPDATE dbo.Users SET Password = PasswordHash WHERE Password IS NULL;
-    ALTER TABLE dbo.Users DROP COLUMN PasswordHash;
+    EXEC('UPDATE dbo.Users SET Password = PasswordHash WHERE Password IS NULL');
+    EXEC('ALTER TABLE dbo.Users DROP COLUMN PasswordHash');
 END");
         }
         catch (Exception ex)

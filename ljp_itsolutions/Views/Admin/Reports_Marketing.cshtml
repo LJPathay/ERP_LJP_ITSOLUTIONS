@@ -1,0 +1,253 @@
+@{
+    ViewData["Title"] = "Marketing Reports";
+    ViewBag.ModuleCount = 4;
+}
+
+
+
+<!-- Marketing Reports Content -->
+<div class="container-fluid">
+    <!-- Campaign Performance -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card-custom">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Campaign Performance</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-download me-1"></i>Export
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="campaignPerformanceChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card-custom">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Customer Engagement</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-download me-1"></i>Export
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="customerEngagementChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Promotion Analytics -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card-custom">
+                <div class="card-header">
+                    <h5 class="fw-bold mb-0">Promotion Analytics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small mb-2">Active Promotions</p>
+                                        <h3 class="fw-bold mb-0">8</h3>
+                                        <div class="d-flex align-items-center gap-1 mt-2">
+                                            <i class="fas fa-arrow-up text-success small"></i>
+                                            <span class="text-success small fw-semibold">25%</span>
+                                            <span class="text-muted small">vs last month</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-icon bg-purple-light">
+                                        <i class="fas fa-tags text-purple"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small mb-2">Total Reach</p>
+                                        <h3 class="fw-bold mb-0">15.2K</h3>
+                                        <div class="d-flex align-items-center gap-1 mt-2">
+                                            <i class="fas fa-arrow-up text-success small"></i>
+                                            <span class="text-success small fw-semibold">18%</span>
+                                            <span class="text-muted small">vs last month</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-icon bg-blue-light">
+                                        <i class="fas fa-users text-info"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small mb-2">Conversion Rate</p>
+                                        <h3 class="fw-bold mb-0">3.8%</h3>
+                                        <div class="d-flex align-items-center gap-1 mt-2">
+                                            <i class="fas fa-arrow-up text-success small"></i>
+                                            <span class="text-success small fw-semibold">12%</span>
+                                            <span class="text-muted small">vs last month</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-icon bg-green-light">
+                                        <i class="fas fa-chart-line text-success"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Social Media Metrics -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card-custom">
+                <div class="card-header">
+                    <h5 class="fw-bold mb-0">Social Media Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small mb-2">Facebook Followers</p>
+                                        <h3 class="fw-bold mb-0">2,847</h3>
+                                        <div class="d-flex align-items-center gap-1 mt-2">
+                                            <i class="fas fa-arrow-up text-success small"></i>
+                                            <span class="text-success small fw-semibold">8.5%</span>
+                                            <span class="text-muted small">vs last month</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-icon bg-blue-light">
+                                        <i class="fab fa-facebook text-info"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small mb-2">Instagram Followers</p>
+                                        <h3 class="fw-bold mb-0">1,234</h3>
+                                        <div class="d-flex align-items-center gap-1 mt-2">
+                                            <i class="fas fa-arrow-up text-success small"></i>
+                                            <span class="text-success small fw-semibold">6.2%</span>
+                                            <span class="text-muted small">vs last month</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-icon bg-pink-light">
+                                        <i class="fab fa-instagram text-pink"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small mb-2">Twitter Followers</p>
+                                        <h3 class="fw-bold mb-0">892</h3>
+                                        <div class="d-flex align-items-center gap-1 mt-2">
+                                            <i class="fas fa-arrow-down text-danger small"></i>
+                                            <span class="text-danger small fw-semibold">2.1%</span>
+                                            <span class="text-muted small">vs last month</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-icon bg-info-light">
+                                        <i class="fab fa-twitter text-info"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Campaign Performance Chart
+        const campaignCtx = document.getElementById('campaignPerformanceChart').getContext('2d');
+        new Chart(campaignCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Campaign ROI',
+                    data: [125, 180, 95, 220, 310],
+                    borderColor: '#d97706',
+                    backgroundColor: 'rgba(217, 119, 6, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            display: true
+                        }
+                    }
+                }
+            }
+        });
+
+        // Customer Engagement Chart
+        const customerCtx = document.getElementById('customerEngagementChart').getContext('2d');
+        new Chart(customerCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Email Campaigns', 'Social Media', 'In-Store Promotions', 'Website Traffic'],
+                datasets: [{
+                    data: [35, 25, 20, 20],
+                    backgroundColor: ['#d97706', '#f59e0b', '#fbbf24', '#34d399'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Marketing Reports loaded successfully');
+        });
+    </script>
+}

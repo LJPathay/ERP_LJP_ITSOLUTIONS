@@ -1,35 +1,10 @@
 @{
     ViewData["Title"] = "Reports";
-    ViewData["PageTitle"] = "View Reports";
     ViewBag.ModuleCount = 4;
 }
 
 @section Navigation {
-    <ul class="nav flex-column gap-2">
-        <li class="nav-item">
-            <a class="nav-link" href="@Url.Action("Index", "Admin")">
-                <i class="fas fa-th-large"></i>
-                <span>View Dashboard</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="@Url.Action("ManageUsers", "Admin")">
-                <i class="fas fa-users"></i>
-                <span>Manage Users</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="@Url.Action("AuditLogs", "Admin")">
-                <i class="fas fa-file-alt"></i>
-                <span>View Audit Logs</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link active" href="@Url.Action("Reports", "Admin")">
-                <i class="fas fa-chart-bar"></i>
-                <span>View Reports</span>
-            </a>
-        </li>
+    <partial name="_AdminNavigation" />
     </ul>
 }
 
@@ -43,10 +18,6 @@
                         <div class="col-md-3">
                             <label class="form-label small">Report Type</label>
                             <select class="form-select">
-                                <option selected>System Overview</option>
-                                <option>User Activity</option>
-                                <option>Sales Performance</option>
-                                <option>Inventory Status</option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -58,8 +29,8 @@
                             <input type="date" class="form-control" value="2024-01-31">
                         </div>
                         <div class="col-md-3">
-                            <button class="btn btn-amber w-100">
-                                <i class="fas fa-chart-line me-2"></i>Generate Report
+                            <button class="btn btn-amber">
+                                <i class="fas fa-search me-2"></i>Generate Report
                             </button>
                         </div>
                     </div>
@@ -68,164 +39,118 @@
         </div>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="row g-4 mb-4">
-        <div class="col-xl-3 col-md-6">
-            <div class="stat-card">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <p class="text-muted small mb-1">Total Revenue</p>
-                        <h3 class="fw-bold mb-0">?125,430</h3>
-                        <p class="text-success small mb-0 mt-2">
-                            <i class="fas fa-arrow-up"></i> 15.3% vs last month
-                        </p>
-                    </div>
-                    <div class="stat-icon bg-green-light">
-                        <i class="fas fa-peso-sign text-success"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6">
-            <div class="stat-card">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <p class="text-muted small mb-1">Total Orders</p>
-                        <h3 class="fw-bold mb-0">3,542</h3>
-                        <p class="text-success small mb-0 mt-2">
-                            <i class="fas fa-arrow-up"></i> 8.2% vs last month
-                        </p>
-                    </div>
-                    <div class="stat-icon bg-blue-light">
-                        <i class="fas fa-shopping-cart text-primary"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6">
-            <div class="stat-card">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <p class="text-muted small mb-1">Active Promotions</p>
-                        <h3 class="fw-bold mb-0">12</h3>
-                        <p class="text-muted small mb-0 mt-2">
-                            <i class="fas fa-minus"></i> No change
-                        </p>
-                    </div>
-                    <div class="stat-icon bg-purple-light">
-                        <i class="fas fa-tags text-purple"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6">
-            <div class="stat-card">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <p class="text-muted small mb-1">Low Stock Items</p>
-                        <h3 class="fw-bold mb-0">8</h3>
-                        <p class="text-danger small mb-0 mt-2">
-                            <i class="fas fa-exclamation-triangle"></i> Needs attention
-                        </p>
-                    </div>
-                    <div class="stat-icon bg-red-light">
-                        <i class="fas fa-box text-danger"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts -->
+    <!-- Dynamic Report Content -->
     <div class="row g-4 mb-4">
         <div class="col-lg-8">
-            <div class="card-custom">
+            <div class="card-custom" id="systemReport">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">Revenue & Sales Trend</h5>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-secondary active">7D</button>
-                        <button class="btn btn-outline-secondary">30D</button>
-                        <button class="btn btn-outline-secondary">90D</button>
-                        <button class="btn btn-outline-secondary">1Y</button>
+                    <h5 class="fw-bold mb-0">System Overview Report</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-download me-1"></i>Export
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
                     </div>
                 </div>
                 <div class="card-body">
-                    <canvas id="salesChart" height="80"></canvas>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <p class="text-muted small mb-1">Total Revenue</p>
+                            <h3 class="fw-bold mb-0">?125,430</h3>
+                            <div class="d-flex align-items-center gap-1 mt-2">
+                                <i class="fas fa-peso-sign text-success"></i>
+                                <span class="text-success small fw-semibold">15.3% vs last month</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="text-muted small mb-1">Total Orders</p>
+                            <h3 class="fw-bold mb-0">3,542</h3>
+                            <div class="d-flex align-items-center gap-1 mt-2">
+                                <i class="fas fa-shopping-bag text-primary"></i>
+                                <span class="text-primary small fw-semibold">8.2% vs last month</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="text-muted small mb-1">Active Promotions</p>
+                            <h3 class="fw-bold mb-0">12</h3>
+                            <div class="d-flex align-items-center gap-1 mt-2">
+                                <i class="fas fa-tags text-warning"></i>
+                                <span class="text-warning small fw-semibold">No change</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
         <div class="col-lg-4">
-            <div class="card-custom h-100">
-                <div class="card-header">
-                    <h5 class="fw-bold mb-0">Top Selling Products</h5>
+            <div class="card-custom" id="userReport" style="display: none;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">User Activity Report</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-download me-1"></i>Export
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <div class="top-product-item mb-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="fw-semibold mb-1">Caramel Macchiato</p>
-                                <p class="text-muted small mb-0">842 sold</p>
-                            </div>
-                            <span class="badge bg-success">?63,150</span>
-                        </div>
-                        <div class="progress mt-2" style="height: 6px;">
-                            <div class="progress-bar bg-amber" style="width: 85%"></div>
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table table-custom mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="status-indicator status-online"></div>
+                                            <span class="fw-semibold">System</span>
+                                        </div>
+                                    </td>
+                                    <td>Database backup completed</td>
+                                    <td><span class="badge badge-success">Success</span></td>
+                                    <td><span class="badge badge-success">Completed</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <div class="top-product-item mb-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="fw-semibold mb-1">Cappuccino</p>
-                                <p class="text-muted small mb-0">721 sold</p>
-                            </div>
-                            <span class="badge bg-success">?54,075</span>
+    <!-- Financial Summary -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card-custom" id="financialReport" style="display: none;">
+                <div class="card-header">
+                    <h5 class="fw-bold mb-0">Financial Summary Report</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <p class="text-muted small mb-1">Total Revenue</p>
+                            <h3 class="fw-bold mb-0">?125,430</h3>
+                            <p class="text-success small mb-0">+15.3% from last month</p>
                         </div>
-                        <div class="progress mt-2" style="height: 6px;">
-                            <div class="progress-bar bg-amber" style="width: 72%"></div>
+                        <div class="col-md-4">
+                            <p class="text-muted small mb-1">Total Orders</p>
+                            <h3 class="fw-bold mb-0">3,542</h3>
+                            <p class="text-success small mb-0">+8.2% from last month</p>
                         </div>
-                    </div>
-
-                    <div class="top-product-item mb-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="fw-semibold mb-1">Iced Americano</p>
-                                <p class="text-muted small mb-0">658 sold</p>
-                            </div>
-                            <span class="badge bg-success">?39,480</span>
-                        </div>
-                        <div class="progress mt-2" style="height: 6px;">
-                            <div class="progress-bar bg-amber" style="width: 66%"></div>
-                        </div>
-                    </div>
-
-                    <div class="top-product-item mb-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="fw-semibold mb-1">Espresso</p>
-                                <p class="text-muted small mb-0">534 sold</p>
-                            </div>
-                            <span class="badge bg-success">?32,040</span>
-                        </div>
-                        <div class="progress mt-2" style="height: 6px;">
-                            <div class="progress-bar bg-amber" style="width: 54%"></div>
-                        </div>
-                    </div>
-
-                    <div class="top-product-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="fw-semibold mb-1">Vanilla Latte</p>
-                                <p class="text-muted small mb-0">412 sold</p>
-                            </div>
-                            <span class="badge bg-success">?28,840</span>
-                        </div>
-                        <div class="progress mt-2" style="height: 6px;">
-                            <div class="progress-bar bg-amber" style="width: 41%"></div>
+                        <div class="col-md-4">
+                            <p class="text-muted small mb-1">Average Order Value</p>
+                            <h3 class="fw-bold mb-0">?35.40</h3>
+                            <p class="text-info small mb-0">Per order</p>
                         </div>
                     </div>
                 </div>
@@ -233,26 +158,44 @@
         </div>
     </div>
 
-    <!-- Performance by Category -->
-    <div class="row g-4">
-        <div class="col-lg-6">
-            <div class="card-custom">
-                <div class="card-header">
-                    <h5 class="fw-bold mb-0">Sales by Category</h5>
+    <!-- Transaction Monitoring -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card-custom" id="transactionReport" style="display: none;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Transaction Monitoring Report</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-download me-1"></i>Export Transactions
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <canvas id="categoryChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-6">
-            <div class="card-custom">
-                <div class="card-header">
-                    <h5 class="fw-bold mb-0">Hourly Sales Distribution</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="hourlyChart"></canvas>
+                    <div class="table-responsive">
+                        <table class="table table-custom mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>#TRX-001</td>
+                                    <td>2024-01-31 10:30 AM</td>
+                                    <td>?1,250.00</td>
+                                    <td><span class="badge badge-success">Completed</span></td>
+                                    <td><span class="badge badge-success">Completed</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -260,84 +203,50 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Sales & Revenue Chart
-        const ctx1 = document.getElementById('salesChart').getContext('2d');
-        new Chart(ctx1, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Revenue (?)',
-                    data: [15200, 18400, 17800, 21200, 19500, 23100, 20800],
-                    borderColor: '#d97706',
-                    backgroundColor: 'rgba(217, 119, 6, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    yAxisID: 'y'
-                }, {
-                    label: 'Orders',
-                    data: [420, 485, 462, 538, 505, 592, 540],
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    yAxisID: 'y1'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                scales: {
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        grid: {
-                            drawOnChartArea: false,
-                        },
-                    },
-                }
+        // Report type switching
+        document.getElementById('reportType').addEventListener('change', function() {
+            const reportType = this.value;
+            
+            // Hide all reports
+            document.getElementById('systemReport').style.display = 'none';
+            document.getElementById('userReport').style.display = 'none';
+            document.getElementById('financialReport').style.display = 'none';
+            document.getElementById('transactionReport').style.display = 'none';
+            
+            // Show selected report
+            switch(reportType) {
+                case 'system':
+                    document.getElementById('systemReport').style.display = 'block';
+                    break;
+                case 'user':
+                    document.getElementById('userReport').style.display = 'block';
+                    break;
+                case 'financial':
+                    document.getElementById('financialReport').style.display = 'block';
+                    break;
+                case 'transaction':
+                    document.getElementById('transactionReport').style.display = 'block';
+                    break;
             }
         });
 
-        // Category Chart
-        const ctx2 = document.getElementById('categoryChart').getContext('2d');
-        new Chart(ctx2, {
-            type: 'doughnut',
-            data: {
-                labels: ['Hot Coffee', 'Cold Coffee', 'Tea', 'Pastries', 'Snacks'],
-                datasets: [{
-                    data: [45, 28, 12, 10, 5],
-                    backgroundColor: ['#d97706', '#f59e0b', '#fbbf24', '#fcd34d', '#fde68a'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: { position: 'bottom' }
-                }
-            }
-        });
-
-        // Hourly Chart
-        const ctx3 = document.getElementById('hourlyChart').getContext('2d');
-        new Chart(ctx3, {
-            type: 'bar',
-            data: {
-                labels: ['6AM', '7AM', '8AM', '9AM', '10AM', '11AM', '12PM', '1PM', '2PM', '3PM', '4PM', '5PM'],
-                datasets: [{
+        // Initialize charts
+        const systemCtx = document.getElementById('systemChart')?.getContext('2d');
+        if (systemCtx) {
+            new Chart(systemCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'System Health',
+                        data: [95, 92, 88, 90, 93],
+                        borderColor: '#d97706',
+                        backgroundColor: 'rgba(217, 119, 6, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
                     label: 'Sales',
                     data: [45, 120, 215, 180, 145, 125, 190, 165, 135, 110, 95, 75],
                     backgroundColor: '#d97706',

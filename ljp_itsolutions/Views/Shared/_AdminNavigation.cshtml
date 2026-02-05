@@ -1,0 +1,97 @@
+@using Microsoft.AspNetCore.Http
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    
+    // Determine active page based on controller and action
+    bool IsDashboardActive() => currentController == "Admin" && (currentAction == "Index" || currentAction == "Dashboard");
+    bool IsUsersActive() => currentController == "Admin" && (currentAction == "Users" || currentAction == "ManageUsers");
+    bool IsAuditLogsActive() => currentController == "Admin" && (currentAction == "AuditLogs" || currentAction == "Audit");
+    
+    // Reports active logic
+    bool IsCashierReportsActive() => currentController == "Admin" && currentAction == "Reports_Cashier";
+    bool IsMarketingReportsActive() => currentController == "Admin" && currentAction == "Reports_Marketing";
+    bool IsManagerReportsActive() => currentController == "Admin" && currentAction == "Reports_Manager";
+    bool IsAnyReportActive() => IsCashierReportsActive() || IsMarketingReportsActive() || IsManagerReportsActive();
+
+    // System Settings active logic
+    bool IsTransactionsActive() => currentController == "Admin" && currentAction == "Transactions";
+    bool IsSystemSettingsActive() => currentController == "Admin" && currentAction == "SystemSettings";
+    bool IsBackupsActive() => currentController == "Admin" && currentAction == "Backups";
+    bool IsAnySystemSettingActive() => IsTransactionsActive() || IsSystemSettingsActive() || IsBackupsActive();
+}
+
+<ul class="nav flex-column gap-2">
+    <li class="nav-item">
+        <a class="nav-link @(IsDashboardActive() ? "active" : "")" href="@Url.Action("Index", "Admin")">
+            <i class="fas fa-th-large"></i>
+            <span>Dashboard</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(IsUsersActive() ? "active" : "")" href="@Url.Action("Users", "Admin")">
+            <i class="fas fa-users"></i>
+            <span>Manage Users & Roles</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(IsAuditLogsActive() ? "active" : "")" href="@Url.Action("AuditLogs", "Admin")">
+            <i class="fas fa-file-alt"></i>
+            <span>View Audit Logs</span>
+        </a>
+    </li>
+    <li class="nav-item dropdown">
+        <a class="nav-link @(IsAnyReportActive() ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-chart-bar"></i>
+            <span>Reports</span>
+            <i class="fas fa-chevron-down ms-auto" style="font-size: 0.8rem; opacity: 0.7;"></i>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+            <li>
+                <a class="dropdown-item @(IsCashierReportsActive() ? "active" : "") d-flex align-items-center gap-2" href="@Url.Action("Reports_Cashier", "Admin")">
+                    <i class="fas fa-cash-register opacity-75"></i>
+                    <span>Cashier Reports</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item @(IsMarketingReportsActive() ? "active" : "") d-flex align-items-center gap-2" href="@Url.Action("Reports_Marketing", "Admin")">
+                    <i class="fas fa-bullhorn opacity-75"></i>
+                    <span>Marketing Reports</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item @(IsManagerReportsActive() ? "active" : "") d-flex align-items-center gap-2" href="@Url.Action("Reports_Manager", "Admin")">
+                    <i class="fas fa-user-tie opacity-75"></i>
+                    <span>Manager Reports</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+    <li class="nav-item dropdown">
+        <a class="nav-link @(IsAnySystemSettingActive() ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-cogs"></i>
+            <span>System Settings</span>
+            <i class="fas fa-chevron-down ms-auto" style="font-size: 0.8rem; opacity: 0.7;"></i>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+            <li>
+                <a class="dropdown-item @(IsTransactionsActive() ? "active" : "") d-flex align-items-center gap-2" href="@Url.Action("Transactions", "Admin")">
+                    <i class="fas fa-exchange-alt opacity-75"></i>
+                    <span>Monitor Transactions</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item @(IsSystemSettingsActive() ? "active" : "") d-flex align-items-center gap-2" href="@Url.Action("SystemSettings", "Admin")">
+                    <i class="fas fa-cog opacity-75"></i>
+                    <span>Configure System</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item @(IsBackupsActive() ? "active" : "") d-flex align-items-center gap-2" href="@Url.Action("Backups", "Admin")">
+                    <i class="fas fa-database opacity-75"></i>
+                    <span>Backups & Archives</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+</ul>

@@ -1,0 +1,375 @@
+@{
+    ViewData["Title"] = "Manager Reports";
+    ViewBag.ModuleCount = 4;
+}
+
+
+
+<!-- Manager Reports Content -->
+<div class="container-fluid">
+    <!-- Team Performance -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card-custom">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Team Performance Overview</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-download me-1"></i>Export
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="teamPerformanceChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card-custom">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Staff Efficiency</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-download me-1"></i>Export
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small mb-2">Average Service Time</p>
+                                        <h3 class="fw-bold mb-0">4.2 min</h3>
+                                        <div class="d-flex align-items-center gap-1 mt-2">
+                                            <i class="fas fa-clock text-success"></i>
+                                            <span class="text-success small fw-semibold">-0.8 min</span>
+                                            <span class="text-muted small">vs last month</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-icon bg-green-light">
+                                        <i class="fas fa-stopwatch text-success"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small mb-2">Customer Satisfaction</p>
+                                        <h3 class="fw-bold mb-0">4.8/5.0</h3>
+                                        <div class="d-flex align-items-center gap-1 mt-2">
+                                            <i class="fas fa-star text-warning"></i>
+                                            <span class="text-warning small fw-semibold">+0.3</span>
+                                            <span class="text-muted small">vs last month</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-icon bg-amber-light">
+                                        <i class="fas fa-smile text-amber"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Management -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card-custom">
+                <div class="card-header">
+                    <h5 class="fw-bold mb-0">Inventory Management</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small mb-2">Total Inventory Value</p>
+                                        <h3 class="fw-bold mb-0">?85,420</h3>
+                                        <div class="d-flex align-items-center gap-1 mt-2">
+                                            <i class="fas fa-peso-sign text-success"></i>
+                                            <span class="text-success small fw-semibold">+5.2%</span>
+                                            <span class="text-muted small">vs last month</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-icon bg-amber-light">
+                                        <i class="fas fa-box text-amber"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small mb-2">Low Stock Items</p>
+                                        <h3 class="fw-bold mb-0">12</h3>
+                                        <div class="d-flex align-items-center gap-1 mt-2">
+                                            <i class="fas fa-exclamation-triangle text-danger"></i>
+                                            <span class="text-danger small fw-semibold">+3</span>
+                                            <span class="text-muted small">vs last month</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-icon bg-red-light">
+                                        <i class="fas fa-exclamation-triangle text-danger"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small mb-2">Turnover Rate</p>
+                                        <h3 class="fw-bold mb-0">2.3x/year</h3>
+                                        <div class="d-flex align-items-center gap-1 mt-2">
+                                            <i class="fas fa-sync-alt text-info"></i>
+                                            <span class="text-info small fw-semibold">-0.2x</span>
+                                            <span class="text-muted small">vs last month</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-icon bg-blue-light">
+                                        <i class="fas fa-chart-line text-info"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Performance -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card-custom">
+                <div class="card-header">
+                    <h5 class="fw-bold mb-0">Financial Performance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small mb-2">Monthly Revenue</p>
+                                        <h3 class="fw-bold mb-0">?125,430</h3>
+                                        <div class="d-flex align-items-center gap-1 mt-2">
+                                            <i class="fas fa-peso-sign text-success"></i>
+                                            <span class="text-success small fw-semibold">+15.3%</span>
+                                            <span class="text-muted small">vs last month</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-icon bg-green-light">
+                                        <i class="fas fa-chart-line text-success"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small mb-2">Operating Costs</p>
+                                        <h3 class="fw-bold mb-0">?42,180</h3>
+                                        <div class="d-flex align-items-center gap-1 mt-2">
+                                            <i class="fas fa-arrow-down text-danger"></i>
+                                            <span class="text-danger small fw-semibold">+8.1%</span>
+                                            <span class="text-muted small">vs last month</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-icon bg-red-light">
+                                        <i class="fas fa-chart-pie text-danger"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small mb-2">Profit Margin</p>
+                                        <h3 class="fw-bold mb-0">36.0%</h3>
+                                        <div class="d-flex align-items-center gap-1 mt-2">
+                                            <i class="fas fa-percentage text-warning"></i>
+                                            <span class="text-warning small fw-semibold">+2.1%</span>
+                                            <span class="text-muted small">vs last month</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-icon bg-amber-light">
+                                        <i class="fas fa-percentage text-amber"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Management -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card-custom">
+                <div class="card-header">
+                    <h5 class="fw-bold mb-0">Staff Schedule Overview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-custom mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Monday</th>
+                                    <th>Tuesday</th>
+                                    <th>Wednesday</th>
+                                    <th>Thursday</th>
+                                    <th>Friday</th>
+                                    <th>Saturday</th>
+                                    <th>Sunday</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar-sm bg-success">
+                                                <i class="fas fa-user text-white small"></i>
+                                            </div>
+                                            <span class="fw-semibold">John Doe</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-success">8:00-16:00</span></td>
+                                    <td><span class="badge badge-success">8:00-16:00</span></td>
+                                    <td><span class="badge badge-success">8:00-16:00</span></td>
+                                    <td><span class="badge badge-success">8:00-16:00</span></td>
+                                    <td><span class="badge badge-success">8:00-16:00</span></td>
+                                    <td><span class="badge badge-success">8:00-16:00</span></td>
+                                    <td><span class="badge badge-warning">OFF</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar-sm bg-amber">
+                                                <i class="fas fa-user text-white small"></i>
+                                            </div>
+                                            <span class="fw-semibold">Jane Smith</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-success">9:00-17:00</span></td>
+                                    <td><span class="badge badge-success">9:00-17:00</span></td>
+                                    <td><span class="badge badge-success">9:00-17:00</span></td>
+                                    <td><span class="badge badge-success">9:00-17:00</span></td>
+                                    <td><span class="badge badge-success">9:00-17:00</span></td>
+                                    <td><span class="badge badge-warning">OFF</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar-sm bg-info">
+                                                <i class="fas fa-user text-white small"></i>
+                                            </div>
+                                            <span class="fw-semibold">Mike Wilson</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-success">10:00-18:00</span></td>
+                                    <td><span class="badge badge-success">10:00-18:00</span></td>
+                                    <td><span class="badge badge-success">10:00-18:00</span></td>
+                                    <td><span class="badge badge-success">10:00-18:00</span></td>
+                                    <td><span class="badge badge-success">10:00-18:00</span></td>
+                                    <td><span class="badge badge-warning">OFF</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Team Performance Chart
+        const teamCtx = document.getElementById('teamPerformanceChart').getContext('2d');
+        new Chart(teamCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Service Time', 'Customer Satisfaction', 'Staff Efficiency'],
+                datasets: [{
+                    label: 'Current Month',
+                    data: [4.2, 4.8, 95],
+                    backgroundColor: '#d97706',
+                    borderColor: '#d97706',
+                    borderWidth: 1
+                }, {
+                    label: 'Previous Month',
+                    data: [5.0, 4.5, 92],
+                    backgroundColor: '#f59e0b',
+                    borderColor: '#f59e0b',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            display: true
+                        }
+                    }
+                }
+            }
+        });
+
+        // Financial Performance Chart
+        const financialCtx = document.getElementById('financialPerformanceChart').getContext('2d');
+        new Chart(financialCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Revenue', 'Operating Costs', 'Profit'],
+                datasets: [{
+                    data: [125430, 42180, 45120],
+                    backgroundColor: ['#10b981', '#ef4444', '#fbbf24'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Manager Reports loaded successfully');
+        });
+    </script>
+}

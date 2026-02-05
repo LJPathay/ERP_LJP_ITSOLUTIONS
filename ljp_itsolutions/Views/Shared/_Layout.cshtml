@@ -10,17 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin-dashboard.css" asp-append-version="true" />
-    <style>
-        /* Sidebar layout styles */
-        .app { min-height:100vh; }
-        .sidebar { width:260px; background: linear-gradient(180deg,#6f2b00,#a14a00); color:white; }
-        .sidebar .brand { color: #fff; }
-        .sidebar .nav-link { color: rgba(255,255,255,0.9); padding: 12px 16px; }
-        .sidebar .nav-link.active, .sidebar .nav-link:hover { background: rgba(255,255,255,0.06); border-radius:8px; }
-        .content { background:#f7f8fa; }
-        .kpi-card { background:white; border-radius:12px; padding:18px; box-shadow:0 6px 18px rgba(31,45,61,0.06); }
-        .recent { background:white; border-radius:12px; padding:18px; box-shadow:0 6px 18px rgba(31,45,61,0.06); }
-    </style>
 </head>
 <body>
     @{
@@ -30,18 +19,18 @@
     <div class="app d-flex">
         <aside class="sidebar p-4 d-flex flex-column">
             <div class="brand mb-4">
-                <div class="d-flex align-items-center mb-3">
-                    <div class="me-3" style="font-size:28px">☕</div>
-                    <div>
-                        <div class="h5 mb-0">Coffee ERP</div>
-                        <div class="small text-amber-light">@userRole</div>
-                    </div>
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <img src="@(Url.Content("~/images/logo.png"))" alt="Coffee ERP" class="sidebar-logo" />
                 </div>
             </div>
-            <nav class="nav flex-column">
+            <nav class="nav flex-column gap-2">
                 @if (IsSectionDefined("Navigation"))
                 {
                     @RenderSection("Navigation")
+                }
+                else if (ViewContext.RouteData.Values["controller"]?.ToString() == "Admin")
+                {
+                    <partial name="_AdminNavigation" />
                 }
                 else
                 {
@@ -60,108 +49,63 @@
 
         <main class="content flex-fill p-4">
             <header class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 class="h3 mb-1 fw-bold">Welcome back, @username</h1>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-amber text-white">
-                            <i class="fas fa-user-tag me-1"></i>@userRole
-                        </span>
-                        <span class="text-muted small">
-                            <i class="fas fa-clock me-1"></i>@DateTime.Now.ToString("dddd, MMMM d, yyyy")
-                        </span>
+                <div class="header-left">
+                    <h1 class="h3 mb-0 fw-bold text-dark">Welcome back, @username</h1>
+                    <div class="text-muted small mt-1">
+                        <i class="far fa-clock me-1"></i>@DateTime.Now.ToString("dddd, MMMM d, yyyy")
                     </div>
                 </div>
-                <div class="d-flex align-items-center gap-3">
-                    <!-- Sidebar toggle for small screens -->
-                    <button id="sidebarToggle" class="btn btn-light d-md-none" aria-label="Toggle sidebar">
-                        <i class="fas fa-bars"></i>
-                    </button>
-
+                <div class="header-right d-flex align-items-center gap-3">
                     <!-- Notifications -->
                     <div class="dropdown">
-                        <button class="btn btn-light position-relative" data-bs-toggle="dropdown" aria-expanded="false" data-bs-toggle="tooltip" title="Notifications">
+                        <button class="btn btn-header-icon position-relative" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-bell"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                3
-                                <span class="visually-hidden">unread notifications</span>
-                            </span>
+                            <span class="notification-badge">3</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg" style="min-width: 320px;">
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg shadow-lg border-0" style="min-width: 320px;">
                             <li class="dropdown-header d-flex justify-content-between align-items-center">
-                                <span>Notifications</span>
+                                <span class="fw-bold">Notifications</span>
                                 <a href="#" class="text-decoration-none small">Mark all as read</a>
                             </li>
-                            <li><hr class="dropdown-divider"></li>
                             <li class="dropdown-item notification-item">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0">
-                                        <div class="bg-blue-light text-primary rounded-circle p-2">
-                                            <i class="fas fa-user-plus small"></i>
-                                        </div>
+                                <div class="d-flex align-items-start">
+                                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3">
+                                        <i class="fas fa-user-plus fa-sm"></i>
                                     </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <p class="mb-1 small fw-semibold">New user registered</p>
-                                        <p class="mb-0 small text-muted">Jane Doe joined the system</p>
-                                        <small class="text-muted"><i class="fas fa-clock me-1"></i>5 minutes ago</small>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="dropdown-item notification-item">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0">
-                                        <div class="bg-green-light text-success rounded-circle p-2">
-                                            <i class="fas fa-chart-line small"></i>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <p class="mb-1 small fw-semibold">Sales report ready</p>
-                                        <p class="mb-0 small text-muted">Monthly sales report is available</p>
-                                        <small class="text-muted"><i class="fas fa-clock me-1"></i>1 hour ago</small>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="dropdown-item notification-item">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0">
-                                        <div class="bg-amber-light text-warning rounded-circle p-2">
-                                            <i class="fas fa-exclamation-triangle small"></i>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <p class="mb-1 small fw-semibold">System maintenance</p>
-                                        <p class="mb-0 small text-muted">Scheduled for tonight at 2 AM</p>
-                                        <small class="text-muted"><i class="fas fa-clock me-1"></i>3 hours ago</small>
+                                    <div>
+                                        <p class="mb-0 small fw-bold">New user registered</p>
+                                        <p class="mb-0 x-small text-muted">Jane Doe joined the system</p>
+                                        <small class="text-muted x-small">5 mins ago</small>
                                     </div>
                                 </div>
                             </li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-center" href="#">View all notifications</a></li>
+                            <li><a class="dropdown-item text-center small text-primary fw-bold" href="#">View all notifications</a></li>
                         </ul>
                     </div>
 
                     <!-- User Profile -->
                     <div class="dropdown">
-                        <button class="btn btn-light d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
-                            <div class="user-avatar-sm bg-amber">
-                                <i class="fas fa-user text-white small"></i>
+                        <button class="btn btn-profile d-flex align-items-center gap-3 shadow-sm border-0 bg-white" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="profile-avatar bg-light d-flex align-items-center justify-content-center">
+                                <i class="fas fa-user text-secondary"></i>
                             </div>
                             <div class="text-start d-none d-md-block">
-                                <div class="fw-semibold small">@username</div>
-                                <div class="small text-muted">@userRole</div>
+                                <p class="mb-0 small fw-bold text-dark">@username</p>
+                                <p class="mb-0 x-small text-muted">@userRole</p>
                             </div>
-                            <i class="fas fa-chevron-down small text-muted"></i>
+                            <i class="fas fa-chevron-down x-small text-muted ms-1"></i>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-key me-2"></i>Change Password</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-user-circle me-2 opacity-50"></i>My Profile</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2 opacity-50"></i>Account Settings</a></li>
                             <li><hr class="dropdown-divider"></li>
                             @if (User?.Identity?.IsAuthenticated == true)
                             {
                                 <li>
                                     <form method="post" asp-controller="Account" asp-action="Logout">
                                         <button type="submit" class="dropdown-item text-danger">
-                                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                            <i class="fas fa-sign-out-alt me-2"></i>Sign Out
                                         </button>
                                     </form>
                                 </li>
