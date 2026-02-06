@@ -1,0 +1,50 @@
+@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Campaign Performance";
+}
+
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1">🎯 Campaign Performance</h2>
+        <p class="text-muted">Track how your promotions are driving sales</p>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light-subtle">
+                        <tr>
+                            <th class="ps-4 py-3">Campaign</th>
+                            <th class="py-3 text-center">Total Uses</th>
+                            <th class="py-3 text-end">Discount Applied</th>
+                            <th class="py-3 text-center">ROI Status</th>
+                            <th class="pe-4 py-3 text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">@item.PromotionName</div>
+                                    <small class="text-muted">Type: Active Campaign</small>
+                                </td>
+                                <td class="text-center fw-bold">@item.UsageCount</td>
+                                <td class="text-end text-danger fw-bold">-$@item.TotalDiscountedAmount.ToString("F2")</td>
+                                <td class="text-center">
+                                    @if (item.UsageCount > 50) { <span class="badge bg-success-subtle text-success">High ROI</span> }
+                                    else if (item.UsageCount > 10) { <span class="badge bg-warning-subtle text-warning">Medium ROI</span> }
+                                    else { <span class="badge bg-danger-subtle text-danger">Low ROI</span> }
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3">Full Report</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

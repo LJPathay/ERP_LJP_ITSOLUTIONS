@@ -1,0 +1,66 @@
+@model ljp_itsolutions.Models.Promotion
+@{
+    ViewData["Title"] = "Create Marketing Campaign";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h2 class="fw-bold mb-1">🚀 Launch New Campaign</h2>
+                    <p class="text-muted">Fill out the details below to start a new promotion.</p>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="CreateCampaign" method="post">
+                        <div class="mb-4">
+                            <label asp-for="PromotionName" class="form-label fw-bold">Campaign Name</label>
+                            <input asp-for="PromotionName" class="form-control form-control-lg rounded-3" placeholder="e.g., Summer Coffee Blast" />
+                            <span asp-validation-for="PromotionName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="DiscountType" class="form-label fw-bold">Discount Type</label>
+                                <select asp-for="DiscountType" class="form-select rounded-3">
+                                    <option value="Percentage">Percentage (%)</option>
+                                    <option value="Fixed">Fixed Amount ($)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="DiscountValue" class="form-label fw-bold">Value</label>
+                                <input asp-for="DiscountValue" class="form-control rounded-3" placeholder="e.g., 20" />
+                                <span asp-validation-for="DiscountValue" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="StartDate" class="form-label fw-bold">Start Date</label>
+                                <input asp-for="StartDate" type="date" class="form-control rounded-3" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="EndDate" class="form-label fw-bold">End Date</label>
+                                <input asp-for="EndDate" type="date" class="form-control rounded-3" value="@DateTime.Now.AddDays(30).ToString("yyyy-MM-dd")" />
+                            </div>
+                        </div>
+
+                        <div class="mb-4 d-flex align-items-center gap-3">
+                            <div class="form-check form-switch p-0" style="padding-left: 2.5em !important;">
+                                <input class="form-check-input ms-0" asp-for="IsActive" type="checkbox" id="isActiveSwitch" checked>
+                                <label class="form-check-label fw-bold" for="isActiveSwitch">Launch Immediately</label>
+                            </div>
+                        </div>
+
+                        <hr class="my-4 opacity-10">
+
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a asp-action="Promotions" class="btn btn-light px-4 rounded-pill">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-5 rounded-pill shadow-sm">Launch Campaign</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

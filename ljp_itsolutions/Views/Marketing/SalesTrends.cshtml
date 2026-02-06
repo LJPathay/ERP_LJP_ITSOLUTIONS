@@ -1,0 +1,85 @@
+@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Sales Trends Reports";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">📈 Sales Trends</h2>
+            <p class="text-muted">Analyze your revenue growth and seasonal trends</p>
+        </div>
+        <div class="d-flex gap-2">
+            <input type="month" class="form-control" value="@DateTime.Now.ToString("yyyy-MM")">
+            <button class="btn btn-primary"><i class="fas fa-sync-alt me-2"></i>Refresh</button>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-5 d-flex align-items-center justify-content-center bg-light-subtle rounded-4" style="min-height: 400px;">
+                    <div class="text-center">
+                        <div class="pulse-icon mb-4">
+                            <i class="fas fa-chart-area fa-5x text-primary opacity-25"></i>
+                        </div>
+                        <h4 class="fw-bold">Interactive Sales Visualization</h4>
+                        <p class="text-muted">Real-time data synchronization with your orders database.</p>
+                        <div class="d-flex justify-content-center gap-3 mt-4">
+                            <div class="px-4 py-2 bg-white shadow-sm rounded-pill small fw-bold"><i class="fas fa-circle text-primary me-2"></i>Daily Sales</div>
+                            <div class="px-4 py-2 bg-white shadow-sm rounded-pill small fw-bold"><i class="fas fa-circle text-success me-2"></i>Target</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+            <h5 class="fw-bold">Daily Revenue Breakdown</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Date</th>
+                            <th class="text-end">Orders Count</th>
+                            <th class="text-end">Average Ticket</th>
+                            <th class="text-end pe-4">Total Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-bold">@item.Date.ToLongDateString()</td>
+                                <td class="text-end">12</td>
+                                <td class="text-end">$14.50</td>
+                                <td class="text-end pe-4 fw-bold text-success">$@item.TotalSales.ToString("N2")</td>
+                            </tr>
+                        }
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">No sales data found for the selected period.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .pulse-icon {
+        animation: pulse 2s infinite;
+    }
+    @@keyframes pulse {
+        0% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.05); opacity: 1; }
+        100% { transform: scale(1); opacity: 0.8; }
+    }
+</style>

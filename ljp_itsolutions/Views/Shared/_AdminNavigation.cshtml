@@ -21,32 +21,30 @@
     bool IsAnySystemSettingActive() => IsTransactionsActive() || IsSystemSettingsActive() || IsBackupsActive();
 }
 
-<ul class="nav flex-column gap-2">
-    <li class="nav-item">
-        <a class="nav-link @(IsDashboardActive() ? "active" : "")" href="@Url.Action("Index", "Admin")">
-            <i class="fas fa-th-large"></i>
-            <span>Dashboard</span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link @(IsUsersActive() ? "active" : "")" href="@Url.Action("Users", "Admin")">
-            <i class="fas fa-users"></i>
-            <span>Manage Users & Roles</span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link @(IsAuditLogsActive() ? "active" : "")" href="@Url.Action("AuditLogs", "Admin")">
-            <i class="fas fa-file-alt"></i>
-            <span>View Audit Logs</span>
-        </a>
-    </li>
-    <li class="nav-item dropdown">
-        <a class="nav-link @(IsAnyReportActive() ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-chart-bar"></i>
+<div class="nav flex-column gap-2">
+    <a class="nav-link d-flex align-items-center gap-3 @(IsDashboardActive() ? "active" : "")" href="@Url.Action("Index", "Admin")">
+        <i class="fas fa-th-large opacity-75"></i>
+        <span>Dashboard</span>
+    </a>
+
+    <a class="nav-link d-flex align-items-center gap-3 @(IsUsersActive() ? "active" : "")" href="@Url.Action("Users", "Admin")">
+        <i class="fas fa-users opacity-75"></i>
+        <span>Manage Users</span>
+    </a>
+
+    <a class="nav-link d-flex align-items-center gap-3 @(IsAuditLogsActive() ? "active" : "")" href="@Url.Action("AuditLogs", "Admin")">
+        <i class="fas fa-file-alt opacity-75"></i>
+        <span>Audit Logs</span>
+    </a>
+
+    <!-- Reports Dropdown -->
+    <div class="nav-item dropdown">
+        <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret @(IsAnyReportActive() ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-chart-bar opacity-75"></i>
             <span>Reports</span>
-            <i class="fas fa-chevron-down ms-auto" style="font-size: 0.8rem; opacity: 0.7;"></i>
+            <i class="fas fa-chevron-down ms-auto x-small opacity-50"></i>
         </a>
-        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+        <ul class="dropdown-menu shadow-lg border-0">
             <li>
                 <a class="dropdown-item @(IsCashierReportsActive() ? "active" : "") d-flex align-items-center gap-2" href="@Url.Action("Reports_Cashier", "Admin")">
                     <i class="fas fa-cash-register opacity-75"></i>
@@ -66,14 +64,16 @@
                 </a>
             </li>
         </ul>
-    </li>
-    <li class="nav-item dropdown">
-        <a class="nav-link @(IsAnySystemSettingActive() ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-cogs"></i>
-            <span>System Settings</span>
-            <i class="fas fa-chevron-down ms-auto" style="font-size: 0.8rem; opacity: 0.7;"></i>
+    </div>
+
+    <!-- System Dropdown -->
+    <div class="nav-item dropdown">
+        <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret @(IsAnySystemSettingActive() ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-cogs opacity-75"></i>
+            <span>System</span>
+            <i class="fas fa-chevron-down ms-auto x-small opacity-50"></i>
         </a>
-        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+        <ul class="dropdown-menu shadow-lg border-0">
             <li>
                 <a class="dropdown-item @(IsTransactionsActive() ? "active" : "") d-flex align-items-center gap-2" href="@Url.Action("Transactions", "Admin")">
                     <i class="fas fa-exchange-alt opacity-75"></i>
@@ -93,5 +93,36 @@
                 </a>
             </li>
         </ul>
-    </li>
-</ul>
+    </div>
+</div>
+
+<style>
+    .nav-link {
+        color: var(--text-light) !important;
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-weight: 500;
+        margin: 0 10px;
+        transition: all 0.2s;
+    }
+    .no-caret::after { display: none !important; }
+    .dropdown-menu {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 8px;
+        margin-top: 5px !important;
+        width: calc(100% - 20px);
+        left: 10px !important;
+    }
+    .dropdown-item {
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+    .dropdown-item.active {
+        background: var(--primary-color) !important;
+        color: #ffffff !important;
+    }
+    .x-small { font-size: 0.75rem; }
+</style>

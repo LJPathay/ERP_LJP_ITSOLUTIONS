@@ -1,38 +1,117 @@
 using Microsoft.AspNetCore.Mvc;
-using ljp_itsolutions.Services;
+using ljp_itsolutions.Data;
+using ljp_itsolutions.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ljp_itsolutions.Controllers
 {
     [Authorize(Roles = "MarketingStaff,Admin")]
     public class MarketingController : Controller
     {
-        private readonly InMemoryStore _store;
+        private readonly ApplicationDbContext _db;
 
-        public MarketingController(InMemoryStore store)
+        public MarketingController(ApplicationDbContext db)
         {
-            _store = store;
+            _db = db;
         }
 
-        public IActionResult Dashboard()
+        // 📊 Dashboard (Analytics Overview)
+        public async Task<IActionResult> Dashboard()
         {
-            // stub KPIs
-            var model = new { Promos = new[] { "Summer Sale", "Buy 1 Get 1" } };
+            var totalCustomers = await _db.Customers.CountAsync();
+            var activePromotions = await _db.Promotions.CountAsync(p => p.IsActive && p.EndDate >= DateTime.Now);
+            var totalOrders = await _db.Orders.CountAsync();
+            var totalPointsAwarded = await _db.Customers.SumAsync(c => (long)c.Points);
+
+            var model = new
+            {
+                TotalCustomers = totalCustomers,
+                ActivePromotions = activePromotions,
+                TotalOrders = totalOrders,
+                TotalPointsAwarded = totalPointsAwarded
+            };
+
             return View(model);
         }
 
-        public IActionResult Promotions()
+        // 🎯 Promotions
+        public async Task<IActionResult> Promotions()
         {
-            // stub promotions list
-            var promos = new[] { new { Id = 1, Name = "Summer Sale", Active = true } };
-            return View(promos);
+            var promotions = await _db.Promotions.ToListAsync();
+            return View(promotions);
+        }
+
+        public IActionResult CreateCampaign()
+        {
+            return View();
         }
 
         [HttpPost]
-        public IActionResult CreatePromotion(string name)
+        public async Task<IActionResult> CreateCampaign(Promotion promotion)
         {
-            // stub: would persist promotion
-            return RedirectToAction("Promotions");
+            if (ModelState.IsValid)
+            {
+                _db.Promotions.Add(promotion);
+                await _db.SaveChangesAsync();
+                return RedirectToAction(nameof(Promotions));
+            }
+            return View(promotion);
+        }
+
+        public async Task<IActionResult> PromotionPerformance()
+        {
+            var performance = await _db.Promotions
+                .Include(p => p.Orders)
+                .Select(p => new
+                {
+                    p.PromotionName,
+                    UsageCount = p.Orders.Count,
+                    TotalDiscountedAmount = p.Orders.Sum(o => o.DiscountAmount)
+                })
+                .ToListAsync();
+            return View(performance);
+        }
+
+        // 👥 Customer Engagement
+        public async Task<IActionResult> Customers()
+        {
+            var customers = await _db.Customers.ToListAsync();
+            return View(customers);
+        }
+
+        public async Task<IActionResult> LoyaltyOverview()
+        {
+            var topCustomers = await _db.Customers
+                .OrderByDescending(c => c.Points)
+                .Take(10)
+                .ToListAsync();
+            return View(topCustomers);
+        }
+
+        public IActionResult RewardRedemptionLogs()
+        {
+            // Dummy data for now as we don't have redemption logs in the DB schema yet
+            return View();
+        }
+
+        // 📈 Reports
+        public async Task<IActionResult> SalesTrends()
+        {
+            var salesData = await _db.Orders
+                .GroupBy(o => o.OrderDate.Date)
+                .Select(g => new { Date = g.Key, TotalSales = g.Sum(o => o.FinalAmount) })
+                .OrderBy(g => g.Date)
+                .ToListAsync();
+            return View(salesData);
+        }
+
+        public IActionResult CampaignReports()
+        {
+            return View();
         }
     }
 }

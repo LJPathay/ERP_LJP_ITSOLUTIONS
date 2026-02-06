@@ -28,6 +28,28 @@
     gap: 20px;
 }
 
+.pos-header-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.search-bar {
+    max-width: 400px;
+}
+
+.search-bar .form-control {
+    border-radius: 0 12px 12px 0;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    box-shadow: none !important;
+}
+
+.search-bar .input-group-text {
+    border-radius: 12px 0 0 12px;
+    padding-left: 15px;
+}
+
 .category-filter {
     display: flex;
     gap: 12px;

@@ -11,22 +11,13 @@
 
 
 <div class="pos-container">
-    <!-- LEFT SIDE: Products -->
+    <div class="products-section">
         <div class="pos-header-actions mb-3">
             <div class="input-group search-bar">
                 <span class="input-group-text bg-white border-end-0">
                     <i class="fas fa-search text-muted"></i>
                 </span>
                 <input type="text" id="productSearch" class="form-control border-start-0" placeholder="Search products..." onkeyup="searchProducts()">
-            </div>
-            
-            <div class="customer-selection mt-2">
-                <select id="customerSelect" class="form-select">
-                    <option value="">Walk-in Customer</option>
-                    @* In a real app, we'd list customers from the DB here *@
-                    <option value="1">Jane Doe (120 pts)</option>
-                    <option value="2">John Smith (45 pts)</option>
-                </select>
             </div>
         </div>
 
@@ -55,7 +46,7 @@
                         }
                     </div>
                     <div class="product-info">
-                        <p class="product-name">@product.Name</p>
+                        <p class="product-name">@product.ProductName</p>
                         <p class="product-price">$@product.Price.ToString("F2")</p>
                     </div>
                 </div>
@@ -273,15 +264,6 @@
             payInput.value = paymentMethod;
             form.appendChild(payInput);
 
-            // Add Customer ID
-            const customerId = document.getElementById('customerSelect').value;
-            if (customerId) {
-                const custInput = document.createElement('input');
-                custInput.type = 'hidden';
-                custInput.name = 'customerId';
-                custInput.value = customerId;
-                form.appendChild(custInput);
-            }
 
             // Add Promo Code
             const promoCode = document.getElementById('promoCode').value;

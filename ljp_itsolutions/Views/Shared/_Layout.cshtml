@@ -33,6 +33,14 @@
                 {
                     <partial name="_CashierNavigation" />
                 }
+                else if (userRole == "MarketingStaff" || ViewContext.RouteData.Values["controller"]?.ToString() == "Marketing")
+                {
+                    <partial name="_MarketingNavigation" />
+                }
+                else if (userRole == "Manager" || ViewContext.RouteData.Values["controller"]?.ToString() == "Manager")
+                {
+                    <partial name="_ManagerNavigation" />
+                }
                 else if (userRole == "Admin" || ViewContext.RouteData.Values["controller"]?.ToString() == "Admin")
                 {
                     <partial name="_AdminNavigation" />

@@ -1,0 +1,137 @@
+@* Marketing Side Navigation with Dropdowns *@
+<div class="nav flex-column gap-2">
+    <!-- Dashboard always visible -->
+    <a class="nav-link d-flex align-items-center gap-3 @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")" asp-controller="Marketing" asp-action="Dashboard">
+        <i class="fas fa-chart-pie opacity-75"></i>
+        <span>Dashboard</span>
+    </a>
+
+    <!-- Promotions Dropdown -->
+    <div class="nav-item dropdown">
+        <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-tags opacity-75"></i>
+            <span>Promotions</span>
+            <i class="fas fa-chevron-down ms-auto x-small opacity-50"></i>
+        </a>
+        <ul class="dropdown-menu shadow-lg border-0">
+            <li>
+                <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Promotions" ? "active" : "") d-flex align-items-center gap-2" asp-controller="Marketing" asp-action="Promotions">
+                    <i class="fas fa-list-ul opacity-75"></i>
+                    <span>Manage Promotions</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "CreateCampaign" ? "active" : "") d-flex align-items-center gap-2" asp-controller="Marketing" asp-action="CreateCampaign">
+                    <i class="fas fa-plus-circle opacity-75"></i>
+                    <span>Create Campaign</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "PromotionPerformance" ? "active" : "") d-flex align-items-center gap-2" asp-controller="Marketing" asp-action="PromotionPerformance">
+                    <i class="fas fa-chart-line opacity-75"></i>
+                    <span>Performance</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Customer Engagement Dropdown -->
+    <div class="nav-item dropdown">
+        <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-users opacity-75"></i>
+            <span>Customers</span>
+            <i class="fas fa-chevron-down ms-auto x-small opacity-50"></i>
+        </a>
+        <ul class="dropdown-menu shadow-lg border-0">
+            <li>
+                <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Customers" ? "active" : "") d-flex align-items-center gap-2" asp-controller="Marketing" asp-action="Customers">
+                    <i class="fas fa-user-friends opacity-75"></i>
+                    <span>View Customers</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "LoyaltyOverview" ? "active" : "") d-flex align-items-center gap-2" asp-controller="Marketing" asp-action="LoyaltyOverview">
+                    <i class="fas fa-award opacity-75"></i>
+                    <span>Loyalty Overview</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "RewardRedemptionLogs" ? "active" : "") d-flex align-items-center gap-2" asp-controller="Marketing" asp-action="RewardRedemptionLogs">
+                    <i class="fas fa-history opacity-75"></i>
+                    <span>Redemption Logs</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Reports Dropdown -->
+    <div class="nav-item dropdown">
+        <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-file-invoice-dollar opacity-75"></i>
+            <span>Reports</span>
+            <i class="fas fa-chevron-down ms-auto x-small opacity-50"></i>
+        </a>
+        <ul class="dropdown-menu shadow-lg border-0">
+            <li>
+                <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "SalesTrends" ? "active" : "") d-flex align-items-center gap-2" asp-controller="Marketing" asp-action="SalesTrends">
+                    <i class="fas fa-chart-area opacity-75"></i>
+                    <span>Sales Trends</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "CampaignReports" ? "active" : "") d-flex align-items-center gap-2" asp-controller="Marketing" asp-action="CampaignReports">
+                    <i class="fas fa-file-pdf opacity-75"></i>
+                    <span>Campaign Reports</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<style>
+    .nav-link {
+        color: var(--text-light) !important;
+        padding: 12px 20px;
+        border-radius: 12px;
+        transition: all 0.2s;
+        font-weight: 500;
+        text-decoration: none;
+        margin: 0 10px;
+    }
+    .nav-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff !important;
+    }
+    .nav-link.active {
+        background: var(--accent-color) !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    .no-caret::after {
+        display: none !important;
+    }
+    .dropdown-menu {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 8px;
+        margin-top: 5px !important;
+        width: calc(100% - 20px);
+        left: 10px !important;
+    }
+    .dropdown-item {
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-weight: 500;
+        color: var(--text-primary);
+        transition: all 0.2s;
+    }
+    .dropdown-item:hover {
+        background: var(--accent-light);
+        color: var(--primary-color);
+    }
+    .dropdown-item.active {
+        background: var(--primary-color) !important;
+        color: #ffffff !important;
+    }
+    .x-small { font-size: 0.75rem; }
+</style>

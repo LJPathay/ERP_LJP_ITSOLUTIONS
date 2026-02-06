@@ -1,0 +1,70 @@
+@model IEnumerable<ljp_itsolutions.Models.Customer>
+@{
+    ViewData["Title"] = "Customer Management";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Customer Engagement</h2>
+            <p class="text-muted">Manage your customer loyalty and contact list</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary bg-white"><i class="fas fa-filter me-2"></i>Filter</button>
+            <button class="btn btn-primary shadow-sm"><i class="fas fa-user-plus me-2"></i>Add Customer</button>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light-subtle">
+                        <tr>
+                            <th class="ps-4 py-3">Customer</th>
+                            <th class="py-3">Contact</th>
+                            <th class="py-3">Points</th>
+                            <th class="py-3">Level</th>
+                            <th class="py-3">Last Active</th>
+                            <th class="pe-4 py-3 text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var customer in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
+                                            @customer.FullName.Substring(0, 1)
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">@customer.FullName</div>
+                                            <small class="text-muted">ID: #CST-@customer.CustomerID</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>@customer.PhoneNumber</td>
+                                <td>
+                                    <div class="fw-bold text-dark">@customer.Points</div>
+                                    <div class="progress mt-1" style="height: 4px; width: 80px;">
+                                        <div class="progress-bar bg-warning" style="width: @(Math.Min(customer.Points / 20.0, 100))%"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (customer.Points > 1000) { <span class="badge bg-warning text-dark">Gold</span> }
+                                    else if (customer.Points > 500) { <span class="badge bg-secondary">Silver</span> }
+                                    else { <span class="badge bg-light text-dark">Bronze</span> }
+                                </td>
+                                <td>3 days ago</td>
+                                <td class="pe-4 text-end">
+                                    <button class="btn btn-sm btn-light rounded-pill px-3">View Profile</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
