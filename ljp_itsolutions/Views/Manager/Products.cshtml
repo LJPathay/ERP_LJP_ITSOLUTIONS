@@ -1,0 +1,140 @@
+@model IEnumerable<ljp_itsolutions.Models.Product>
+@{
+    ViewData["Title"] = "Product Management";
+    var categories = ViewBag.Categories as IEnumerable<ljp_itsolutions.Models.Category>;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Product Management</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+            <i class="fas fa-plus me-2"></i>Add New Product
+        </button>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Product</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="product-thumb me-3">
+                                            @if (!string.IsNullOrEmpty(item.ImageURL))
+                                            {
+                                                <img src="@item.ImageURL" alt="@item.ProductName" class="rounded" style="width: 48px; height: 48px; object-fit: cover;" />
+                                            }
+                                            else
+                                            {
+                                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                                    <i class="fas fa-image text-muted"></i>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">@item.ProductName</div>
+                                            <small class="text-muted">ID: @item.ProductID</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-info bg-opacity-10 text-info">@item.Category?.CategoryName</span></td>
+                                <td>$@item.Price.ToString("F2")</td>
+                                <td>
+                                    <form asp-action="UpdateStock" method="post" class="d-flex align-items-center" style="max-width: 120px;">
+                                        <input type="hidden" name="id" value="@item.ProductID" />
+                                        <input type="number" name="stock" value="@item.StockQuantity" class="form-control form-control-sm me-2" />
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary py-0 px-2"><i class="fas fa-save fa-xs"></i></button>
+                                    </form>
+                                </td>
+                                <td>
+                                    @if (item.StockQuantity > 0)
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success">In Stock</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger bg-opacity-10 text-danger">Out of Stock</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-sm btn-light"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-sm btn-light text-danger"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Add New Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="CreateProduct" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Product Photo</label>
+                        <input type="file" name="photo" class="form-control" accept="image/*" required />
+                        <div class="form-text">Choose a high-quality photo for the POS display.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Product Name</label>
+                        <input type="text" name="ProductName" class="form-control" required placeholder="e.g. Iced Vanilla Latte" />
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label">Category</label>
+                            <select name="CategoryID" class="form-select" required>
+                                <option value="">Select Category</option>
+                                @foreach (var cat in categories)
+                                {
+                                    <option value="@cat.CategoryID">@cat.CategoryName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label class="form-label">Price ($)</label>
+                            <input type="number" step="0.01" name="Price" class="form-control" required placeholder="0.00" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Initial Stock</label>
+                        <input type="number" name="StockQuantity" class="form-control" required value="0" />
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4">Create Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .product-thumb {
+        border: 1px solid #eee;
+        padding: 2px;
+        background: #fff;
+    }
+</style>

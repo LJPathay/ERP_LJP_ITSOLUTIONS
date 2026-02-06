@@ -15,7 +15,6 @@ namespace ljp_itsolutions.Models
 
         public virtual ICollection<User> Users { get; set; } = new List<User>();
 
-        // Helpers for common roles
         public const string Admin = "Admin";
         public const string Manager = "Manager";
         public const string Cashier = "Cashier";
