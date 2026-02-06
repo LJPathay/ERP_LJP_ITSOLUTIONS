@@ -1,31 +1,293 @@
+@model IEnumerable<ljp_itsolutions.Models.Product>
 @{
-    ViewData["Title"] = "POS";
+    ViewData["Title"] = "POS - Create Order";
+    var products = Model ?? Enumerable.Empty<ljp_itsolutions.Models.Product>();
+    var categories = products.Select(p => p.Category?.CategoryName).Where(c => c != null).Distinct().OrderBy(c => c).ToList();
 }
 
-@section Navigation {
-    <ul class="nav flex-column gap-2">
-        <li class="nav-item">
-            <a class="nav-link active" href="@Url.Action("Index", "Cashier")">
-                <i class="fas fa-shopping-cart"></i>
-                <span>Create Order</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="@Url.Action("TransactionHistory", "Cashier")">
-                <i class="fas fa-file-invoice"></i>
-                <span>Transaction History</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="@Url.Action("ProcessPayment", "Cashier")">
-                <i class="fas fa-credit-card"></i>
-                <span>Process Payment</span>
-            </a>
-        </li>
-    </ul>
+@section Styles {
+    <link rel="stylesheet" href="~/css/pos-cashier.css" asp-append-version="true" />
 }
 
-<div class="container-fluid">
-    <h3>POS - Cashier Interface</h3>
-    <p>This is a placeholder for the POS / Create Order interface.</p>
+
+<div class="pos-container">
+    <!-- LEFT SIDE: Products -->
+        <div class="pos-header-actions mb-3">
+            <div class="input-group search-bar">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" id="productSearch" class="form-control border-start-0" placeholder="Search products..." onkeyup="searchProducts()">
+            </div>
+            
+            <div class="customer-selection mt-2">
+                <select id="customerSelect" class="form-select">
+                    <option value="">Walk-in Customer</option>
+                    @* In a real app, we'd list customers from the DB here *@
+                    <option value="1">Jane Doe (120 pts)</option>
+                    <option value="2">John Smith (45 pts)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="category-filter">
+            <button class="category-btn active" onclick="filterCategory('All')">All Items</button>
+            @foreach (var cat in categories)
+            {
+                <button class="category-btn" onclick="filterCategory('@cat')">@cat</button>
+            }
+        </div>
+
+        <div class="products-grid" id="productsGrid">
+            @foreach (var product in Model)
+            {
+                <div class="product-card" data-category="@product.Category?.CategoryName" onclick="addToCart('@product.ProductID', '@product.ProductName', @product.Price)">
+                    <div class="product-image">
+                        @if (product.Category?.CategoryName == "Coffee") { <i class="fas fa-coffee"></i> }
+                        else if (product.Category?.CategoryName == "Tea") { <i class="fas fa-leaf"></i> }
+                        else { <i class="fas fa-cookie"></i> }
+                    </div>
+                    <div class="product-info">
+                        <p class="product-name">@product.Name</p>
+                        <p class="product-price">$@product.Price.ToString("F2")</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- RIGHT SIDE: Cart -->
+    <div class="cart-section">
+        <div class="cart-header">
+            <h4>Current Order</h4>
+            <button class="btn btn-sm btn-outline-danger" onclick="clearCart()">Clear</button>
+        </div>
+
+        <div class="cart-items" id="cartItems">
+            <!-- Items will be injected here -->
+            <div class="text-center text-muted py-5" id="emptyCartMsg">
+                <i class="fas fa-shopping-basket fa-3x mb-3 opacity-20"></i>
+                <p>No items in cart</p>
+            </div>
+        </div>
+
+        <div class="cart-footer">
+            <div class="promotion-area mb-3">
+                <div class="input-group input-group-sm">
+                    <input type="text" id="promoCode" class="form-control" placeholder="Promo code">
+                    <button class="btn btn-outline-secondary" onclick="applyPromo()">Apply</button>
+                </div>
+                <small id="promoStatus" class="text-success" style="display:none"></small>
+            </div>
+
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span id="subtotal">$0.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Tax (5%)</span>
+                <span id="tax">$0.00</span>
+            </div>
+            <div class="summary-row total">
+                <span>Total</span>
+                <span id="total">$0.00</span>
+            </div>
+
+            <div class="payment-methods">
+                <button class="payment-btn active" onclick="setPayment('Cash')">
+                    <i class="fas fa-money-bill-wave mb-1"></i>
+                    <span>Cash</span>
+                </button>
+                <button class="payment-btn" onclick="setPayment('Card')">
+                    <i class="fas fa-credit-card mb-1"></i>
+                    <span>Card</span>
+                </button>
+                <button class="payment-btn" onclick="setPayment('E-Wallet')">
+                    <i class="fas fa-wallet mb-1"></i>
+                    <span>E-Wallet</span>
+                </button>
+            </div>
+
+            <button class="pay-now-btn" onclick="processPayment()">
+                <i class="fas fa-check-circle"></i>
+                <span>Confirm & Pay</span>
+            </button>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        let cart = [];
+        let paymentMethod = 'Cash';
+
+        function addToCart(id, name, price) {
+            const existing = cart.find(item => item.id === id);
+            if (existing) {
+                existing.qty++;
+            } else {
+                cart.push({ id, name, price, qty: 1 });
+            }
+            renderCart();
+        }
+
+        function updateQty(id, delta) {
+            const item = cart.find(i => i.id === id);
+            if (item) {
+                item.qty += delta;
+                if (item.qty <= 0) {
+                    cart = cart.filter(i => i.id !== id);
+                }
+            }
+            renderCart();
+        }
+
+        function clearCart() {
+            cart = [];
+            renderCart();
+        }
+
+        function renderCart() {
+            const cartContainer = document.getElementById('cartItems');
+            const emptyMsg = document.getElementById('emptyCartMsg');
+            
+            if (cart.length === 0) {
+                cartContainer.innerHTML = '';
+                cartContainer.appendChild(emptyMsg);
+                emptyMsg.style.display = 'block';
+                updateTotals(0);
+                return;
+            }
+
+            emptyMsg.style.display = 'none';
+            cartContainer.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <h6>${item.name}</h6>
+                        <span>$${item.price.toFixed(2)} / unit</span>
+                    </div>
+                    <div class="cart-item-qty">
+                        <button class="qty-btn" onclick="updateQty('${item.id}', -1)">-</button>
+                        <span>${item.qty}</span>
+                        <button class="qty-btn" onclick="updateQty('${item.id}', 1)">+</button>
+                    </div>
+                    <div class="fw-bold">$${(item.price * item.qty).toFixed(2)}</div>
+                </div>
+            `).join('');
+
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            updateTotals(subtotal);
+        }
+
+        function updateTotals(subtotal) {
+            const tax = subtotal * 0.05;
+            const total = subtotal + tax;
+
+            document.getElementById('subtotal').innerText = `$${subtotal.toFixed(2)}`;
+            document.getElementById('tax').innerText = `$${tax.toFixed(2)}`;
+            document.getElementById('total').innerText = `$${total.toFixed(2)}`;
+        }
+
+        function searchProducts() {
+            const query = document.getElementById('productSearch').value.toLowerCase();
+            document.querySelectorAll('.product-card').forEach(card => {
+                const name = card.querySelector('.product-name').innerText.toLowerCase();
+                if (name.includes(query)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function applyPromo() {
+            const code = document.getElementById('promoCode').value;
+            const status = document.getElementById('promoStatus');
+            if (code.toUpperCase() === 'FIRSTBUY') {
+                status.innerText = 'Promo applied: 10% Off';
+                status.style.display = 'block';
+                status.classList.replace('text-danger', 'text-success');
+                // In a real app, this would recalculate totals
+            } else {
+                status.innerText = 'Invalid code';
+                status.style.display = 'block';
+                status.classList.replace('text-success', 'text-danger');
+            }
+        }
+
+        function filterCategory(category) {
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText === category || (category === 'All' && btn.innerText === 'All Items'));
+            });
+
+            // Filter products
+            document.querySelectorAll('.product-card').forEach(card => {
+                if (category === 'All' || card.dataset.category === category) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            // Clear search when switching categories
+            document.getElementById('productSearch').value = '';
+        }
+
+        function setPayment(method) {
+            paymentMethod = method;
+            document.querySelectorAll('.payment-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText.includes(method));
+            });
+        }
+
+        function processPayment() {
+            if (cart.length === 0) {
+                alert('Please add items to cart first.');
+                return;
+            }
+            
+            const productIds = cart.flatMap(item => Array(item.qty).fill(item.id));
+            
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("PlaceOrder", "Cashier")';
+            
+            productIds.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'productIds';
+                input.value = id;
+                form.appendChild(input);
+            });
+
+            // Add payment method
+            const payInput = document.createElement('input');
+            payInput.type = 'hidden';
+            payInput.name = 'paymentMethod';
+            payInput.value = paymentMethod;
+            form.appendChild(payInput);
+
+            // Add Customer ID
+            const customerId = document.getElementById('customerSelect').value;
+            if (customerId) {
+                const custInput = document.createElement('input');
+                custInput.type = 'hidden';
+                custInput.name = 'customerId';
+                custInput.value = customerId;
+                form.appendChild(custInput);
+            }
+
+            // Add Promo Code
+            const promoCode = document.getElementById('promoCode').value;
+            if (promoCode) {
+                const promoInput = document.createElement('input');
+                promoInput.type = 'hidden';
+                promoInput.name = 'promoCode';
+                promoInput.value = promoCode;
+                form.appendChild(promoInput);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+}

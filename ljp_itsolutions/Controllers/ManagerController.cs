@@ -34,11 +34,11 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
-        public IActionResult UpdateStock(Guid id, int stock)
+        public IActionResult UpdateStock(int id, int stock)
         {
             if (_store.Products.TryGetValue(id, out var p))
             {
-                p.Stock = stock;
+                p.StockQuantity = stock;
             }
             return RedirectToAction("Products");
         }

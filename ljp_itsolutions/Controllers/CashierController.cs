@@ -1,47 +1,137 @@
 using Microsoft.AspNetCore.Mvc;
 using ljp_itsolutions.Services;
 using ljp_itsolutions.Models;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using ljp_itsolutions.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace ljp_itsolutions.Controllers
 {
+    [Authorize(Roles = "Cashier,Admin")]
     public class CashierController : Controller
     {
+        private readonly ApplicationDbContext _db;
         private readonly InMemoryStore _store;
 
-        public CashierController(InMemoryStore store)
+        public CashierController(ApplicationDbContext db, InMemoryStore store)
         {
+            _db = db;
             _store = store;
         }
 
-        public IActionResult CreateOrder()
+        public async Task<IActionResult> CreateOrder()
         {
-            return View(_store.Products.Values);
+            var products = await _db.Products.Include(p => p.Category).Where(p => p.IsAvailable).ToListAsync();
+            return View(products);
         }
 
         [HttpPost]
-        public IActionResult PlaceOrder(Guid cashierId, List<Guid> productIds)
+        public async Task<IActionResult> PlaceOrder(List<int> productIds, string paymentMethod = "Cash", int? customerId = null, string? promoCode = null)
         {
-            var order = new Order { CashierId = cashierId };
-            foreach (var pid in productIds)
+            if (productIds == null || !productIds.Any())
+                return RedirectToAction("Index", "POS");
+
+            // 1. Get current user ID from claims
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out var cashierId))
+                return Challenge();
+
+            // 2. Create the order
+            var order = new Order
             {
-                if (_store.Products.TryGetValue(pid, out var p) && p.Stock > 0)
+                OrderID = Guid.NewGuid(),
+                OrderDate = DateTime.Now,
+                CashierID = cashierId,
+                CustomerID = customerId,
+                PaymentMethod = paymentMethod,
+                PaymentStatus = "Completed"
+            };
+
+            // Basic Promotion handling
+            if (!string.IsNullOrEmpty(promoCode))
+            {
+                var promotion = await _db.Promotions.FirstOrDefaultAsync(p => p.PromotionName == promoCode && p.IsActive);
+                if (promotion != null)
                 {
-                    order.Lines.Add(new OrderLine { ProductId = p.Id, ProductName = p.Name, Price = p.Price, Quantity = 1 });
-                    p.Stock -= 1;
+                    order.PromotionID = promotion.PromotionID;
                 }
             }
-            _store.Orders[order.Id] = order;
+
+            // 3. Group IDs to simplify quantity handling
+            var productGroups = productIds.GroupBy(id => id);
+            decimal total = 0;
+
+            foreach (var group in productGroups)
+            {
+                var product = await _db.Products.FindAsync(group.Key);
+                if (product != null)
+                {
+                    int qty = group.Count();
+                    var detail = new OrderDetail
+                    {
+                        OrderID = order.OrderID,
+                        ProductID = product.ProductID,
+                        Quantity = qty,
+                        UnitPrice = product.Price,
+                        Subtotal = product.Price * qty
+                    };
+                    order.OrderDetails.Add(detail);
+                    total += detail.Subtotal;
+
+                    // Update stock
+                    product.StockQuantity -= qty;
+                }
+            }
+
+            order.TotalAmount = total;
+            order.FinalAmount = total; // No discount for now
+
+            // 4. Record Payment
+            order.Payments.Add(new Payment
+            {
+                OrderID = order.OrderID,
+                PaymentDate = DateTime.Now,
+                AmountPaid = total,
+                PaymentMethod = paymentMethod,
+                PaymentStatus = "Success"
+            });
+
+            // 5. Create Inventory Log
+            foreach (var detail in order.OrderDetails)
+            {
+                _db.InventoryLogs.Add(new InventoryLog
+                {
+                    ProductID = detail.ProductID,
+                    QuantityChange = -detail.Quantity,
+                    ChangeType = "Sale",
+                    LogDate = DateTime.Now,
+                    Remarks = $"Order #{order.OrderID.ToString().Substring(0, 8)}"
+                });
+            }
+
+            _db.Orders.Add(order);
+            await _db.SaveChangesAsync();
+
+            // Notify UI (via TempData for simple redirect)
+            TempData["SuccessMessage"] = "Order placed successfully!";
+            
             return RedirectToAction("TransactionHistory");
         }
 
-        public IActionResult TransactionHistory()
+        public async Task<IActionResult> TransactionHistory()
         {
-            return View(_store.Orders.Values);
+            var orders = await _db.Orders
+                .Include(o => o.OrderDetails)
+                .Include(o => o.Cashier)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+            return View(orders);
         }
 
         public IActionResult ProcessPayment(Guid orderId, decimal amount)
         {
-            // stub: would integrate with payment provider
+            // Fully integrated into PlaceOrder for the POS flow
             return RedirectToAction("TransactionHistory");
         }
     }

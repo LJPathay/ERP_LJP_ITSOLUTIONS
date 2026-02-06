@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin-dashboard.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     @{
@@ -23,12 +24,16 @@
                     <img src="@(Url.Content("~/images/logo.png"))" alt="Coffee ERP" class="sidebar-logo" />
                 </div>
             </div>
-            <nav class="nav flex-column gap-2">
+            <nav class="nav flex-column gap-2 h-100">
                 @if (IsSectionDefined("Navigation"))
                 {
                     @RenderSection("Navigation")
                 }
-                else if (ViewContext.RouteData.Values["controller"]?.ToString() == "Admin")
+                else if (userRole == "Cashier")
+                {
+                    <partial name="_CashierNavigation" />
+                }
+                else if (userRole == "Admin" || ViewContext.RouteData.Values["controller"]?.ToString() == "Admin")
                 {
                     <partial name="_AdminNavigation" />
                 }
@@ -37,7 +42,7 @@
                     <a class="nav-link active" href="/Admin/Dashboard">Dashboard</a>
                     <a class="nav-link" href="/Admin/Users">User & Access Management</a>
                     <a class="nav-link" href="/Admin/Reports">CRM</a>
-                    <a class="nav-link" href="/Cashier/CreateOrder">POS & Orders</a>
+                    <a class="nav-link" href="/POS/Index">POS & Orders</a>
                     <a class="nav-link" href="/Manager/Products">Product & Menu</a>
                     <a class="nav-link" href="/Marketing/Promotions">Marketing Automation</a>
                     <a class="nav-link" href="/Manager/Reports">Business Intelligence</a>
@@ -48,6 +53,26 @@
         </aside>
 
         <main class="content flex-fill p-4">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="position-fixed top-0 end-0 p-3" style="z-index: 1060">
+                    <div class="toast show animate__animated animate__fadeInRight" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header bg-success text-white">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong class="me-auto">Success</strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            @TempData["SuccessMessage"]
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    setTimeout(() => {
+                        $('.toast').fadeOut();
+                    }, 4000);
+                </script>
+            }
             <header class="d-flex justify-content-between align-items-center mb-4">
                 <div class="header-left">
                     <h1 class="h3 mb-0 fw-bold text-dark">Welcome back, @username</h1>
@@ -56,34 +81,6 @@
                     </div>
                 </div>
                 <div class="header-right d-flex align-items-center gap-3">
-                    <!-- Notifications -->
-                    <div class="dropdown">
-                        <button class="btn btn-header-icon position-relative" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-badge">3</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg shadow-lg border-0" style="min-width: 320px;">
-                            <li class="dropdown-header d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">Notifications</span>
-                                <a href="#" class="text-decoration-none small">Mark all as read</a>
-                            </li>
-                            <li class="dropdown-item notification-item">
-                                <div class="d-flex align-items-start">
-                                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3">
-                                        <i class="fas fa-user-plus fa-sm"></i>
-                                    </div>
-                                    <div>
-                                        <p class="mb-0 small fw-bold">New user registered</p>
-                                        <p class="mb-0 x-small text-muted">Jane Doe joined the system</p>
-                                        <small class="text-muted x-small">5 mins ago</small>
-                                    </div>
-                                </div>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-center small text-primary fw-bold" href="#">View all notifications</a></li>
-                        </ul>
-                    </div>
-
                     <!-- User Profile -->
                     <div class="dropdown">
                         <button class="btn btn-profile d-flex align-items-center gap-3 shadow-sm border-0 bg-white" data-bs-toggle="dropdown" aria-expanded="false">
@@ -97,15 +94,13 @@
                             <i class="fas fa-chevron-down x-small text-muted ms-1"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2">
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-user-circle me-2 opacity-50"></i>My Profile</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2 opacity-50"></i>Account Settings</a></li>
-                            <li><hr class="dropdown-divider"></li>
                             @if (User?.Identity?.IsAuthenticated == true)
                             {
                                 <li>
                                     <form method="post" asp-controller="Account" asp-action="Logout">
-                                        <button type="submit" class="dropdown-item text-danger">
-                                            <i class="fas fa-sign-out-alt me-2"></i>Sign Out
+                                        <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2 py-2">
+                                            <i class="fas fa-sign-out-alt opacity-75"></i>
+                                            <span>Sign Out</span>
                                         </button>
                                     </form>
                                 </li>

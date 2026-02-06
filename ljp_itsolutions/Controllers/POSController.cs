@@ -1,20 +1,32 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ljp_itsolutions.Services;
+using Microsoft.EntityFrameworkCore;
 
-using Microsoft.AspNetCore.Authorization;
 namespace ljp_itsolutions.Controllers
 {
     [Authorize(Roles = "Cashier,Admin")]
     public class POSController : Controller
     {
-        public IActionResult Index()
+        private readonly ljp_itsolutions.Data.ApplicationDbContext _db;
+
+        public POSController(ljp_itsolutions.Data.ApplicationDbContext db)
         {
-            return View();
+            _db = db;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            var products = await _db.Products
+                .Include(p => p.Category)
+                .Where(p => p.IsAvailable)
+                .ToListAsync();
+            return View(products);
         }
 
         public IActionResult CreateOrder()
         {
-            return View();
+            return RedirectToAction("Index");
         }
     }
 }

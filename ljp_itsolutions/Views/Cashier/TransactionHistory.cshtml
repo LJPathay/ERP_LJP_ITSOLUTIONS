@@ -1,0 +1,104 @@
+@model IEnumerable<ljp_itsolutions.Models.Order>
+@{
+    ViewData["Title"] = "Transaction History";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Transaction History</h2>
+            <p class="text-muted">Review and manage past orders</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-white shadow-sm border-0"><i class="fas fa-download me-2 text-primary"></i>Export CSV</button>
+            <button class="btn btn-primary shadow-sm px-4" onclick="location.href='@Url.Action("Index", "POS")'"><i class="fas fa-plus me-2"></i>New Order</button>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="border-radius: 20px; overflow: hidden;">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4 py-3 border-0">Order ID</th>
+                            <th class="py-3 border-0">Date & Time</th>
+                            <th class="py-3 border-0">Items Count</th>
+                            <th class="py-3 border-0">Total Amount</th>
+                            <th class="py-3 border-0">Status</th>
+                            <th class="py-3 border-0 text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var orders = Model ?? Enumerable.Empty<ljp_itsolutions.Models.Order>();
+                        }
+                        @if (!orders.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="opacity-50">
+                                        <i class="fas fa-receipt fa-3x mb-3"></i>
+                                        <p>No transactions found</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var order in orders.OrderByDescending(o => o.OrderID))
+                            {
+                                <tr>
+                                    <td class="ps-4 fw-bold">#@order.OrderID.ToString().Substring(0, 8).ToUpper()</td>
+                                    <td>@order.OrderDate.ToString("MMM dd, yyyy HH:mm")</td>
+                                    <td>@order.OrderDetails.Count</td>
+                                    <td class="fw-bold text-dark">$@order.FinalAmount.ToString("F2")</td>
+                                    <td>
+                                        <span class="badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-2">@order.PaymentStatus</span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <button class="btn btn-icon btn-light" title="View Details"><i class="fas fa-eye text-primary"></i></button>
+                                        <button class="btn btn-icon btn-light" title="Print Receipt"><i class="fas fa-print text-muted"></i></button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        border: none;
+    }
+    .btn-icon:hover {
+        background: #eef2f7;
+        transform: translateY(-2px);
+    }
+    .btn-white {
+        background: white;
+        color: #2d3436;
+        font-weight: 600;
+    }
+    .table thead th {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #636e72;
+    }
+    .table tbody td {
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
+</style>

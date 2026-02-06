@@ -34,7 +34,7 @@ namespace ljp_itsolutions.Controllers
             var user = await _db.Users.FindAsync(guid);
             if (user != null)
             {
-                user.IsArchived = true;
+                user.IsActive = false;
                 await _db.SaveChangesAsync();
             }
             return RedirectToAction("Users");
@@ -113,10 +113,10 @@ namespace ljp_itsolutions.Controllers
         // Admin dashboard showing KPIs
         public IActionResult Dashboard()
         {
-            var totalRevenue = _store.Orders.Values.Sum(o => o.Total);
-            var ordersToday = _store.Orders.Values.Count(o => o.CreatedAt.Date == DateTime.UtcNow.Date);
-            var activeCustomers = _store.Users.Values.Count(u => !(u.IsArchived ?? false));
-            var lowStockItems = _store.Products.Values.Count(p => p.Stock < 10);
+            var totalRevenue = _store.Orders.Values.Sum(o => o.FinalAmount);
+            var ordersToday = _store.Orders.Values.Count(o => o.OrderDate.Date == DateTime.Today);
+            var activeCustomers = _store.Users.Values.Count(u => u.IsActive);
+            var lowStockItems = _store.Products.Values.Count(p => p.StockQuantity < 10);
 
             var model = new
             {

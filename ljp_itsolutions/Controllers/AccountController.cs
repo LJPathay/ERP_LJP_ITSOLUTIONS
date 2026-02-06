@@ -26,7 +26,7 @@ namespace ljp_itsolutions.Controllers
 
         [AllowAnonymous]
         [HttpGet]
-        public IActionResult Login(string returnUrl = null)
+        public IActionResult Login(string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
             return View(new LoginViewModel());
@@ -35,7 +35,7 @@ namespace ljp_itsolutions.Controllers
         [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
+        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
 
@@ -45,7 +45,7 @@ namespace ljp_itsolutions.Controllers
             ljp_itsolutions.Models.User? user = null;
             if (!string.IsNullOrWhiteSpace(model.UsernameOrEmail))
             {
-                user = await _db.Users.FirstOrDefaultAsync(u => u.Username == model.UsernameOrEmail || u.Email == model.UsernameOrEmail);
+                user = await _db.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Username == model.UsernameOrEmail || u.Email == model.UsernameOrEmail);
             }
 
             if (user == null)
@@ -67,28 +67,28 @@ namespace ljp_itsolutions.Controllers
                 return View(model);
             }
 
+            var roleName = user.Role?.RoleName ?? Role.Admin;
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Role, (user.Role ?? Role.Admin).ToString())
+                new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
+                new Claim(ClaimTypes.Role, roleName)
             };
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
 
-            var primaryRole = (user.Role ?? Role.Admin).ToString();
-
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
 
-            return primaryRole switch
+            return roleName switch
             {
-                nameof(Role.Admin) => RedirectToAction("Dashboard", "Admin"),
-                nameof(Role.Manager) => RedirectToAction("Dashboard", "Manager"),
-                nameof(Role.Cashier) => RedirectToAction("Index", "POS"),
-                nameof(Role.MarketingStaff) => RedirectToAction("Dashboard", "Marketing"),
+                Role.Admin => RedirectToAction("Dashboard", "Admin"),
+                Role.Manager => RedirectToAction("Dashboard", "Manager"),
+                Role.Cashier => RedirectToAction("Index", "POS"),
+                Role.MarketingStaff => RedirectToAction("Dashboard", "Marketing"),
                 _ => RedirectToAction("Index", "Home"),
             };
         }

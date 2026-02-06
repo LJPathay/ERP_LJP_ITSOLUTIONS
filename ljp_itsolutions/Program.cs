@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using ljp_itsolutions.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,62 +63,85 @@ using (var scope = app.Services.CreateScope())
     try
     {
         db.Database.Migrate();
-        try
-        {
-            db.Database.ExecuteSqlRaw(@"IF COL_LENGTH('dbo.Users', 'Email') IS NULL
-BEGIN
-    ALTER TABLE dbo.Users ADD Email NVARCHAR(MAX) NULL;
-END");
-
-            db.Database.ExecuteSqlRaw(@"IF COL_LENGTH('dbo.Users', 'Password') IS NULL
-BEGIN
-    ALTER TABLE dbo.Users ADD Password NVARCHAR(MAX) NULL;
-END");
-
-            db.Database.ExecuteSqlRaw(@"IF COL_LENGTH('dbo.Users', 'PasswordHash') IS NOT NULL
-BEGIN
-    EXEC('UPDATE dbo.Users SET Password = PasswordHash WHERE Password IS NULL');
-    EXEC('ALTER TABLE dbo.Users DROP COLUMN PasswordHash');
-END");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Schema fixup error: {ex.Message}");
-        }
 
         var store = scope.ServiceProvider.GetRequiredService<ljp_itsolutions.Services.InMemoryStore>();
         var dbContext = scope.ServiceProvider.GetRequiredService<ljp_itsolutions.Data.ApplicationDbContext>();
 
+        // 1. Seed Roles first
+        foreach (var seededRole in store.Roles.Values)
+        {
+            if (!dbContext.Roles.Any(r => r.RoleName == seededRole.RoleName))
+            {
+                Console.WriteLine($"Seeding role: {seededRole.RoleName}");
+                var role = new Role { RoleName = seededRole.RoleName };
+                dbContext.Roles.Add(role);
+                dbContext.SaveChanges(); 
+            }
+        }
+
+        // 2. Seed Categories
+        foreach (var seededCat in store.Categories.Values)
+        {
+            if (!dbContext.Categories.Any(c => c.CategoryName == seededCat.CategoryName))
+            {
+                Console.WriteLine($"Seeding category: {seededCat.CategoryName}");
+                var cat = new Category { CategoryName = seededCat.CategoryName };
+                dbContext.Categories.Add(cat);
+                dbContext.SaveChanges();
+            }
+        }
+
+        // 3. Seed Users
+        var dbRoles = dbContext.Roles.ToList();
         foreach (var seeded in store.Users.Values)
         {
             if (!dbContext.Users.Any(u => u.Username == seeded.Username))
             {
-                dbContext.Users.Add(seeded);
-                Console.WriteLine($"Seeding new user: {seeded.Username}, Password length={seeded.Password?.Length}");
-            }
-            else
-            {
-                var existing = dbContext.Users.First(u => u.Username == seeded.Username);
-                existing.Email = seeded.Email;
-                existing.FullName = seeded.FullName;
-                existing.Role = seeded.Role;
-                if (!string.IsNullOrEmpty(seeded.Password))
+                var roleInDb = dbRoles.FirstOrDefault(r => r.RoleName == seeded.Role.RoleName);
+                if (roleInDb != null)
                 {
-                    existing.Password = seeded.Password;
+                    Console.WriteLine($"Seeding user: {seeded.Username}");
+                    var user = new User
+                    {
+                        UserID = Guid.NewGuid(),
+                        Username = seeded.Username,
+                        FullName = seeded.FullName,
+                        Email = seeded.Email,
+                        Password = seeded.Password,
+                        RoleID = roleInDb.RoleID,
+                        IsActive = seeded.IsActive,
+                        CreatedAt = DateTime.Now
+                    };
+                    dbContext.Users.Add(user);
                 }
-                existing.IsArchived = seeded.IsArchived;
-                Console.WriteLine($"Updated existing user: {existing.Username}, Password length={existing.Password?.Length}");
             }
         }
-        dbContext.SaveChanges();
-        try
+
+        // 4. Seed Products
+        var dbCats = dbContext.Categories.ToList();
+        foreach (var p in store.Products.Values)
         {
-            foreach (var u in dbContext.Users)
+            if (!dbContext.Products.Any(prod => prod.ProductName == p.ProductName))
             {
-                Console.WriteLine($"DB user: {u.Username}, Password length={u.Password?.Length}");
+                var catInDb = dbCats.FirstOrDefault(c => c.CategoryName == p.Category.CategoryName);
+                if (catInDb != null)
+                {
+                    Console.WriteLine($"Seeding product: {p.ProductName}");
+                    var product = new Product
+                    {
+                        ProductName = p.ProductName,
+                        Price = p.Price,
+                        StockQuantity = p.StockQuantity,
+                        CategoryID = catInDb.CategoryID,
+                        IsAvailable = true
+                    };
+                    dbContext.Products.Add(product);
+                }
             }
         }
-        catch { }
+
+        dbContext.SaveChanges();
+        Console.WriteLine("Seeding completed successfully.");
     }
     catch (Exception ex)
     {
