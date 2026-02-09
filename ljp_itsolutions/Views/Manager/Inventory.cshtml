@@ -1,0 +1,101 @@
+@model IEnumerable<ljp_itsolutions.Models.Product>
+@{
+    ViewData["Title"] = "Inventory Management";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Inventory Management</h2>
+            <p class="text-muted">Monitor stock levels and manage reorders.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-danger"><i class="fas fa-exclamation-circle me-2"></i>Low Stock Alerts</button>
+            <button class="btn btn-primary"><i class="fas fa-truck-loading me-2"></i>Restock All</button>
+        </div>
+    </div>
+
+    <!-- Inventory Summary -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center p-3">
+                <h6 class="text-muted small uppercase fw-bold mb-2">Total SKU</h6>
+                <h3 class="fw-bold mb-0">@Model.Count()</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center p-3 border-start border-warning border-4">
+                <h6 class="text-muted small uppercase fw-bold mb-2">Low Stock</h6>
+                <h3 class="fw-bold mb-0 text-warning">@Model.Count(p => p.StockQuantity > 0 && p.StockQuantity < 10)</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center p-3 border-start border-danger border-4">
+                <h6 class="text-muted small uppercase fw-bold mb-2">Out of Stock</h6>
+                <h3 class="fw-bold mb-0 text-danger">@Model.Count(p => p.StockQuantity == 0)</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center p-3 border-start border-success border-4">
+                <h6 class="text-muted small uppercase fw-bold mb-2">Healthy Stock</h6>
+                <h3 class="fw-bold mb-0 text-success">@Model.Count(p => p.StockQuantity >= 10)</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Product Name</th>
+                            <th>Category</th>
+                            <th>Current Stock</th>
+                            <th>Threshold</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Stock Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">@item.ProductName</div>
+                                    <small class="text-muted">ID: @item.ProductID</small>
+                                </td>
+                                <td>@item.Category?.CategoryName</td>
+                                <td>
+                                    <span class="fw-bold @(item.StockQuantity < 10 ? "text-danger" : "")">@item.StockQuantity</span>
+                                </td>
+                                <td>10 units</td>
+                                <td>
+                                    @if (item.StockQuantity == 0)
+                                    {
+                                        <span class="badge bg-danger rounded-pill">Out of Stock</span>
+                                    }
+                                    else if (item.StockQuantity < 10)
+                                    {
+                                        <span class="badge bg-warning rounded-pill">Low Stock</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success rounded-pill">In Stock</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <form asp-action="UpdateStock" method="post" class="d-inline-flex gap-2">
+                                        <input type="hidden" name="id" value="@item.ProductID" />
+                                        <input type="number" name="stock" value="@item.StockQuantity" class="form-control form-control-sm" style="width: 80px;" />
+                                        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

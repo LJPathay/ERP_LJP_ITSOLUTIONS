@@ -19,6 +19,11 @@ namespace ljp_itsolutions.Controllers
             _photoService = photoService;
         }
 
+        public IActionResult Index()
+        {
+            return RedirectToAction("Dashboard");
+        }
+
         public async Task<IActionResult> Dashboard()
         {
             var model = new
@@ -49,8 +54,10 @@ namespace ljp_itsolutions.Controllers
                 }
             }
 
+            product.IsAvailable = true;
             _db.Products.Add(product);
             await _db.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Product created successfully!";
             return RedirectToAction("Products");
         }
 
@@ -62,8 +69,54 @@ namespace ljp_itsolutions.Controllers
             {
                 product.StockQuantity = stock;
                 await _db.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Stock updated successfully!";
             }
             return RedirectToAction("Products");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditProduct(Product product, IFormFile photo)
+        {
+            var existingProduct = await _db.Products.FindAsync(product.ProductID);
+            if (existingProduct == null) return NotFound();
+
+            if (photo != null)
+            {
+                var result = await _photoService.AddPhotoAsync(photo);
+                if (result.Error == null)
+                {
+                    existingProduct.ImageURL = result.SecureUrl.AbsoluteUri;
+                }
+            }
+
+            existingProduct.ProductName = product.ProductName;
+            existingProduct.CategoryID = product.CategoryID;
+            existingProduct.Price = product.Price;
+            existingProduct.StockQuantity = product.StockQuantity;
+            existingProduct.IsAvailable = Request.Form["IsAvailable"] == "true";
+
+            await _db.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Product updated successfully!";
+            return RedirectToAction("Products");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteProduct(int id)
+        {
+            var product = await _db.Products.FindAsync(id);
+            if (product != null)
+            {
+                _db.Products.Remove(product);
+                await _db.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Product deleted successfully!";
+            }
+            return RedirectToAction("Products");
+        }
+
+        public async Task<IActionResult> Inventory()
+        {
+            var products = await _db.Products.Include(p => p.Category).ToListAsync();
+            return View(products);
         }
 
         public IActionResult Reports()

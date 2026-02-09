@@ -120,7 +120,7 @@ namespace ljp_itsolutions.Controllers
 
             // Simple password reset placeholder - in a real app generate a token and flow
             var callback = Url.Action("ResetPassword", "Account", new { userId = user.Id, token = "placeholder" }, protocol: Request.Scheme);
-            await _emailSender.SendEmailAsync(user.Email, "Password Reset", $"Reset your password using this link: {callback}");
+            await _emailSender.SendEmailAsync(user.Email ?? string.Empty, "Password Reset", $"Reset your password using this link: {callback}");
             TempData["Message"] = "Password reset instructions were sent to the registered email.";
             return RedirectToAction("Login");
         }

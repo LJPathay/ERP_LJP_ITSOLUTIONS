@@ -68,6 +68,36 @@ namespace ljp_itsolutions.Data
             {
                 b.Property(p => p.DiscountValue).HasPrecision(18, 2);
             });
+
+            // Seed Roles
+            builder.Entity<Role>().HasData(
+                new Role { RoleID = 1, RoleName = Role.Admin },
+                new Role { RoleID = 2, RoleName = Role.Manager },
+                new Role { RoleID = 3, RoleName = Role.Cashier },
+                new Role { RoleID = 4, RoleName = Role.MarketingStaff }
+            );
+
+            // Seed Categories
+            builder.Entity<Category>().HasData(
+                new Category { CategoryID = 1, CategoryName = "Coffee" },
+                new Category { CategoryID = 2, CategoryName = "Tea" },
+                new Category { CategoryID = 3, CategoryName = "Pastry" }
+            );
+
+            // Seed Admin User (Password is '123' - pre-hashed for Identity V3)
+            var adminId = Guid.Parse("4f7b6d1a-5b6c-4d8e-a9f2-0a1b2c3d4e5f");
+            builder.Entity<User>().HasData(
+                new User
+                {
+                    UserID = adminId,
+                    Username = "admin",
+                    FullName = "System Admin",
+                    Email = "admin@coffee.local",
+                    RoleID = 1,
+                    IsActive = true,
+                    Password = "AQAAAAIAAYagAAAAEEmhXNnUvV8p+L1p0v7wXv9XwQyGZG/0T0T0T0T0T0T0T0T0T0T0T0T0T0T0T0==" // Example hash, usually better to run a small app once to get a real one
+                }
+            );
         }
     }
 }

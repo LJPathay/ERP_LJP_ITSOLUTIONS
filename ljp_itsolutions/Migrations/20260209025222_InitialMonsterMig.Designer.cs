@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ljp_itsolutions.Data;
 
@@ -11,9 +12,11 @@ using ljp_itsolutions.Data;
 namespace ljp_itsolutions.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260209025222_InitialMonsterMig")]
+    partial class InitialMonsterMig
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,23 +66,6 @@ namespace ljp_itsolutions.Migrations
                     b.HasKey("CategoryID");
 
                     b.ToTable("Categories");
-
-                    b.HasData(
-                        new
-                        {
-                            CategoryID = 1,
-                            CategoryName = "Coffee"
-                        },
-                        new
-                        {
-                            CategoryID = 2,
-                            CategoryName = "Tea"
-                        },
-                        new
-                        {
-                            CategoryID = 3,
-                            CategoryName = "Pastry"
-                        });
                 });
 
             modelBuilder.Entity("ljp_itsolutions.Models.Customer", b =>
@@ -354,28 +340,6 @@ namespace ljp_itsolutions.Migrations
                     b.HasKey("RoleID");
 
                     b.ToTable("Roles");
-
-                    b.HasData(
-                        new
-                        {
-                            RoleID = 1,
-                            RoleName = "Admin"
-                        },
-                        new
-                        {
-                            RoleID = 2,
-                            RoleName = "Manager"
-                        },
-                        new
-                        {
-                            RoleID = 3,
-                            RoleName = "Cashier"
-                        },
-                        new
-                        {
-                            RoleID = 4,
-                            RoleName = "MarketingStaff"
-                        });
                 });
 
             modelBuilder.Entity("ljp_itsolutions.Models.User", b =>
@@ -418,19 +382,6 @@ namespace ljp_itsolutions.Migrations
                     b.HasIndex("RoleID");
 
                     b.ToTable("Users");
-
-                    b.HasData(
-                        new
-                        {
-                            UserID = new Guid("4f7b6d1a-5b6c-4d8e-a9f2-0a1b2c3d4e5f"),
-                            CreatedAt = new DateTime(2026, 2, 9, 12, 32, 59, 531, DateTimeKind.Local).AddTicks(6139),
-                            Email = "admin@coffee.local",
-                            FullName = "System Admin",
-                            IsActive = true,
-                            Password = "AQAAAAIAAYagAAAAEEmhXNnUvV8p+L1p0v7wXv9XwQyGZG/0T0T0T0T0T0T0T0T0T0T0T0T0T0T0T0==",
-                            RoleID = 1,
-                            Username = "admin"
-                        });
                 });
 
             modelBuilder.Entity("ljp_itsolutions.Models.AuditLog", b =>

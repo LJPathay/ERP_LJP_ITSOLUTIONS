@@ -43,6 +43,12 @@
                 </a>
             </li>
             <li>
+                <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Inventory" ? "active" : "") d-flex align-items-center gap-2" asp-controller="Manager" asp-action="Inventory">
+                    <i class="fas fa-boxes opacity-75"></i>
+                    <span>Inventory Levels</span>
+                </a>
+            </li>
+            <li>
                 <a class="dropdown-item d-flex align-items-center gap-2" href="#">
                     <i class="fas fa-truck opacity-75"></i>
                     <span>Suppliers</span>
