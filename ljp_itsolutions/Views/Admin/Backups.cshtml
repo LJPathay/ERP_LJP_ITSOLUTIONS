@@ -1,3 +1,4 @@
+@model IEnumerable<System.IO.FileInfo>
 @{
     ViewData["Title"] = "Backups & Archives";
     ViewBag.ModuleCount = 4;
@@ -12,12 +13,29 @@
                     <h2 class="fw-bold mb-1">Backups & Archives</h2>
                     <p class="text-muted mb-0">Manage system data backups and ensure data durability</p>
                 </div>
-                <button class="btn btn-primary">
-                    <i class="fas fa-plus me-1"></i>Create Backup
-                </button>
+                <form asp-action="CreateBackup" method="post">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Create Backup
+                    </button>
+                </form>
             </div>
         </div>
     </div>
+    
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
     <!-- Backup Status Cards -->
     <div class="row g-4 mb-4">
@@ -27,10 +45,18 @@
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <p class="text-muted small mb-2">Last Backup</p>
-                            <h6 class="fw-bold mb-2">@DateTime.Now.AddHours(-2).ToString("MMM dd, HH:mm")</h6>
-                            <small class="text-success">
-                                <i class="fas fa-check-circle me-1"></i>Successful
-                            </small>
+                            @if (Model != null && Model.Any())
+                            {
+                                <h6 class="fw-bold mb-2">@Model.First().CreationTime.ToString("MMM dd, HH:mm")</h6>
+                                <small class="text-success">
+                                    <i class="fas fa-check-circle me-1"></i>Available
+                                </small>
+                            }
+                            else
+                            {
+                                <h6 class="fw-bold mb-2">None</h6>
+                                <small class="text-muted">No backups yet</small>
+                            }
                         </div>
                         <div class="stat-icon bg-success bg-opacity-10">
                             <i class="fas fa-clock text-success"></i>
@@ -46,9 +72,9 @@
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <p class="text-muted small mb-2">Total Backups</p>
-                            <h6 class="fw-bold mb-2">24</h6>
+                            <h6 class="fw-bold mb-2">@(Model?.Count() ?? 0)</h6>
                             <small class="text-muted">
-                                <i class="fas fa-database me-1"></i>All time
+                                <i class="fas fa-database me-1"></i>Stored locally
                             </small>
                         </div>
                         <div class="stat-icon bg-primary bg-opacity-10">
@@ -64,10 +90,14 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
-                            <p class="text-muted small mb-2">Storage Used</p>
-                            <h6 class="fw-bold mb-2">1.2 GB</h6>
+                            <p class="text-muted small mb-2">Total Size</p>
+                            @{
+                                long totalSize = Model?.Sum(f => f.Length) ?? 0;
+                                string sizeStr = (totalSize / 1024.0 / 1024.0).ToString("N2") + " MB";
+                            }
+                            <h6 class="fw-bold mb-2">@sizeStr</h6>
                             <small class="text-info">
-                                <i class="fas fa-hdd me-1"></i>Of 10 GB
+                                <i class="fas fa-hdd me-1"></i>Disk usage
                             </small>
                         </div>
                         <div class="stat-icon bg-info bg-opacity-10">
@@ -77,16 +107,16 @@
                 </div>
             </div>
         </div>
-
+        
         <div class="col-lg-3 col-md-6">
             <div class="card-custom">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <p class="text-muted small mb-2">Auto Backup</p>
-                            <h6 class="fw-bold mb-2">Enabled</h6>
-                            <small class="text-success">
-                                <i class="fas fa-sync me-1"></i>Daily at 2:00 AM
+                            <h6 class="fw-bold mb-2">Manual</h6>
+                            <small class="text-warning">
+                                <i class="fas fa-exclamation-triangle me-1"></i>Not scheduled
                             </small>
                         </div>
                         <div class="stat-icon bg-warning bg-opacity-10">
@@ -107,9 +137,8 @@
                         <i class="fas fa-list text-primary me-2"></i>Backup History
                     </h5>
                     <div class="d-flex gap-2">
-                        <input type="text" class="form-control form-control-sm" placeholder="Search backups..." style="width: 200px;">
-                        <button class="btn btn-outline-secondary btn-sm">
-                            <i class="fas fa-sync-alt"></i>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="window.location.reload()">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
                         </button>
                     </div>
                 </div>
@@ -118,123 +147,73 @@
                         <table class="table table-custom mb-0">
                             <thead>
                                 <tr>
-                                    <th>Backup ID</th>
-                                    <th>Date & Time</th>
+                                    <th>Backup File</th>
+                                    <th>Date Created</th>
                                     <th>Size</th>
-                                    <th>Type</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @{
-                                    var backups = new[]
-                                    {
-                                        new { Id = "BKP-001", Date = DateTime.Now.AddHours(-2), Size = "52.3 MB", Type = "Auto", Status = "Success" },
-                                        new { Id = "BKP-002", Date = DateTime.Now.AddDays(-1), Size = "51.8 MB", Type = "Manual", Status = "Success" },
-                                        new { Id = "BKP-003", Date = DateTime.Now.AddDays(-2), Size = "50.2 MB", Type = "Auto", Status = "Success" },
-                                        new { Id = "BKP-004", Date = DateTime.Now.AddDays(-3), Size = "49.7 MB", Type = "Auto", Status = "Success" },
-                                        new { Id = "BKP-005", Date = DateTime.Now.AddDays(-4), Size = "48.9 MB", Type = "Auto", Status = "Success" }
-                                    };
-
-                                    foreach (var backup in backups)
+                                @if (Model != null && Model.Any())
+                                {
+                                    foreach (var file in Model)
                                     {
                                         <tr>
-                                            <td><span class="badge bg-secondary">@backup.Id</span></td>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="fas fa-file-alt text-muted"></i>
+                                                    <span class="fw-semibold">@file.Name</span>
+                                                </div>
+                                            </td>
                                             <td>
                                                 <small class="text-muted">
-                                                    <i class="far fa-calendar me-1"></i>@backup.Date.ToString("MMM dd, yyyy HH:mm")
+                                                    <i class="far fa-calendar me-1"></i>@file.CreationTime.ToString("MMM dd, yyyy HH:mm:ss")
                                                 </small>
                                             </td>
-                                            <td>@backup.Size</td>
                                             <td>
-                                                @if (backup.Type == "Auto")
-                                                {
-                                                    <span class="badge bg-info">@backup.Type</span>
+                                                @{
+                                                    var size = (file.Length / 1024.0).ToString("N2") + " KB";
+                                                    if (file.Length > 1024 * 1024)
+                                                    {
+                                                        size = (file.Length / 1024.0 / 1024.0).ToString("N2") + " MB";
+                                                    }
                                                 }
-                                                else
-                                                {
-                                                    <span class="badge bg-primary">@backup.Type</span>
-                                                }
+                                                @size
                                             </td>
                                             <td>
-                                                @if (backup.Status == "Success")
-                                                {
-                                                    <span class="badge bg-success">
-                                                        <i class="fas fa-check me-1"></i>@backup.Status
-                                                    </span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-danger">
-                                                        <i class="fas fa-times me-1"></i>@backup.Status
-                                                    </span>
-                                                }
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Success
+                                                </span>
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-1">
-                                                    <button class="btn btn-outline-primary btn-sm" title="Download">
+                                                    <!-- Note: Download logic not implemented, just a button for now -->
+                                                    <button class="btn btn-outline-primary btn-sm" title="Download (Not Implemented)">
                                                         <i class="fas fa-download"></i>
                                                     </button>
-                                                    <button class="btn btn-outline-success btn-sm" title="Restore">
-                                                        <i class="fas fa-undo"></i>
-                                                    </button>
-                                                    <button class="btn btn-outline-danger btn-sm" title="Delete">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
+                                                    <form asp-action="DeleteBackup" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this backup?');">
+                                                        <input type="hidden" name="fileName" value="@file.Name" />
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
                                                 </div>
                                             </td>
                                         </tr>
                                     }
                                 }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5 text-muted">
+                                            <i class="fas fa-archive fa-3x mb-3 d-block"></i>
+                                            No backups found.
+                                        </td>
+                                    </tr>
+                                }
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Backup Configuration -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card-custom">
-                <div class="card-header bg-white">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-cog text-warning me-2"></i>Backup Configuration
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label small fw-semibold">Backup Frequency</label>
-                            <select class="form-select">
-                                <option selected>Daily</option>
-                                <option>Weekly</option>
-                                <option>Monthly</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-semibold">Backup Time</label>
-                            <input type="time" class="form-control" value="02:00">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-semibold">Retention Period (days)</label>
-                            <input type="number" class="form-control" value="30" min="7" max="365">
-                        </div>
-                        <div class="col-12">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="autoBackup" checked>
-                                <label class="form-check-label small" for="autoBackup">
-                                    Enable automatic backups
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <button class="btn btn-primary">
-                                <i class="fas fa-save me-1"></i>Save Configuration
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>

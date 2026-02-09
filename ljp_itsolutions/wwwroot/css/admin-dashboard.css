@@ -35,19 +35,25 @@ body {
 
 /* Enhanced Sidebar */
 .sidebar {
-    width: 300px;
-    background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    background-color: var(--primary-color);
-    color: var(--text-light);
-    box-shadow: var(--shadow-lg);
-    transition: all 0.3s ease;
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
+    background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
+    background-color: var(--primary-color) !important;
     height: 100vh;
+    transition: all 0.3s ease;
     overflow-y: auto;
     z-index: 1000;
-    backdrop-filter: blur(10px);
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
+}
+
+/* Hide scrollbar but allow scrolling */
+.sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+.sidebar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 /* Scrollbar Styling for Sidebar */
@@ -69,17 +75,6 @@ body {
     display: none;
 }
 
-.sidebar .brand {
-    color: var(--text-light);
-    padding: 1rem 1.5rem !important;
-    /* Compact padding */
-    border-bottom: 1px solid var(--hover-color);
-    margin-bottom: 0.5rem !important;
-    position: relative;
-    z-index: 10;
-    overflow: hidden;
-    flex-shrink: 0;
-}
 
 .sidebar .brand::before {
     content: '';
@@ -111,37 +106,82 @@ body {
 
 .sidebar-logo {
     height: 125px !important;
-    /* Enlarged Logo */
     width: auto !important;
     max-width: 100% !important;
     object-fit: contain !important;
     filter: brightness(0) invert(1) !important;
     transition: transform 0.3s ease !important;
-    position: relative;
-    z-index: 20;
+    margin: 0 auto !important;
+    display: block !important;
 }
 
 .sidebar-logo:hover {
     transform: scale(1.05) !important;
-    filter: brightness(1.1) invert(1) !important;
-    /* Box shadow removed */
 }
 
-.sidebar .brand .d-flex {
+.sidebar .brand {
+    padding: 3rem 1.5rem 2.5rem !important;
+    position: relative;
+    text-align: center;
+    margin-bottom: 2rem !important;
+}
+
+.sidebar .brand::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20px;
+    right: 20px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    display: block !important;
+    opacity: 1 !important;
+    z-index: 10 !important;
+}
+
+.sidebar .nav {
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+}
+
+.sidebar .nav-item {
+    width: 100% !important;
+    padding: 0 10px !important;
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.7) !important;
+    padding: 14px 22px !important;
+    border-radius: 15px !important;
+    transition: all 0.2s ease !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important;
+    gap: 15px !important;
+    font-weight: 500 !important;
+    font-size: 1rem !important;
     width: 100% !important;
+    background: transparent !important;
+    text-decoration: none !important;
+    border: none !important;
 }
 
-.sidebar .brand .d-flex>div:first-child {
-    flex-shrink: 0 !important;
-    margin-right: 0.75rem !important;
+.sidebar .nav-link:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: white !important;
 }
 
-.sidebar .brand .d-flex>div:last-child {
-    flex-shrink: 1 !important;
-    margin-left: 0.75rem !important;
+.sidebar .nav-link.active {
+    background: #d97706 !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.sidebar .nav-link i {
+    width: 24px;
+    text-align: center;
+    font-size: 1.1rem;
 }
 
 .sidebar .brand .h5 {
@@ -184,51 +224,74 @@ body {
 }
 
 /* Enhanced Navigation Links */
-.sidebar .nav-link {
-    color: var(--text-light) !important;
-    padding: 0.875rem 1.25rem !important;
-    margin: 0.25rem 0.75rem !important;
-    border-radius: 0.75rem !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+.sidebar .nav-link:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.sidebar .nav-link.active {
+    background: #d97706 !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+}
+
+.sidebar .nav-link.active i,
+.sidebar .nav-link.active span {
+    color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+.sidebar .nav-link:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.sidebar .nav-item.dropdown {
+    width: 100% !important;
+}
+
+.sidebar .dropdown-toggle::after {
+    display: none !important;
+}
+
+.sidebar .dropdown-menu {
+    background: #ffffff !important;
+    border: none !important;
+    margin: 5px 0 10px 0 !important;
+    padding: 10px !important;
+    width: 100% !important;
+    position: static !important;
+    transform: none !important;
+    box-shadow: var(--shadow-lg) !important;
+    border-radius: 12px !important;
+}
+
+.sidebar .dropdown-item {
+    color: var(--text-primary) !important;
+    padding: 8px 15px !important;
+    margin: 2px 0 !important;
+    border-radius: 8px !important;
+    font-size: 0.9rem !important;
     display: flex !important;
     align-items: center !important;
-    gap: 1rem !important;
-    font-weight: 500 !important;
-    text-decoration: none !important;
-    position: relative !important;
-    width: calc(100% - 1.5rem) !important;
+    gap: 12px !important;
     background: transparent !important;
-    border: 2px solid transparent !important;
-    overflow: hidden !important;
-    line-height: 1.5 !important;
+    transition: all 0.2s ease !important;
+    font-weight: 500 !important;
 }
 
-.sidebar .nav-link i:first-child {
-    width: 24px;
-    text-align: center;
-    font-size: 1.1rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+.sidebar .dropdown-item:hover {
+    background: #f1f5f9 !important;
+    color: var(--primary-color) !important;
 }
 
-.sidebar .nav-link:hover {
-    background: var(--hover-color) !important;
-    color: var(--text-light) !important;
-    transform: translateX(8px) scale(1.02) !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25) !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-    backdrop-filter: blur(4px) !important;
-}
-
-.sidebar .nav-link.active,
-.sidebar .nav-link.active:hover {
-    background: var(--accent-color) !important;
+.sidebar .dropdown-item.active {
+    background: var(--primary-color) !important;
     color: white !important;
-    box-shadow: var(--shadow-md) !important;
-    transform: translateX(0) scale(1) !important;
-    border-color: var(--accent-color) !important;
-    backdrop-filter: blur(4px) !important;
+}
+
+.sidebar .dropdown-item i {
+    width: 20px !important;
+    text-align: center !important;
+    opacity: 0.7 !important;
 }
 
 .sidebar .nav-link i {

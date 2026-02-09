@@ -67,6 +67,12 @@ namespace ljp_itsolutions.Controllers
                 return View(model);
             }
 
+            if (!user.IsActive)
+            {
+                ModelState.AddModelError(string.Empty, "Account is deactivated. Please contact administrator.");
+                return View(model);
+            }
+
             var roleName = user.Role?.RoleName ?? Role.Admin;
 
             var claims = new List<Claim>

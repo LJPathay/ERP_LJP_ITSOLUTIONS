@@ -1,241 +1,259 @@
+@model Dictionary<string, string>
 @{
     ViewData["Title"] = "System Settings";
     ViewBag.ModuleCount = 4;
+    
+    // Helper function to safely get values
+    string GetVal(string key, string defaultVal = "") => Model != null && Model.ContainsKey(key) && !string.IsNullOrEmpty(Model[key]) ? Model[key] : defaultVal;
+    bool GetBool(string key) => Model != null && Model.ContainsKey(key) && (Model[key].ToLower() == "true" || Model[key].ToLower() == "on");
 }
 
 <div class="container-fluid">
-    <!-- Welcome Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="fw-bold mb-1">System Settings</h2>
+    <form asp-action="UpdateSettings" method="post">
+        @Html.AntiForgeryToken()
+        
+        <!-- Action Bar -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
                     <p class="text-muted mb-0">Configure your ERP system settings and preferences</p>
-                </div>
-                <button class="btn btn-primary">
-                    <i class="fas fa-save me-1"></i>Save All Changes
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Settings Categories -->
-    <div class="row g-4">
-        <!-- General Settings -->
-        <div class="col-md-6">
-            <div class="card-custom h-100">
-                <div class="card-header bg-white">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-cog text-primary me-2"></i>General Settings
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">System Name</label>
-                        <input type="text" class="form-control" value="LJP IT Solutions ERP" placeholder="Enter system name">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Timezone</label>
-                        <select class="form-select">
-                            <option selected>Asia/Manila (GMT+8)</option>
-                            <option>Asia/Tokyo (GMT+9)</option>
-                            <option>UTC (GMT+0)</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Currency</label>
-                        <select class="form-select">
-                            <option selected>PHP (₱)</option>
-                            <option>USD ($)</option>
-                            <option>EUR (€)</option>
-                        </select>
-                    </div>
-                    <div class="mb-0">
-                        <label class="form-label small fw-semibold">Date Format</label>
-                        <select class="form-select">
-                            <option selected>MM/DD/YYYY</option>
-                            <option>DD/MM/YYYY</option>
-                            <option>YYYY-MM-DD</option>
-                        </select>
-                    </div>
+                    <button type="submit" class="btn btn-amber shadow-sm">
+                        <i class="fas fa-save me-1"></i>Save All Changes
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Security Settings -->
-        <div class="col-md-6">
-            <div class="card-custom h-100">
-                <div class="card-header bg-white">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-shield-alt text-success me-2"></i>Security Settings
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Session Timeout (minutes)</label>
-                        <input type="number" class="form-control" value="30" min="5" max="120">
-                        <small class="text-muted">Users will be logged out after this period of inactivity</small>
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- Settings Categories -->
+        <div class="row g-4">
+            <!-- General Settings -->
+            <div class="col-md-6">
+                <div class="card-custom h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="fw-bold mb-0">
+                            <i class="fas fa-cog text-primary me-2"></i>General Settings
+                        </h5>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Password Minimum Length</label>
-                        <input type="number" class="form-control" value="8" min="6" max="20">
-                    </div>
-                    <div class="mb-3">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="requireSpecialChars" checked>
-                            <label class="form-check-label small" for="requireSpecialChars">
-                                Require special characters in passwords
-                            </label>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">System Name</label>
+                            <input type="text" name="SystemName" class="form-control" value="@GetVal("SystemName", "LJP IT Solutions ERP")" placeholder="Enter system name">
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="requireNumbers" checked>
-                            <label class="form-check-label small" for="requireNumbers">
-                                Require numbers in passwords
-                            </label>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Timezone</label>
+                            <select name="Timezone" class="form-select">
+                                <option value="Asia/Manila" selected="@(GetVal("Timezone") == "Asia/Manila")">Asia/Manila (GMT+8)</option>
+                                <option value="Asia/Tokyo" selected="@(GetVal("Timezone") == "Asia/Tokyo")">Asia/Tokyo (GMT+9)</option>
+                                <option value="UTC" selected="@(GetVal("Timezone") == "UTC")">UTC (GMT+0)</option>
+                            </select>
                         </div>
-                    </div>
-                    <div class="mb-0">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="twoFactorAuth">
-                            <label class="form-check-label small" for="twoFactorAuth">
-                                Enable two-factor authentication
-                            </label>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Currency</label>
+                            <select name="Currency" class="form-select">
+                                <option value="PHP" selected="@(GetVal("Currency") == "PHP")">PHP (₱)</option>
+                                <option value="USD" selected="@(GetVal("Currency") == "USD")">USD ($)</option>
+                                <option value="EUR" selected="@(GetVal("Currency") == "EUR")">EUR (€)</option>
+                            </select>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label small fw-semibold">Date Format</label>
+                            <select name="DateFormat" class="form-select">
+                                <option value="MM/DD/YYYY" selected="@(GetVal("DateFormat") == "MM/DD/YYYY")">MM/DD/YYYY</option>
+                                <option value="DD/MM/YYYY" selected="@(GetVal("DateFormat") == "DD/MM/YYYY")">DD/MM/YYYY</option>
+                                <option value="YYYY-MM-DD" selected="@(GetVal("DateFormat") == "YYYY-MM-DD")">YYYY-MM-DD</option>
+                            </select>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Business Settings -->
-        <div class="col-md-6">
-            <div class="card-custom h-100">
-                <div class="card-header bg-white">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-briefcase text-info me-2"></i>Business Settings
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Company Name</label>
-                        <input type="text" class="form-control" value="LJP IT Solutions" placeholder="Enter company name">
+            <!-- Security Settings -->
+            <div class="col-md-6">
+                <div class="card-custom h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="fw-bold mb-0">
+                            <i class="fas fa-shield-alt text-success me-2"></i>Security Settings
+                        </h5>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Tax Rate (%)</label>
-                        <input type="number" class="form-control" value="12" min="0" max="100" step="0.01">
-                        <small class="text-muted">Default tax rate for transactions</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Low Stock Threshold</label>
-                        <input type="number" class="form-control" value="10" min="1">
-                        <small class="text-muted">Alert when product stock falls below this number</small>
-                    </div>
-                    <div class="mb-0">
-                        <label class="form-label small fw-semibold">Business Hours</label>
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <input type="time" class="form-control" value="09:00">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Session Timeout (minutes)</label>
+                            <input type="number" name="SessionTimeout" class="form-control" value="@GetVal("SessionTimeout", "30")" min="5" max="120">
+                            <small class="text-muted">Users will be logged out after this period of inactivity</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Password Minimum Length</label>
+                            <input type="number" name="PasswordMinLength" class="form-control" value="@GetVal("PasswordMinLength", "8")" min="6" max="20">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="RequireSpecialChars" id="requireSpecialChars" value="true" @(GetBool("RequireSpecialChars") ? "checked" : "")>
+                                <label class="form-check-label small" for="requireSpecialChars">
+                                    Require special characters in passwords
+                                </label>
                             </div>
-                            <div class="col-6">
-                                <input type="time" class="form-control" value="18:00">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="RequireNumbers" id="requireNumbers" value="true" @(GetBool("RequireNumbers") ? "checked" : "")>
+                                <label class="form-check-label small" for="requireNumbers">
+                                    Require numbers in passwords
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="TwoFactorAuth" id="twoFactorAuth" value="true" @(GetBool("TwoFactorAuth") ? "checked" : "")>
+                                <label class="form-check-label small" for="twoFactorAuth">
+                                    Enable two-factor authentication
+                                </label>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Email & Notifications -->
-        <div class="col-md-6">
-            <div class="card-custom h-100">
-                <div class="card-header bg-white">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-bell text-warning me-2"></i>Notifications
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">SMTP Server</label>
-                        <input type="text" class="form-control" placeholder="smtp.example.com">
+            <!-- Business Settings -->
+            <div class="col-md-6">
+                <div class="card-custom h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="fw-bold mb-0">
+                            <i class="fas fa-briefcase text-info me-2"></i>Business Settings
+                        </h5>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">SMTP Port</label>
-                        <input type="number" class="form-control" value="587">
-                    </div>
-                    <div class="mb-3">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
-                            <label class="form-check-label small" for="emailNotifications">
-                                Enable email notifications
-                            </label>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Company Name</label>
+                            <input type="text" name="CompanyName" class="form-control" value="@GetVal("CompanyName", "LJP IT Solutions")" placeholder="Enter company name">
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="lowStockAlerts" checked>
-                            <label class="form-check-label small" for="lowStockAlerts">
-                                Low stock alerts
-                            </label>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Tax Rate (%)</label>
+                            <input type="number" name="TaxRate" class="form-control" value="@GetVal("TaxRate", "12")" min="0" max="100" step="0.01">
+                            <small class="text-muted">Default tax rate for transactions</small>
                         </div>
-                    </div>
-                    <div class="mb-0">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="dailyReports" checked>
-                            <label class="form-check-label small" for="dailyReports">
-                                Daily summary reports
-                            </label>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Low Stock Threshold</label>
+                            <input type="number" name="LowStockThreshold" class="form-control" value="@GetVal("LowStockThreshold", "10")" min="1">
+                            <small class="text-muted">Alert when product stock falls below this number</small>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Database & Backup -->
-        <div class="col-md-12">
-            <div class="card-custom">
-                <div class="card-header bg-white">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-database text-danger me-2"></i>Database & Backup
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="stat-icon bg-success bg-opacity-10">
-                                    <i class="fas fa-check-circle text-success"></i>
+                        <div class="mb-0">
+                            <label class="form-label small fw-semibold">Business Hours</label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="time" name="BusinessHourStart" class="form-control" value="@GetVal("BusinessHourStart", "09:00")">
                                 </div>
-                                <div>
-                                    <p class="text-muted small mb-1">Database Status</p>
-                                    <h6 class="fw-bold mb-0">Connected</h6>
+                                <div class="col-6">
+                                    <input type="time" name="BusinessHourEnd" class="form-control" value="@GetVal("BusinessHourEnd", "18:00")">
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="stat-icon bg-info bg-opacity-10">
-                                    <i class="fas fa-clock text-info"></i>
-                                </div>
-                                <div>
-                                    <p class="text-muted small mb-1">Last Backup</p>
-                                    <h6 class="fw-bold mb-0">@DateTime.Now.AddHours(-2).ToString("MMM dd, HH:mm")</h6>
-                                </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email & Notifications -->
+            <div class="col-md-6">
+                <div class="card-custom h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="fw-bold mb-0">
+                            <i class="fas fa-bell text-warning me-2"></i>Notifications
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">SMTP Server</label>
+                            <input type="text" name="SmtpServer" class="form-control" value="@GetVal("SmtpServer")" placeholder="smtp.example.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">SMTP Port</label>
+                            <input type="number" name="SmtpPort" class="form-control" value="@GetVal("SmtpPort", "587")">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="EmailNotifications" id="emailNotifications" value="true" @(GetBool("EmailNotifications") ? "checked" : "")>
+                                <label class="form-check-label small" for="emailNotifications">
+                                    Enable email notifications
+                                </label>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="d-flex gap-2">
-                                <a href="@Url.Action("Backups", "Admin")" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-history me-1"></i>View Backups
-                                </a>
-                                <button class="btn btn-primary btn-sm">
-                                    <i class="fas fa-download me-1"></i>Backup Now
-                                </button>
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="LowStockAlerts" id="lowStockAlerts" value="true" @(GetBool("LowStockAlerts") ? "checked" : "")>
+                                <label class="form-check-label small" for="lowStockAlerts">
+                                    Low stock alerts
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="DailyReports" id="dailyReports" value="true" @(GetBool("DailyReports") ? "checked" : "")>
+                                <label class="form-check-label small" for="dailyReports">
+                                    Daily summary reports
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Database & Backup -->
+            <div class="col-md-12">
+                <div class="card-custom">
+                    <div class="card-header bg-white">
+                        <h5 class="fw-bold mb-0">
+                            <i class="fas fa-database text-danger me-2"></i>Database & Backup
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="stat-icon bg-success bg-opacity-10">
+                                        <i class="fas fa-check-circle text-success"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted small mb-1">Database Status</p>
+                                        <h6 class="fw-bold mb-0">Connected</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="stat-icon bg-info bg-opacity-10">
+                                        <i class="fas fa-clock text-info"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted small mb-1">System Time</p>
+                                        <h6 class="fw-bold mb-0">@DateTime.Now.ToString("MMM dd, HH:mm")</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex gap-2">
+                                    <a href="@Url.Action("Backups", "Admin")" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-history me-1"></i>View Backups
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>

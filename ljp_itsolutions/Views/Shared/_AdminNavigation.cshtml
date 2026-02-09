@@ -3,43 +3,46 @@
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
     
-    // Determine active page based on controller and action
     bool IsDashboardActive() => currentController == "Admin" && (currentAction == "Index" || currentAction == "Dashboard");
     bool IsUsersActive() => currentController == "Admin" && (currentAction == "Users" || currentAction == "ManageUsers");
     bool IsAuditLogsActive() => currentController == "Admin" && (currentAction == "AuditLogs" || currentAction == "Audit");
     
-    // Reports active logic
     bool IsCashierReportsActive() => currentController == "Admin" && currentAction == "Reports_Cashier";
     bool IsMarketingReportsActive() => currentController == "Admin" && currentAction == "Reports_Marketing";
     bool IsManagerReportsActive() => currentController == "Admin" && currentAction == "Reports_Manager";
     bool IsAnyReportActive() => IsCashierReportsActive() || IsMarketingReportsActive() || IsManagerReportsActive();
 
-    // System Settings active logic
     bool IsTransactionsActive() => currentController == "Admin" && currentAction == "Transactions";
     bool IsSystemSettingsActive() => currentController == "Admin" && currentAction == "SystemSettings";
     bool IsBackupsActive() => currentController == "Admin" && currentAction == "Backups";
     bool IsAnySystemSettingActive() => IsTransactionsActive() || IsSystemSettingsActive() || IsBackupsActive();
 }
 
-<div class="nav flex-column gap-2">
-    <a class="nav-link d-flex align-items-center gap-3 @(IsDashboardActive() ? "active" : "")" href="@Url.Action("Index", "Admin")">
-        <i class="fas fa-th-large opacity-75"></i>
-        <span>Dashboard</span>
-    </a>
+<div class="nav flex-column">
+    <div class="nav-item">
+        <a class="nav-link d-flex align-items-center @(IsDashboardActive() ? "active" : "")" href="@Url.Action("Index", "Admin")">
+            <i class="fas fa-th-large opacity-75"></i>
+            <span>Dashboard</span>
+        </a>
+    </div>
 
-    <a class="nav-link d-flex align-items-center gap-3 @(IsUsersActive() ? "active" : "")" href="@Url.Action("Users", "Admin")">
-        <i class="fas fa-users opacity-75"></i>
-        <span>Manage Users</span>
-    </a>
+    <div class="nav-item">
+        <a class="nav-link d-flex align-items-center @(IsUsersActive() ? "active" : "")" href="@Url.Action("Users", "Admin")">
+            <i class="fas fa-users opacity-75"></i>
+            <span>Manage Users</span>
+        </a>
+    </div>
 
-    <a class="nav-link d-flex align-items-center gap-3 @(IsAuditLogsActive() ? "active" : "")" href="@Url.Action("AuditLogs", "Admin")">
-        <i class="fas fa-file-alt opacity-75"></i>
-        <span>Audit Logs</span>
-    </a>
+    <div class="nav-item">
+        <a class="nav-link d-flex align-items-center @(IsAuditLogsActive() ? "active" : "")" href="@Url.Action("AuditLogs", "Admin")">
+            <i class="fas fa-file-alt opacity-75"></i>
+            <span>Audit Logs</span>
+        </a>
+    </div>
 
     <!-- Reports Dropdown -->
     <div class="nav-item dropdown">
-        <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret @(IsAnyReportActive() ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <a class="nav-link d-flex align-items-center dropdown-toggle no-caret @(IsAnyReportActive() ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="fas fa-chart-bar opacity-75"></i>
             <span>Reports</span>
             <i class="fas fa-chevron-down ms-auto x-small opacity-50"></i>
@@ -68,8 +71,8 @@
 
     <!-- System Dropdown -->
     <div class="nav-item dropdown">
-        <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret @(IsAnySystemSettingActive() ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-cogs opacity-75"></i>
+        <a class="nav-link d-flex align-items-center dropdown-toggle no-caret @(IsAnySystemSettingActive() ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-cog opacity-75"></i>
             <span>System</span>
             <i class="fas fa-chevron-down ms-auto x-small opacity-50"></i>
         </a>
@@ -77,52 +80,23 @@
             <li>
                 <a class="dropdown-item @(IsTransactionsActive() ? "active" : "") d-flex align-items-center gap-2" href="@Url.Action("Transactions", "Admin")">
                     <i class="fas fa-exchange-alt opacity-75"></i>
-                    <span>Monitor Transactions</span>
+                    <span>Sales Transactions</span>
                 </a>
             </li>
             <li>
                 <a class="dropdown-item @(IsSystemSettingsActive() ? "active" : "") d-flex align-items-center gap-2" href="@Url.Action("SystemSettings", "Admin")">
                     <i class="fas fa-cog opacity-75"></i>
-                    <span>Configure System</span>
+                    <span>General Settings</span>
                 </a>
             </li>
             <li>
                 <a class="dropdown-item @(IsBackupsActive() ? "active" : "") d-flex align-items-center gap-2" href="@Url.Action("Backups", "Admin")">
                     <i class="fas fa-database opacity-75"></i>
-                    <span>Backups & Archives</span>
+                    <span>Database Backups</span>
                 </a>
             </li>
         </ul>
     </div>
 </div>
 
-<style>
-    .nav-link {
-        color: var(--text-light) !important;
-        padding: 12px 20px;
-        border-radius: 12px;
-        font-weight: 500;
-        margin: 0 10px;
-        transition: all 0.2s;
-    }
-    .no-caret::after { display: none !important; }
-    .dropdown-menu {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 8px;
-        margin-top: 5px !important;
-        width: calc(100% - 20px);
-        left: 10px !important;
-    }
-    .dropdown-item {
-        border-radius: 8px;
-        padding: 10px 15px;
-        font-weight: 500;
-        color: var(--text-primary);
-    }
-    .dropdown-item.active {
-        background: var(--primary-color) !important;
-        color: #ffffff !important;
-    }
-    .x-small { font-size: 0.75rem; }
-</style>
+
