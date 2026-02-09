@@ -1,21 +1,86 @@
+@model IEnumerable<ljp_itsolutions.Models.Order>
 @{
     ViewData["Title"] = "Monitor Transactions";
 }
 
 <div class="container-fluid">
     <div class="welcome-section mb-4">
-        <h2 class="welcome-title">Monitor Transactions</h2>
+        <h2 class="welcome-title fw-bold">Monitor Transactions</h2>
         <p class="text-muted">Track and analyze all system transactions in real-time.</p>
     </div>
 
     <div class="card-custom">
-        <div class="card-body text-center py-5">
-            <i class="fas fa-exchange-alt fa-3x text-amber mb-3"></i>
-            <h4>Transaction History</h4>
-            <p class="text-muted">Detailed transaction logs will appear here. This module is currently being populated with real-time data.</p>
-            <button class="btn btn-amber mt-3">
-                <i class="fas fa-sync-alt me-2"></i>Refresh Data
-            </button>
+        <div class="card-header d-flex justify-content-between align-items-center bg-white py-3">
+            <h5 class="fw-bold mb-0">Transaction History</h5>
+            <div class="d-flex gap-2">
+                <div class="input-group input-group-sm">
+                    <input type="text" id="transactionSearch" class="form-control" placeholder="Search transactions...">
+                    <span class="input-group-text bg-amber text-white border-amber"><i class="fas fa-search"></i></span>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary" onclick="window.location.reload()">
+                    <i class="fas fa-sync-alt me-1"></i>Refresh
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Cashier</th>
+                            <th>Total Amount</th>
+                            <th>Status</th>
+                            <th>Method</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var order in Model)
+                            {
+                                <tr>
+                                    <td><span class="fw-bold text-amber">#@order.OrderID.ToString().Substring(0, 8)</span></td>
+                                    <td>@order.OrderDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>@(order.Customer?.FullName ?? "Walk-in")</td>
+                                    <td>@(order.Cashier?.FullName ?? "Unknown")</td>
+                                    <td class="fw-bold">₱@order.FinalAmount.ToString("N2")</td>
+                                    <td>
+                                        <span class="badge @(order.PaymentStatus == "Completed" || order.PaymentStatus == "Paid" ? "bg-success" : "bg-warning")">
+                                            @order.PaymentStatus
+                                        </span>
+                                    </td>
+                                    <td>@order.PaymentMethod</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="fas fa-receipt fa-3x mb-3 d-block"></i>
+                                    No transactions found.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#transactionSearch').on('keyup', function() {
+                var value = $(this).val().toLowerCase();
+                $("table tbody tr").filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+        });
+    </script>
+}

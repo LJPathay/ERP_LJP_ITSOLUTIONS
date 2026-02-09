@@ -20,6 +20,7 @@ namespace ljp_itsolutions.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<InventoryLog> InventoryLogs { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<SystemSetting> SystemSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

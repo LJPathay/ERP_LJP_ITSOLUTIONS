@@ -72,4 +72,11 @@ namespace ljp_itsolutions.Models
 
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
     }
+
+    public class SystemSetting
+    {
+        [Key]
+        public string SettingKey { get; set; } = string.Empty;
+        public string SettingValue { get; set; } = string.Empty;
+    }
 }

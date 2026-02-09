@@ -1,48 +1,115 @@
+@model dynamic
 @{
     ViewData["Title"] = "Cashier Reports";
     ViewBag.ModuleCount = 4;
 }
 
-
-
-<!-- Cashier Reports Content -->
 <div class="container-fluid">
     <!-- Daily Sales Summary -->
     <div class="row g-4 mb-4">
         <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="fw-bold mb-1">Daily Sales Summary</h2>
+                    <p class="text-muted mb-0">Overview of today's sales performance</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-primary fs-6 align-self-center">
+                        <i class="far fa-calendar-alt me-2"></i>@DateTime.Today.ToString("MMM dd, yyyy")
+                    </span>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="location.reload()">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Today's Sales -->
+        <div class="col-lg-3 col-md-6">
             <div class="card-custom">
-                <div class="card-header">
-                    <h5 class="fw-bold mb-0">Daily Sales Summary</h5>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-calendar me-2"></i>Today
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary">
-                            <i class="fas fa-calendar-alt me-2"></i>This Week
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary">
-                            <i class="fas fa-calendar me-2"></i>This Month
-                        </button>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <p class="text-muted small mb-2">Today's Sales</p>
+                            <h3 class="fw-bold mb-2">₱@Model.TodaysSales.ToString("N2")</h3>
+                            @if (Model.YesterdaysSales > 0)
+                            {
+                                var percentChange = ((Model.TodaysSales - Model.YesterdaysSales) / Model.YesterdaysSales) * 100;
+                                var isPositive = percentChange >= 0;
+                                <small class="@(isPositive ? "text-success" : "text-danger")">
+                                    <i class="fas @(isPositive ? "fa-arrow-up" : "fa-arrow-down") me-1"></i>@Math.Abs(percentChange).ToString("N1")% vs yesterday
+                                </small>
+                            }
+                            else
+                            {
+                                <small class="text-muted">No sales yesterday</small>
+                            }
+                        </div>
+                        <div class="stat-icon bg-success bg-opacity-10">
+                            <i class="fas fa-peso-sign text-success"></i>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Transactions -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card-custom">
                 <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <p class="text-muted small mb-1">Today's Sales</p>
-                            <h3 class="fw-bold mb-0">?2,450</h3>
-                            <p class="text-success small mb-0">+5.2% from yesterday</p>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <p class="text-muted small mb-2">Transactions</p>
+                            <h3 class="fw-bold mb-2">@Model.TodaysTransactions</h3>
+                            <small class="text-primary">
+                                <i class="fas fa-receipt me-1"></i>Completed orders
+                            </small>
                         </div>
+                        <div class="stat-icon bg-primary bg-opacity-10">
+                            <i class="fas fa-shopping-bag text-primary"></i>
                         </div>
-                        <div class="col-md-4">
-                            <p class="text-muted small mb-1">Transactions</p>
-                            <h3 class="fw-bold mb-0">156</h3>
-                            <p class="text-muted small mb-0">Average: ?15.75</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Avg Transaction -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card-custom">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <p class="text-muted small mb-2">Avg. Transaction</p>
+                            <h3 class="fw-bold mb-2">₱@Model.AvgTransactionValue.ToString("N2")</h3>
+                            <small class="text-info">
+                                <i class="fas fa-calculator me-1"></i>Per order
+                            </small>
                         </div>
+                        <div class="stat-icon bg-info bg-opacity-10">
+                            <i class="fas fa-chart-bar text-info"></i>
                         </div>
-                        <div class="col-md-4">
-                            <p class="text-muted small mb-1">Top Item</p>
-                            <h3 class="fw-bold mb-0">Caramel Macchiato</h3>
-                            <p class="text-muted small mb-0">42 sold</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Item -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card-custom">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <p class="text-muted small mb-2">Top Item</p>
+                            <h6 class="fw-bold mb-1 text-truncate" title="@Model.TopItemName">@Model.TopItemName</h6>
+                            <small class="text-warning">
+                                <i class="fas fa-star me-1"></i>@Model.TopItemCount sold
+                            </small>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-10">
+                            <i class="fas fa-trophy text-warning"></i>
                         </div>
                     </div>
                 </div>
@@ -50,191 +117,93 @@
         </div>
     </div>
 
-    <!-- Cash Transactions -->
     <div class="row g-4 mb-4">
-        <div class="col-12">
-            <div class="card-custom">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">Cash Transactions</h5>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-download me-2"></i>Export
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary">
-                            <i class="fas fa-sync-alt me-2"></i>Refresh
-                        </button>
-                    </div>
+        <!-- Recent Cash Transactions -->
+        <div class="col-lg-8">
+            <div class="card-custom h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-money-bill-wave text-success me-2"></i>Recent Cash Transactions
+                    </h5>
+                    <a href="@Url.Action("Transactions", "Admin")" class="btn btn-sm btn-outline-primary">View All</a>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-custom mb-0">
                             <thead>
                                 <tr>
-                                    <th>Transaction ID</th>
+                                    <th>Trax ID</th>
                                     <th>Time</th>
+                                    <th>Customer</th>
                                     <th>Cashier</th>
                                     <th>Amount</th>
-                                    <th>Payment Method</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>#CASH-001</td>
-                                    <td>09:30 AM</td>
-                                    <td>John Doe</td>
-                                    <td><span class="badge badge-amber">Cashier</span></td>
-                                    <td>?50.00</td>
-                                    <td><span class="badge badge-success">Cash</span></td>
-                                </tr>
-                                <tr>
-                                    <td>#CASH-002</td>
-                                    <td>09:45 AM</td>
-                                    <td>Jane Smith</td>
-                                    <td><span class="badge badge-amber">Cashier</span></td>
-                                    <td>?75.00</td>
-                                    <td><span class="badge badge-success">Card</span></td>
-                                </tr>
+                                @if (Model.RecentTransactions != null && Model.RecentTransactions.Count > 0)
+                                {
+                                    foreach (var trx in Model.RecentTransactions)
+                                    {
+                                        <tr>
+                                            <td><span class="badge bg-secondary">#@trx.OrderID.ToString().Substring(0, 8)</span></td>
+                                            <td>@trx.OrderDate.ToString("hh:mm tt")</td>
+                                            <td>@(trx.Customer?.FullName ?? "Walk-in")</td>
+                                            <td>@(trx.Cashier?.FullName ?? "N/A")</td>
+                                            <td class="fw-bold">₱@trx.FinalAmount.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">No cash transactions yet today</td>
+                                    </tr>
+                                }
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Shift Summary -->
-    <div class="row g-4 mb-4">
-        <div class="col-12">
-            <div class="card-custom">
-                <div class="card-header">
-                    <h5 class="fw-bold mb-0">Shift Summary</h5>
+        <!-- Inventory Alerts -->
+        <div class="col-lg-4">
+            <div class="card-custom h-100">
+                <div class="card-header bg-white">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-exclamation-triangle text-danger me-2"></i>Low Stock Alerts
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <p class="text-muted small mb-1">Current Shift</p>
-                            <h4 class="fw-bold">Morning Shift</h4>
-                            <p class="text-muted small mb-1">Time: 6:00 AM - 2:00 PM</p>
-                            <p class="text-muted small mb-1">Cashier: <span class="badge badge-amber">John Doe</span></p>
-                            <p class="text-muted small mb-1">Sales: <span class="text-success">?1,250</span></p>
+                    @if (Model.LowStockItems != null && Model.LowStockItems.Count > 0)
+                    {
+                        foreach (var item in Model.LowStockItems)
+                        {
+                            <div class="alert alert-warning d-flex align-items-center justify-content-between mb-2 p-2" role="alert">
+                                <div class="d-flex align-items-center overflow-hidden">
+                                    <i class="fas fa-box-open me-2 text-warning"></i>
+                                    <div class="text-truncate">
+                                        <small class="fw-bold d-block text-truncate">@item.Name</small>
+                                        <small class="text-muted">Only @item.StockQuantity left</small>
+                                    </div>
+                                </div>
+                                <a href="@Url.Action("Products", "Manager")" class="btn btn-sm btn-light py-0 px-2">Refill</a>
+                            </div>
+                        }
+                        
+                        <div class="mt-3 text-center">
+                            <a href="@Url.Action("Products", "Manager")" class="btn btn-sm btn-outline-danger w-100">Manage Inventory</a>
                         </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                            <h6 class="text-muted">Inventory levels look good!</h6>
                         </div>
-                        <div class="col-md-4">
-                            <p class="text-muted small mb-1">Previous Shift</p>
-                            <h4 class="fw-bold">Evening Shift</h4>
-                            <p class="text-muted small mb-1">Time: 2:00 PM - 10:00 PM</p>
-                            <p class="text-muted small mb-1">Cashier: <span class="badge badge-amber">Jane Smith</span></p>
-                            <p class="text-muted small mb-1">Sales: <span class="text-success">?980</span></p>
-                        </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Inventory Alerts -->
-    <div class="row g-4 mb-4">
-        <div class="col-12">
-            <div class="card-custom">
-                <div class="card-header">
-                    <h5 class="fw-bold mb-0">Inventory Alerts</h5>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-warning d-flex align-items-center" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <div>
-                            <h6 class="mb-0">Low Stock Alert</h6>
-                            <p class="mb-0">3 items are running low on stock</p>
-                            <p class="mb-0"><strong>Items:</strong> Coffee Beans, Milk, Sugar</p>
-                            <button class="btn btn-sm btn-outline-secondary ms-2">View Details</button>
-                        </div>
-                    </div>
+                    }
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        // Daily Sales Chart
-        const dailySalesCtx = document.getElementById('dailySalesChart').getContext('2d');
-        new Chart(dailySalesCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Sales',
-                    data: [1200, 1350, 1100, 980, 750],
-                    backgroundColor: '#d97706',
-                    borderColor: '#d97706',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            display: true
-                        }
-                    }
-                }
-            }
-        });
-
-        // Cash Transactions Chart
-        const cashTransactionsCtx = document.getElementById('cashTransactionsChart').getContext('2d');
-        new Chart(cashTransactionsCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Cash', 'Card', 'Digital Wallet'],
-                datasets: [{
-                    data: [65, 25, 10],
-                    backgroundColor: ['#d97706', '#f59e0b', '#34d399'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-
-        // Inventory Status Chart
-        const inventoryStatusCtx = document.getElementById('inventoryStatusChart').getContext('2d');
-        new Chart(inventoryStatusCtx, {
-            type: 'pie',
-            data: {
-                labels: ['In Stock', 'Low Stock', 'Out of Stock', 'Discontinued'],
-                datasets: [{
-                    data: [85, 8, 5, 2],
-                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#f871c1c'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Cashier Reports loaded successfully');
-        });
-    </script>
-}

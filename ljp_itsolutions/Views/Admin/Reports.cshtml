@@ -1,37 +1,83 @@
+@model dynamic
 @{
     ViewData["Title"] = "Reports";
     ViewBag.ModuleCount = 4;
 }
 
-@section Navigation {
-    <partial name="_AdminNavigation" />
-    </ul>
-}
-
 <div class="container-fluid">
-    <!-- Report Filters -->
+    <!-- Welcome Section -->
     <div class="row mb-4">
         <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold mb-1">System Reports</h2>
+                    <p class="text-muted mb-0">Comprehensive reports and analytics for your business</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download me-1"></i>Export All
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="location.reload()">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-4 col-md-6">
             <div class="card-custom">
                 <div class="card-body">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-3">
-                            <label class="form-label small">Report Type</label>
-                            <select class="form-select">
-                            </select>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <p class="text-muted small mb-2">Total Revenue</p>
+                            <h3 class="fw-bold mb-2">₱@Model.TotalRevenue.ToString("N2")</h3>
+                            <small class="text-success">
+                                <i class="fas fa-chart-line me-1"></i>All completed orders
+                            </small>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label small">Start Date</label>
-                            <input type="date" class="form-control" value="2024-01-01">
+                        <div class="stat-icon bg-success bg-opacity-10">
+                            <i class="fas fa-peso-sign text-success"></i>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label small">End Date</label>
-                            <input type="date" class="form-control" value="2024-01-31">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <div class="card-custom">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <p class="text-muted small mb-2">Total Orders</p>
+                            <h3 class="fw-bold mb-2">@Model.TotalOrders</h3>
+                            <small class="text-primary">
+                                <i class="fas fa-shopping-cart me-1"></i>All time orders
+                            </small>
                         </div>
-                        <div class="col-md-3">
-                            <button class="btn btn-amber">
-                                <i class="fas fa-search me-2"></i>Generate Report
-                            </button>
+                        <div class="stat-icon bg-primary bg-opacity-10">
+                            <i class="fas fa-shopping-bag text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <div class="card-custom">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <p class="text-muted small mb-2">Active Promotions</p>
+                            <h3 class="fw-bold mb-2">@Model.ActivePromotions</h3>
+                            <small class="text-warning">
+                                <i class="fas fa-tags me-1"></i>Currently running
+                            </small>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-10">
+                            <i class="fas fa-percentage text-warning"></i>
                         </div>
                     </div>
                 </div>
@@ -39,160 +85,135 @@
         </div>
     </div>
 
-    <!-- Dynamic Report Content -->
+    <!-- Report Categories -->
     <div class="row g-4 mb-4">
-        <div class="col-lg-8">
-            <div class="card-custom" id="systemReport">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">System Overview Report</h5>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-download me-1"></i>Export
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary">
-                            <i class="fas fa-sync-alt me-1"></i>Refresh
-                        </button>
-                    </div>
+        <div class="col-md-4">
+            <div class="card-custom h-100">
+                <div class="card-header bg-white">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-chart-bar text-primary me-2"></i>Sales Reports
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <p class="text-muted small mb-1">Total Revenue</p>
-                            <h3 class="fw-bold mb-0">?125,430</h3>
-                            <div class="d-flex align-items-center gap-1 mt-2">
-                                <i class="fas fa-peso-sign text-success"></i>
-                                <span class="text-success small fw-semibold">15.3% vs last month</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <p class="text-muted small mb-1">Total Orders</p>
-                            <h3 class="fw-bold mb-0">3,542</h3>
-                            <div class="d-flex align-items-center gap-1 mt-2">
-                                <i class="fas fa-shopping-bag text-primary"></i>
-                                <span class="text-primary small fw-semibold">8.2% vs last month</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <p class="text-muted small mb-1">Active Promotions</p>
-                            <h3 class="fw-bold mb-0">12</h3>
-                            <div class="d-flex align-items-center gap-1 mt-2">
-                                <i class="fas fa-tags text-warning"></i>
-                                <span class="text-warning small fw-semibold">No change</span>
-                            </div>
-                        </div>
+                    <p class="text-muted small mb-3">View detailed sales analytics and performance metrics</p>
+                    <div class="d-grid gap-2">
+                        <a href="@Url.Action("Reports_Manager", "Admin")" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-file-alt me-1"></i>Manager Reports
+                        </a>
+                        <a href="@Url.Action("Reports_Cashier", "Admin")" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-cash-register me-1"></i>Cashier Reports
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-4">
-            <div class="card-custom" id="userReport" style="display: none;">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">User Activity Report</h5>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-download me-1"></i>Export
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary">
-                            <i class="fas fa-sync-alt me-1"></i>Refresh
+
+        <div class="col-md-4">
+            <div class="card-custom h-100">
+                <div class="card-header bg-white">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-bullhorn text-success me-2"></i>Marketing Reports
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Track campaign performance and customer engagement</p>
+                    <div class="d-grid gap-2">
+                        <a href="@Url.Action("Reports_Marketing", "Admin")" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-chart-line me-1"></i>View Marketing Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card-custom h-100">
+                <div class="card-header bg-white">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-file-export text-info me-2"></i>Custom Reports
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Generate custom reports based on your criteria</p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-info btn-sm" disabled>
+                            <i class="fas fa-cog me-1"></i>Coming Soon
                         </button>
                     </div>
                 </div>
-                <div class="card-body">
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card-custom">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-receipt text-success me-2"></i>Recent Transactions
+                    </h5>
+                    <a href="@Url.Action("Transactions", "Admin")" class="btn btn-sm btn-primary">
+                        View All <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-custom mb-0">
                             <thead>
                                 <tr>
-                                    <th>Timestamp</th>
-                                    <th>User</th>
-                                    <th>Action</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="status-indicator status-online"></div>
-                                            <span class="fw-semibold">System</span>
-                                        </div>
-                                    </td>
-                                    <td>Database backup completed</td>
-                                    <td><span class="badge badge-success">Success</span></td>
-                                    <td><span class="badge badge-success">Completed</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Financial Summary -->
-    <div class="row g-4 mb-4">
-        <div class="col-12">
-            <div class="card-custom" id="financialReport" style="display: none;">
-                <div class="card-header">
-                    <h5 class="fw-bold mb-0">Financial Summary Report</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <p class="text-muted small mb-1">Total Revenue</p>
-                            <h3 class="fw-bold mb-0">?125,430</h3>
-                            <p class="text-success small mb-0">+15.3% from last month</p>
-                        </div>
-                        <div class="col-md-4">
-                            <p class="text-muted small mb-1">Total Orders</p>
-                            <h3 class="fw-bold mb-0">3,542</h3>
-                            <p class="text-success small mb-0">+8.2% from last month</p>
-                        </div>
-                        <div class="col-md-4">
-                            <p class="text-muted small mb-1">Average Order Value</p>
-                            <h3 class="fw-bold mb-0">?35.40</h3>
-                            <p class="text-info small mb-0">Per order</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Transaction Monitoring -->
-    <div class="row g-4 mb-4">
-        <div class="col-12">
-            <div class="card-custom" id="transactionReport" style="display: none;">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">Transaction Monitoring Report</h5>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-download me-1"></i>Export Transactions
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary">
-                            <i class="fas fa-sync-alt me-1"></i>Refresh
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-custom mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Transaction ID</th>
+                                    <th>Order ID</th>
                                     <th>Date</th>
+                                    <th>Customer</th>
+                                    <th>Cashier</th>
                                     <th>Amount</th>
-                                    <th>Type</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>#TRX-001</td>
-                                    <td>2024-01-31 10:30 AM</td>
-                                    <td>?1,250.00</td>
-                                    <td><span class="badge badge-success">Completed</span></td>
-                                    <td><span class="badge badge-success">Completed</span></td>
-                                </tr>
+                                @if (Model.RecentTransactions != null && Model.RecentTransactions.Count > 0)
+                                {
+                                    foreach (var order in Model.RecentTransactions)
+                                    {
+                                        <tr>
+                                            <td><span class="badge bg-secondary">#@order.OrderID</span></td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    <i class="far fa-calendar me-1"></i>@order.OrderDate.ToString("MMM dd, yyyy HH:mm")
+                                                </small>
+                                            </td>
+                                            <td>@(order.Customer?.FullName ?? "Walk-in")</td>
+                                            <td>@(order.Cashier?.FullName ?? "N/A")</td>
+                                            <td class="fw-semibold">₱@order.FinalAmount.ToString("N2")</td>
+                                            <td>
+                                                @if (order.PaymentStatus == "Completed" || order.PaymentStatus == "Paid")
+                                                {
+                                                    <span class="badge bg-success">@order.PaymentStatus</span>
+                                                }
+                                                else if (order.PaymentStatus == "Pending")
+                                                {
+                                                    <span class="badge bg-warning">@order.PaymentStatus</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">@order.PaymentStatus</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-5">
+                                            <div class="d-flex flex-column align-items-center">
+                                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                                <h6 class="text-muted mb-2">No Transactions Found</h6>
+                                                <p class="text-muted small mb-0">Transactions will appear here once orders are placed</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
                             </tbody>
                         </table>
                     </div>
@@ -201,66 +222,3 @@
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        // Report type switching
-        document.getElementById('reportType').addEventListener('change', function() {
-            const reportType = this.value;
-            
-            // Hide all reports
-            document.getElementById('systemReport').style.display = 'none';
-            document.getElementById('userReport').style.display = 'none';
-            document.getElementById('financialReport').style.display = 'none';
-            document.getElementById('transactionReport').style.display = 'none';
-            
-            // Show selected report
-            switch(reportType) {
-                case 'system':
-                    document.getElementById('systemReport').style.display = 'block';
-                    break;
-                case 'user':
-                    document.getElementById('userReport').style.display = 'block';
-                    break;
-                case 'financial':
-                    document.getElementById('financialReport').style.display = 'block';
-                    break;
-                case 'transaction':
-                    document.getElementById('transactionReport').style.display = 'block';
-                    break;
-            }
-        });
-
-        // Initialize charts
-        const systemCtx = document.getElementById('systemChart')?.getContext('2d');
-        if (systemCtx) {
-            new Chart(systemCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                    datasets: [{
-                        label: 'System Health',
-                        data: [95, 92, 88, 90, 93],
-                        borderColor: '#d97706',
-                        backgroundColor: 'rgba(217, 119, 6, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                    label: 'Sales',
-                    data: [45, 120, 215, 180, 145, 125, 190, 165, 135, 110, 95, 75],
-                    backgroundColor: '#d97706',
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-    </script>
-}

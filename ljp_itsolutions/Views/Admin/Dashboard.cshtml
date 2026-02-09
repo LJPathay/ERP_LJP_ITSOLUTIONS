@@ -1,3 +1,4 @@
+@model dynamic
 @{
     ViewData["Title"] = "Admin Dashboard";
     ViewBag.ModuleCount = 4;
@@ -5,22 +6,34 @@
 
 <!-- Dashboard Content -->
 <div class="container-fluid">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold mb-1">Admin Dashboard</h2>
+                    <p class="text-muted mb-0">Welcome back! Here's what's happening with your system today.</p>
+                </div>
+                <div class="text-muted small">
+                    <i class="fas fa-clock me-1"></i>
+                    Last updated: @DateTime.Now.ToString("MMM dd, yyyy HH:mm")
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Statistics Cards -->
     <div class="row g-4 mb-4">
         <div class="col-xl-3 col-md-6">
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-start">
-                    <div>
+                    <div class="flex-grow-1">
                         <p class="text-muted small mb-2">Total Users</p>
-                        <h3 class="fw-bold mb-0">248</h3>
-                        <div class="d-flex align-items-center gap-1 mt-2">
-                            <i class="fas fa-arrow-up text-success small"></i>
-                            <span class="text-success small fw-semibold">12%</span>
-                            <span class="text-muted small">from last month</span>
-                        </div>
+                        <h3 class="fw-bold mb-2">@Model.TotalUsers</h3>
+                        <small class="text-muted">All registered users</small>
                     </div>
-                    <div class="stat-icon bg-amber-light">
-                        <i class="fas fa-users text-amber"></i>
+                    <div class="stat-icon bg-primary bg-opacity-10">
+                        <i class="fas fa-users text-primary"></i>
                     </div>
                 </div>
             </div>
@@ -29,17 +42,15 @@
         <div class="col-xl-3 col-md-6">
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted small mb-2">Active Sessions</p>
-                        <h3 class="fw-bold mb-0">84</h3>
-                        <div class="d-flex align-items-center gap-1 mt-2">
-                            <i class="fas fa-arrow-up text-success small"></i>
-                            <span class="text-success small fw-semibold">8%</span>
-                            <span class="text-muted small">from yesterday</span>
-                        </div>
+                    <div class="flex-grow-1">
+                        <p class="text-muted small mb-2">Active Users</p>
+                        <h3 class="fw-bold mb-2">@Model.ActiveUsers</h3>
+                        <small class="text-success">
+                            <i class="fas fa-check-circle me-1"></i>Currently active
+                        </small>
                     </div>
-                    <div class="stat-icon bg-green-light">
-                        <i class="fas fa-desktop text-success"></i>
+                    <div class="stat-icon bg-success bg-opacity-10">
+                        <i class="fas fa-user-check text-success"></i>
                     </div>
                 </div>
             </div>
@@ -48,16 +59,13 @@
         <div class="col-xl-3 col-md-6">
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-start">
-                    <div>
+                    <div class="flex-grow-1">
                         <p class="text-muted small mb-2">System Logs</p>
-                        <h3 class="fw-bold mb-0">1,429</h3>
-                        <div class="d-flex align-items-center gap-1 mt-2">
-                            <i class="fas fa-minus text-muted small"></i>
-                            <span class="text-muted small fw-semibold">No change</span>
-                        </div>
+                        <h3 class="fw-bold mb-2">@Model.TotalAuditLogs</h3>
+                        <small class="text-muted">Total audit entries</small>
                     </div>
-                    <div class="stat-icon bg-blue-light">
-                        <i class="fas fa-file-alt text-primary"></i>
+                    <div class="stat-icon bg-info bg-opacity-10">
+                        <i class="fas fa-file-alt text-info"></i>
                     </div>
                 </div>
             </div>
@@ -66,17 +74,50 @@
         <div class="col-xl-3 col-md-6">
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-start">
-                    <div>
+                    <div class="flex-grow-1">
                         <p class="text-muted small mb-2">Failed Logins</p>
-                        <h3 class="fw-bold mb-0">12</h3>
-                        <div class="d-flex align-items-center gap-1 mt-2">
-                            <i class="fas fa-arrow-down text-danger small"></i>
-                            <span class="text-danger small fw-semibold">3%</span>
-                            <span class="text-muted small">from yesterday</span>
-                        </div>
+                        <h3 class="fw-bold mb-2">@Model.FailedLogins</h3>
+                        <small class="text-danger">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Security alerts
+                        </small>
                     </div>
-                    <div class="stat-icon bg-red-light">
-                        <i class="fas fa-exclamation-triangle text-danger"></i>
+                    <div class="stat-icon bg-danger bg-opacity-10">
+                        <i class="fas fa-shield-alt text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card-custom">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-bolt text-warning me-2"></i>Quick Actions
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-3 col-sm-6">
+                            <a href="@Url.Action("Users", "Admin")" class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center py-3">
+                                <i class="fas fa-user-plus me-2"></i>Add New User
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="@Url.Action("AuditLogs", "Admin")" class="btn btn-outline-info w-100 d-flex align-items-center justify-content-center py-3">
+                                <i class="fas fa-file-alt me-2"></i>View All Logs
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="@Url.Action("Transactions", "Admin")" class="btn btn-outline-success w-100 d-flex align-items-center justify-content-center py-3">
+                                <i class="fas fa-receipt me-2"></i>View Transactions
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="@Url.Action("SystemSettings", "Admin")" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center py-3">
+                                <i class="fas fa-cog me-2"></i>System Settings
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -86,23 +127,47 @@
     <!-- Charts Row -->
     <div class="row g-4 mb-4">
         <div class="col-lg-8">
-            <div class="card-custom">
-                <div class="card-header">
-                    <h5 class="fw-bold mb-0">User Activity Overview</h5>
+            <div class="card-custom h-100">
+                <div class="card-header bg-white">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-chart-bar text-primary me-2"></i>User Role Distribution
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="userActivityChart" height="80"></canvas>
+                    @if (Model.RoleDistribution != null && ((IEnumerable<dynamic>)Model.RoleDistribution).Any())
+                    {
+                        <canvas id="userRolesBarChart" height="80"></canvas>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No role distribution data available</p>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
 
         <div class="col-lg-4">
-            <div class="card-custom">
-                <div class="card-header">
-                    <h5 class="fw-bold mb-0">User Roles Distribution</h5>
+            <div class="card-custom h-100">
+                <div class="card-header bg-white">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-chart-pie text-success me-2"></i>Roles Overview
+                    </h5>
                 </div>
-                <div class="card-body">
-                    <canvas id="userRolesChart"></canvas>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    @if (Model.RoleDistribution != null && ((IEnumerable<dynamic>)Model.RoleDistribution).Any())
+                    {
+                        <canvas id="userRolesChart"></canvas>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">No data available</p>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -112,9 +177,11 @@
     <div class="row">
         <div class="col-12">
             <div class="card-custom">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">Recent User Activities</h5>
-                    <a href="@Url.Action("AuditLogs", "Admin")" class="btn btn-sm btn-amber">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-history text-info me-2"></i>Recent User Activities
+                    </h5>
+                    <a href="@Url.Action("AuditLogs", "Admin")" class="btn btn-sm btn-primary">
                         View All Logs <i class="fas fa-arrow-right ms-1"></i>
                     </a>
                 </div>
@@ -126,109 +193,59 @@
                                     <th>User</th>
                                     <th>Role</th>
                                     <th>Action</th>
-                                    <th>IP Address</th>
                                     <th>Timestamp</th>
-                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="user-avatar-sm bg-amber">
-                                                <i class="fas fa-user text-white small"></i>
+                                @if (Model.RecentActivityLogs != null && Model.RecentActivityLogs.Count > 0)
+                                {
+                                    foreach (var log in Model.RecentActivityLogs)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="user-avatar-sm bg-primary bg-opacity-10">
+                                                        <i class="fas fa-user text-primary small"></i>
+                                                    </div>
+                                                    <span class="fw-semibold">@(log.User?.FullName ?? "System")</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @if (log.User?.Role != null)
+                                                {
+                                                    <span class="badge bg-primary">@log.User.Role.RoleName</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">System</span>
+                                                }
+                                            </td>
+                                            <td>@log.Action</td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    <i class="far fa-clock me-1"></i>@log.Timestamp.ToString("MMM dd, yyyy HH:mm")
+                                                </small>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center py-5">
+                                            <div class="d-flex flex-column align-items-center">
+                                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                                <h6 class="text-muted mb-2">No Recent Activity</h6>
+                                                <p class="text-muted small mb-3">Activity logs will appear here as users interact with the system</p>
+                                                <a href="@Url.Action("Users", "Admin")" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-plus me-1"></i>Add First User
+                                                </a>
                                             </div>
-                                            <span class="fw-semibold">John Doe</span>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge badge-amber">Admin</span></td>
-                                    <td>Created new user</td>
-                                    <td>192.168.1.100</td>
-                                    <td>2024-01-31 10:30 AM</td>
-                                    <td><span class="badge badge-success">Success</span></td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="user-avatar-sm bg-amber">
-                                                <i class="fas fa-user text-white small"></i>
-                                            </div>
-                                            <span class="fw-semibold">Jane Smith</span>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge badge-amber">Manager</span></td>
-                                    <td>Updated product inventory</td>
-                                    <td>192.168.1.105</td>
-                                    <td>2024-01-31 10:25 AM</td>
-                                    <td><span class="badge badge-success">Success</span></td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="user-avatar-sm bg-amber">
-                                                <i class="fas fa-user text-white small"></i>
-                                            </div>
-                                            <span class="fw-semibold">Mike Wilson</span>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge badge-amber">Cashier</span></td>
-                                    <td>Processed payment</td>
-                                    <td>192.168.1.110</td>
-                                    <td>2024-01-31 10:20 AM</td>
-                                    <td><span class="badge badge-success">Success</span></td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="user-avatar-sm bg-amber">
-                                                <i class="fas fa-user text-white small"></i>
-                                            </div>
-                                            <span class="fw-semibold">Sarah Johnson</span>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge badge-amber">Marketing Staff</span></td>
-                                    <td>Created promotion campaign</td>
-                                    <td>192.168.1.115</td>
-                                    <td>2024-01-31 10:15 AM</td>
-                                    <td><span class="badge badge-success">Success</span></td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="user-avatar-sm bg-amber">
-                                                <i class="fas fa-user text-white small"></i>
-                                            </div>
-                                            <span class="fw-semibold">Unknown User</span>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge badge-secondary">N/A</span></td>
-                                    <td>Failed login attempt</td>
-                                    <td>192.168.1.200</td>
-                                    <td>2024-01-31 10:10 AM</td>
-                                    <td><span class="badge badge-danger">Failed</span></td>
-                                </tr>
+                                        </td>
+                                    </tr>
+                                }
                             </tbody>
                         </table>
-                    </div>
-                </div>
-                <div class="card-footer bg-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted small">Showing 1 to 8 of 1,429 entries</span>
-                        <nav>
-                            <ul class="pagination pagination-sm mb-0">
-                                <li class="page-item disabled">
-                                    <a class="page-link" href="#">Previous</a>
-                                </li>
-                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                <li class="page-item"><a class="page-link" href="#">...</a></li>
-                                <li class="page-item"><a class="page-link" href="#">179</a></li>
-                                <li class="page-item">
-                                    <a class="page-link" href="#">Next</a>
-                                </li>
-                            </ul>
-                        </nav>
                     </div>
                 </div>
             </div>
@@ -238,44 +255,118 @@
 
 @section Scripts {
     <script>
-        // User Activity Chart
-        const ctx1 = document.getElementById('userActivityChart').getContext('2d');
-        new Chart(ctx1, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Active Users',
-                    data: [65, 78, 82, 95, 88, 72, 68],
-                    borderColor: '#d97706',
-                    backgroundColor: 'rgba(217, 119, 6, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: { y: { beginAtZero: true } }
-            }
-        });
+        @if (Model.RoleDistribution != null && ((IEnumerable<dynamic>)Model.RoleDistribution).Any())
+        {
+            <text>
+            // Prepare role distribution data from server
+            var roleLabels = [@Html.Raw(string.Join(", ", ((IEnumerable<dynamic>)Model.RoleDistribution).Select(r => $"\"{r.Role}\"")))];
+            var roleCounts = [@Html.Raw(string.Join(", ", ((IEnumerable<dynamic>)Model.RoleDistribution).Select(r => r.Count)))];
+            
+            // Color palette - using professional colors
+            var roleColors = ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6c757d', '#0dcaf0'];
 
-        // User Roles Chart
-        const ctx2 = document.getElementById('userRolesChart').getContext('2d');
-        new Chart(ctx2, {
-            type: 'doughnut',
-            data: {
-                labels: ['Admin', 'Manager', 'Cashier', 'Marketing'],
-                datasets: [{
-                    data: [15, 35, 120, 78],
-                    backgroundColor: ['#d97706','#f59e0b','#fbbf24','#fcd34d'],
-                    borderWidth: 0
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }
-        });
+            // User Roles Bar Chart
+            const ctx1 = document.getElementById('userRolesBarChart');
+            if (ctx1) {
+                new Chart(ctx1.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: roleLabels,
+                        datasets: [{
+                            label: 'Number of Users',
+                            data: roleCounts,
+                            backgroundColor: roleColors,
+                            borderWidth: 0,
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                cornerRadius: 6,
+                                titleFont: { size: 14, weight: 'bold' },
+                                bodyFont: { size: 13 }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1,
+                                    font: { size: 12 }
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    font: { size: 12 }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // User Roles Doughnut Chart
+            const ctx2 = document.getElementById('userRolesChart');
+            if (ctx2) {
+                new Chart(ctx2.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: roleLabels,
+                        datasets: [{
+                            data: roleCounts,
+                            backgroundColor: roleColors,
+                            borderWidth: 3,
+                            borderColor: '#fff',
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 15,
+                                    font: { size: 12 },
+                                    usePointStyle: true,
+                                    pointStyle: 'circle'
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                cornerRadius: 6,
+                                titleFont: { size: 14, weight: 'bold' },
+                                bodyFont: { size: 13 },
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        let value = context.parsed || 0;
+                                        let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        let percentage = ((value / total) * 100).toFixed(1);
+                                        return label + ': ' + value + ' (' + percentage + '%)';
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '65%'
+                    }
+                });
+            }
+            </text>
+        }
     </script>
 }
