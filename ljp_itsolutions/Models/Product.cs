@@ -21,10 +21,10 @@ namespace ljp_itsolutions.Models
 
         public int StockQuantity { get; set; }
 
-        [StringLength(255)]
         public string? ImageURL { get; set; }
 
         public bool IsAvailable { get; set; } = true;
+        public virtual ICollection<ProductRecipe> ProductRecipes { get; set; } = new List<ProductRecipe>();
 
         // Legacy compatibility
         [NotMapped] public Guid Id { get; set; } = Guid.NewGuid();

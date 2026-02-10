@@ -64,7 +64,11 @@ namespace ljp_itsolutions.Controllers
 
             foreach (var group in productGroups)
             {
-                var product = await _db.Products.FindAsync(group.Key);
+                var product = await _db.Products
+                    .Include(p => p.ProductRecipes)
+                    .ThenInclude(pr => pr.Ingredient)
+                    .FirstOrDefaultAsync(p => p.ProductID == group.Key);
+
                 if (product != null)
                 {
                     int qty = group.Count();
@@ -79,8 +83,29 @@ namespace ljp_itsolutions.Controllers
                     order.OrderDetails.Add(detail);
                     total += detail.Subtotal;
 
-                    // Update stock
-                    product.StockQuantity -= qty;
+                    // Update Inventory
+                    if (product.ProductRecipes != null && product.ProductRecipes.Any())
+                    {
+                        foreach (var recipe in product.ProductRecipes)
+                        {
+                            recipe.Ingredient.StockQuantity -= (recipe.QuantityRequired * qty);
+                            
+                            // Log ingredient usage
+                            _db.InventoryLogs.Add(new InventoryLog
+                            {
+                                ProductID = product.ProductID,
+                                QuantityChange = (int)-(recipe.QuantityRequired * qty), // Casting to int for legacy log, though ingredients use decimal
+                                ChangeType = "Recipe Deduction",
+                                LogDate = DateTime.Now,
+                                Remarks = $"Used {recipe.Ingredient.Name} for Order #{order.OrderID.ToString().Substring(0, 8)}"
+                            });
+                        }
+                    }
+                    else
+                    {
+                        // Fallback: update product stock if no recipe defined
+                        product.StockQuantity -= qty;
+                    }
                 }
             }
 

@@ -107,6 +107,144 @@ namespace ljp_itsolutions.Migrations
                     b.ToTable("Customers");
                 });
 
+            modelBuilder.Entity("ljp_itsolutions.Models.Expense", b =>
+                {
+                    b.Property<int>("ExpenseID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ExpenseID"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ExpenseDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReferenceNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("ExpenseID");
+
+                    b.ToTable("Expenses");
+
+                    b.HasData(
+                        new
+                        {
+                            ExpenseID = 1,
+                            Amount = 150.00m,
+                            Category = "Utilities",
+                            Description = "Monthly power consumption",
+                            ExpenseDate = new DateTime(2026, 1, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Title = "Electricity Bill - Jan"
+                        },
+                        new
+                        {
+                            ExpenseID = 2,
+                            Amount = 85.50m,
+                            Category = "Supplies",
+                            Description = "50L Fresh Milk",
+                            ExpenseDate = new DateTime(2026, 2, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Title = "Milk Supply Restock"
+                        },
+                        new
+                        {
+                            ExpenseID = 3,
+                            Amount = 320.00m,
+                            Category = "Supplies",
+                            Description = "20kg Arabica beans",
+                            ExpenseDate = new DateTime(2026, 2, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Title = "Coffee Beans Cargo"
+                        });
+                });
+
+            modelBuilder.Entity("ljp_itsolutions.Models.Ingredient", b =>
+                {
+                    b.Property<int>("IngredientID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IngredientID"));
+
+                    b.Property<decimal>("LowStockThreshold")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("StockQuantity")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("IngredientID");
+
+                    b.ToTable("Ingredients");
+
+                    b.HasData(
+                        new
+                        {
+                            IngredientID = 1,
+                            LowStockThreshold = 2m,
+                            Name = "Espresso Beans",
+                            StockQuantity = 10m,
+                            Unit = "kg"
+                        },
+                        new
+                        {
+                            IngredientID = 2,
+                            LowStockThreshold = 5m,
+                            Name = "Fresh Milk",
+                            StockQuantity = 20m,
+                            Unit = "L"
+                        },
+                        new
+                        {
+                            IngredientID = 3,
+                            LowStockThreshold = 1000m,
+                            Name = "Caramel Syrup",
+                            StockQuantity = 5000m,
+                            Unit = "ml"
+                        },
+                        new
+                        {
+                            IngredientID = 4,
+                            LowStockThreshold = 1000m,
+                            Name = "Fructose",
+                            StockQuantity = 5000m,
+                            Unit = "ml"
+                        },
+                        new
+                        {
+                            IngredientID = 5,
+                            LowStockThreshold = 10m,
+                            Name = "Pastry Flour",
+                            StockQuantity = 50m,
+                            Unit = "kg"
+                        });
+                });
+
             modelBuilder.Entity("ljp_itsolutions.Models.InventoryLog", b =>
                 {
                     b.Property<int>("LogID")
@@ -278,8 +416,7 @@ namespace ljp_itsolutions.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("ImageURL")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("bit");
@@ -301,6 +438,117 @@ namespace ljp_itsolutions.Migrations
                     b.HasIndex("CategoryID");
 
                     b.ToTable("Products");
+
+                    b.HasData(
+                        new
+                        {
+                            ProductID = 1,
+                            CategoryID = 1,
+                            IsAvailable = true,
+                            Price = 3.50m,
+                            ProductName = "Espresso Blend",
+                            StockQuantity = 50
+                        },
+                        new
+                        {
+                            ProductID = 2,
+                            CategoryID = 1,
+                            IsAvailable = true,
+                            Price = 5.25m,
+                            ProductName = "Caramel Macchiato",
+                            StockQuantity = 30
+                        },
+                        new
+                        {
+                            ProductID = 3,
+                            CategoryID = 2,
+                            IsAvailable = true,
+                            Price = 4.00m,
+                            ProductName = "Earl Grey Tea",
+                            StockQuantity = 20
+                        },
+                        new
+                        {
+                            ProductID = 4,
+                            CategoryID = 3,
+                            IsAvailable = true,
+                            Price = 4.50m,
+                            ProductName = "Chocolate Croissant",
+                            StockQuantity = 15
+                        },
+                        new
+                        {
+                            ProductID = 5,
+                            CategoryID = 3,
+                            IsAvailable = true,
+                            Price = 3.75m,
+                            ProductName = "Blueberry Muffin",
+                            StockQuantity = 5
+                        });
+                });
+
+            modelBuilder.Entity("ljp_itsolutions.Models.ProductRecipe", b =>
+                {
+                    b.Property<int>("RecipeID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RecipeID"));
+
+                    b.Property<int>("IngredientID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductID")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("QuantityRequired")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("decimal(18,5)");
+
+                    b.HasKey("RecipeID");
+
+                    b.HasIndex("IngredientID");
+
+                    b.HasIndex("ProductID");
+
+                    b.ToTable("ProductRecipes");
+
+                    b.HasData(
+                        new
+                        {
+                            RecipeID = 1,
+                            IngredientID = 1,
+                            ProductID = 1,
+                            QuantityRequired = 0.018m
+                        },
+                        new
+                        {
+                            RecipeID = 2,
+                            IngredientID = 1,
+                            ProductID = 2,
+                            QuantityRequired = 0.018m
+                        },
+                        new
+                        {
+                            RecipeID = 3,
+                            IngredientID = 2,
+                            ProductID = 2,
+                            QuantityRequired = 0.250m
+                        },
+                        new
+                        {
+                            RecipeID = 4,
+                            IngredientID = 3,
+                            ProductID = 2,
+                            QuantityRequired = 30m
+                        },
+                        new
+                        {
+                            RecipeID = 5,
+                            IngredientID = 4,
+                            ProductID = 2,
+                            QuantityRequired = 10m
+                        });
                 });
 
             modelBuilder.Entity("ljp_itsolutions.Models.Promotion", b =>
@@ -336,6 +584,28 @@ namespace ljp_itsolutions.Migrations
                     b.HasKey("PromotionID");
 
                     b.ToTable("Promotions");
+
+                    b.HasData(
+                        new
+                        {
+                            PromotionID = 1,
+                            DiscountType = "Percentage",
+                            DiscountValue = 10m,
+                            EndDate = new DateTime(2026, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            PromotionName = "Early Bird Discount",
+                            StartDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            PromotionID = 2,
+                            DiscountType = "Fixed",
+                            DiscountValue = 5m,
+                            EndDate = new DateTime(2026, 2, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            PromotionName = "Grand Opening Special",
+                            StartDate = new DateTime(2026, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        });
                 });
 
             modelBuilder.Entity("ljp_itsolutions.Models.Role", b =>
@@ -437,7 +707,7 @@ namespace ljp_itsolutions.Migrations
                         new
                         {
                             UserID = new Guid("4f7b6d1a-5b6c-4d8e-a9f2-0a1b2c3d4e5f"),
-                            CreatedAt = new DateTime(2026, 2, 9, 22, 44, 52, 573, DateTimeKind.Local).AddTicks(8410),
+                            CreatedAt = new DateTime(2026, 2, 10, 18, 25, 51, 443, DateTimeKind.Local).AddTicks(9990),
                             Email = "admin@coffee.local",
                             FullName = "System Admin",
                             IsActive = true,
@@ -531,6 +801,25 @@ namespace ljp_itsolutions.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("ljp_itsolutions.Models.ProductRecipe", b =>
+                {
+                    b.HasOne("ljp_itsolutions.Models.Ingredient", "Ingredient")
+                        .WithMany("ProductRecipes")
+                        .HasForeignKey("IngredientID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ljp_itsolutions.Models.Product", "Product")
+                        .WithMany("ProductRecipes")
+                        .HasForeignKey("ProductID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ingredient");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("ljp_itsolutions.Models.User", b =>
                 {
                     b.HasOne("ljp_itsolutions.Models.Role", "Role")
@@ -552,11 +841,21 @@ namespace ljp_itsolutions.Migrations
                     b.Navigation("Orders");
                 });
 
+            modelBuilder.Entity("ljp_itsolutions.Models.Ingredient", b =>
+                {
+                    b.Navigation("ProductRecipes");
+                });
+
             modelBuilder.Entity("ljp_itsolutions.Models.Order", b =>
                 {
                     b.Navigation("OrderDetails");
 
                     b.Navigation("Payments");
+                });
+
+            modelBuilder.Entity("ljp_itsolutions.Models.Product", b =>
+                {
+                    b.Navigation("ProductRecipes");
                 });
 
             modelBuilder.Entity("ljp_itsolutions.Models.Promotion", b =>

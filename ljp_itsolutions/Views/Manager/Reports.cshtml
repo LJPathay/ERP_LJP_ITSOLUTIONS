@@ -1,3 +1,4 @@
+@model List<ljp_itsolutions.Models.ProductSalesSummary>
 @{
     ViewData["Title"] = "Business Intelligence";
 }
@@ -27,7 +28,7 @@
                         <div class="text-center">
                             <i class="fas fa-chart-area fa-3x text-muted mb-3"></i>
                             <p class="text-muted">Interactive Chart Visualization (Placeholder)</p>
-                            <small class="text-muted d-block">Requires Chart.js or D3.js integration</small>
+                            <small class="text-muted d-block">Requires Chart.js integration</small>
                         </div>
                     </div>
                 </div>
@@ -63,34 +64,31 @@
                             <th class="ps-4">Product</th>
                             <th>Total Sold</th>
                             <th>Revenue</th>
-                            <th>Trend</th>
+                            <th class="text-end pe-4">Progress</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td class="ps-4">
-                                <span class="fw-bold">Espresso Blend</span>
-                            </td>
-                            <td>450 units</td>
-                            <td>$1,250.00</td>
-                            <td><span class="text-success fw-bold">↑ 12%</span></td>
-                        </tr>
-                        <tr>
-                            <td class="ps-4">
-                                <span class="fw-bold">Caramel Macchiato</span>
-                            </td>
-                            <td>380 units</td>
-                            <td>$1,900.00</td>
-                            <td><span class="text-success fw-bold">↑ 8%</span></td>
-                        </tr>
-                        <tr>
-                            <td class="ps-4">
-                                <span class="fw-bold">Iced Vanilla Latte</span>
-                            </td>
-                            <td>310 units</td>
-                            <td>$1,395.00</td>
-                            <td><span class="text-danger fw-bold">↓ 4%</span></td>
-                        </tr>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <span class="fw-bold">@item.ProductName</span>
+                                </td>
+                                <td>@item.TotalSold units</td>
+                                <td>$@item.Revenue.ToString("N2")</td>
+                                <td class="text-end pe-4">
+                                    <div class="progress" style="height: 6px; width: 100px; display: inline-flex;">
+                                        <div class="progress-bar bg-success" style="width: 75%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No sales data found for the selected period.</td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>

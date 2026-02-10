@@ -1,0 +1,92 @@
+@{
+    ViewData["Title"] = "Marketing Performance";
+    var performance = ViewBag.Performance as IEnumerable<dynamic>;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Marketing Performance</h2>
+            <p class="text-muted">Monitor how your campaigns are driving sales.</p>
+        </div>
+    </div>
+
+    <!-- Performance Charts Placeholder -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h5 class="fw-bold mb-0">Campaign Success Rate</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-center h-100 py-5">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-chart-line fa-4x mb-3 opacity-25"></i>
+                            <p>Visual performance analytics will appear here as more data is collected.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h5 class="fw-bold mb-0">Top Performing Promo</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @if (performance != null && performance.Any())
+                        {
+                            foreach (var item in performance)
+                            {
+                                <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                    <div>
+                                        <h6 class="fw-bold mb-0">@item.Name</h6>
+                                        <small class="text-muted">@item.Count uses</small>
+                                    </div>
+                                    <span class="fw-bold text-success">$@item.Revenue.ToString("N2")</span>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="p-4 text-center text-muted">No campaign data yet.</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Marketing KPIs -->
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 text-center">
+                <h6 class="text-muted small uppercase fw-bold mb-2">Social Reach</h6>
+                <h3 class="fw-bold mb-0">--</h3>
+                <small class="text-info mt-2"><i class="fas fa-info-circle me-1"></i>Connect Social API</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 text-center">
+                <h6 class="text-muted small uppercase fw-bold mb-2">Customer Growth</h6>
+                <h3 class="fw-bold mb-0">+12%</h3>
+                <small class="text-success mt-2"><i class="fas fa-caret-up me-1"></i>Vs last month</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 text-center">
+                <h6 class="text-muted small uppercase fw-bold mb-2">Coupon ROI</h6>
+                <h3 class="fw-bold mb-0">4.5x</h3>
+                <small class="text-success mt-2"><i class="fas fa-check me-1"></i>Healthy</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 text-center text-white bg-primary">
+                <h6 class="text-light small uppercase fw-bold mb-2">Conversion Rate</h6>
+                <h3 class="fw-bold mb-0">2.8%</h3>
+                <small class="text-light mt-2">Active traffic</small>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,77 @@
+@model IEnumerable<ljp_itsolutions.Models.Order>
+@{
+    ViewData["Title"] = "Transaction Overrides";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Transaction Overrides</h2>
+            <p class="text-muted">Void or refund specific transactions (Critical Manager Access).</p>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Transaction ID</th>
+                            <th>Date</th>
+                            <th>Cashier</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <span class="fw-bold text-primary">#@order.OrderID.ToString().Substring(0, 8)</span>
+                                </td>
+                                <td>@order.OrderDate.ToString("MMM dd, yyyy HH:mm")</td>
+                                <td>@order.Cashier?.FullName</td>
+                                <td class="fw-bold">$@order.FinalAmount.ToString("F2")</td>
+                                <td>
+                                    @if (order.PaymentStatus == "Paid")
+                                    {
+                                        <span class="badge bg-success rounded-pill">Paid</span>
+                                    }
+                                    else if (order.PaymentStatus == "Voided")
+                                    {
+                                        <span class="badge bg-secondary rounded-pill">Voided</span>
+                                    }
+                                    else if (order.PaymentStatus == "Refunded")
+                                    {
+                                        <span class="badge bg-info rounded-pill">Refunded</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning rounded-pill">@order.PaymentStatus</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    @if (order.PaymentStatus == "Paid")
+                                    {
+                                        <form asp-action="VoidOrder" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to VOID this transaction? This cannot be undone.')">
+                                            <input type="hidden" name="id" value="@order.OrderID" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-ban me-1"></i>Void
+                                            </button>
+                                        </form>
+                                        <button class="btn btn-sm btn-outline-info ms-2">
+                                            <i class="fas fa-undo me-1"></i>Refund
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

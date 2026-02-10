@@ -33,16 +33,18 @@
             @foreach (var product in Model)
             {
                 <div class="product-card" data-category="@product.Category?.CategoryName" onclick="addToCart('@product.ProductID', '@product.ProductName', @product.Price)">
-                    <div class="product-image">
+                    <div class="product-image-container">
                         @if (!string.IsNullOrEmpty(product.ImageURL))
                         {
-                            <img src="@product.ImageURL" alt="@product.ProductName" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />
+                            <img src="@product.ImageURL" alt="@product.ProductName" class="product-img" />
                         }
                         else
                         {
-                            @if (product.Category?.CategoryName == "Coffee") { <i class="fas fa-coffee"></i> }
-                            else if (product.Category?.CategoryName == "Tea") { <i class="fas fa-leaf"></i> }
-                            else { <i class="fas fa-cookie"></i> }
+                            <div class="product-icon">
+                                @if (product.Category?.CategoryName == "Coffee") { <i class="fas fa-coffee"></i> }
+                                else if (product.Category?.CategoryName == "Tea") { <i class="fas fa-leaf"></i> }
+                                else { <i class="fas fa-cookie"></i> }
+                            </div>
                         }
                     </div>
                     <div class="product-info">

@@ -1,130 +1,78 @@
-@* Manager Side Navigation with Dropdowns *@
-<div class="nav flex-column gap-2">
-    <a class="nav-link d-flex align-items-center gap-3 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")" asp-controller="Manager" asp-action="Dashboard">
-        <i class="fas fa-chart-line opacity-75"></i>
-        <span>Manager Dashboard</span>
-    </a>
-
-    <!-- Operations Dropdown -->
-    <div class="nav-item dropdown">
-        <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-store opacity-75"></i>
-            <span>Operations</span>
-            <i class="fas fa-chevron-down ms-auto x-small opacity-50"></i>
+@* Manager Side Navigation - High Level Responsibilities *@
+<div class="nav flex-column">
+    <div class="nav-item">
+        <a class="nav-link d-flex align-items-center gap-3 @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")" asp-controller="Manager" asp-action="Dashboard">
+            <i class="fas fa-th-large opacity-75"></i>
+            <span>Overview Dashboard</span>
         </a>
-        <ul class="dropdown-menu shadow-lg border-0">
-            <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" asp-controller="POS" asp-action="Index">
-                    <i class="fas fa-cash-register opacity-75"></i>
-                    <span>Open POS</span>
-                </a>
-            </li>
-            <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Cashier" asp-action="TransactionHistory">
-                    <i class="fas fa-history opacity-75"></i>
-                    <span>Order History</span>
-                </a>
-            </li>
-        </ul>
     </div>
 
-    <!-- Inventory Dropdown -->
+    <!-- Intelligence & Finance -->
     <div class="nav-item dropdown">
-        <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-boxes opacity-75"></i>
-            <span>Inventory</span>
-            <i class="fas fa-chevron-down ms-auto x-small opacity-50"></i>
-        </a>
-        <ul class="dropdown-menu shadow-lg border-0">
-            <li>
-                <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Products" ? "active" : "") d-flex align-items-center gap-2" asp-controller="Manager" asp-action="Products">
-                    <i class="fas fa-coffee opacity-75"></i>
-                    <span>Product Management</span>
-                </a>
-            </li>
-            <li>
-                <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Inventory" ? "active" : "") d-flex align-items-center gap-2" asp-controller="Manager" asp-action="Inventory">
-                    <i class="fas fa-boxes opacity-75"></i>
-                    <span>Inventory Levels</span>
-                </a>
-            </li>
-            <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="#">
-                    <i class="fas fa-truck opacity-75"></i>
-                    <span>Suppliers</span>
-                </a>
-            </li>
-        </ul>
-    </div>
-
-    <!-- Analytics Dropdown -->
-    <div class="nav-item dropdown">
-        <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-chart-bar opacity-75"></i>
-            <span>Intelligence</span>
+        <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret @(ViewContext.RouteData.Values["action"]?.ToString() == "Reports" || ViewContext.RouteData.Values["action"]?.ToString() == "Finance" ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-chart-pie opacity-75"></i>
+            <span>Intelligence & Finance</span>
             <i class="fas fa-chevron-down ms-auto x-small opacity-50"></i>
         </a>
         <ul class="dropdown-menu shadow-lg border-0">
             <li>
                 <a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Manager" asp-action="Reports">
-                    <i class="fas fa-file-invoice opacity-75"></i>
-                    <span>Sales Reports</span>
+                    <i class="fas fa-file-invoice-dollar opacity-75"></i>
+                    <span>Sales & Analytics</span>
                 </a>
             </li>
             <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="#">
-                    <i class="fas fa-user-clock opacity-75"></i>
-                    <span>Staff Attendance</span>
+                <a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Manager" asp-action="Finance">
+                    <i class="fas fa-balance-scale opacity-75"></i>
+                    <span>Profit & Expenses</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Operations & Marketing -->
+    <div class="nav-item dropdown">
+        <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret @(ViewContext.RouteData.Values["action"]?.ToString() == "Promotions" || ViewContext.RouteData.Values["action"]?.ToString() == "Marketing" ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-bullhorn opacity-75"></i>
+            <span>Marketing & Growth</span>
+            <i class="fas fa-chevron-down ms-auto x-small opacity-50"></i>
+        </a>
+        <ul class="dropdown-menu shadow-lg border-0">
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Manager" asp-action="Promotions">
+                    <i class="fas fa-tag opacity-75"></i>
+                    <span>Manage Promotions</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Manager" asp-action="Marketing">
+                    <i class="fas fa-chart-line opacity-75"></i>
+                    <span>Marketing Performance</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Inventory & Control -->
+    <div class="nav-item dropdown">
+        <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret @(ViewContext.RouteData.Values["action"]?.ToString() == "Products" || ViewContext.RouteData.Values["action"]?.ToString() == "Transactions" ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-shield-alt opacity-75"></i>
+            <span>Operations & Control</span>
+            <i class="fas fa-chevron-down ms-auto x-small opacity-50"></i>
+        </a>
+        <ul class="dropdown-menu shadow-lg border-0">
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Manager" asp-action="Products">
+                    <i class="fas fa-dollar-sign opacity-75"></i>
+                    <span>Product & Pricing</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Manager" asp-action="Transactions">
+                    <i class="fas fa-exchange-alt opacity-75"></i>
+                    <span>Transaction Overrides</span>
                 </a>
             </li>
         </ul>
     </div>
 </div>
-
-<style>
-    .nav-link {
-        color: var(--text-light) !important;
-        padding: 12px 20px;
-        border-radius: 12px;
-        transition: all 0.2s;
-        font-weight: 500;
-        text-decoration: none;
-        margin: 0 10px;
-    }
-    .nav-link:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #ffffff !important;
-    }
-    .nav-link.active {
-        background: var(--accent-color) !important;
-        color: #ffffff !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-    .no-caret::after {
-        display: none !important;
-    }
-    .dropdown-menu {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 8px;
-        margin-top: 5px !important;
-        width: calc(100% - 20px);
-        left: 10px !important;
-    }
-    .dropdown-item {
-        border-radius: 8px;
-        padding: 10px 15px;
-        font-weight: 500;
-        color: var(--text-primary);
-        transition: all 0.2s;
-    }
-    .dropdown-item:hover {
-        background: var(--accent-light);
-        color: var(--primary-color);
-    }
-    .dropdown-item.active {
-        background: var(--primary-color) !important;
-        color: #ffffff !important;
-    }
-    .x-small { font-size: 0.75rem; }
-</style>

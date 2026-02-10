@@ -42,7 +42,7 @@ namespace ljp_itsolutions.Services
                 var uploadParams = new ImageUploadParams
                 {
                     File = new FileDescription(file.FileName, stream),
-                    Transformation = new Transformation().Height(500).Width(500).Crop("fill").Gravity("face"),
+                    Transformation = new Transformation().Height(500).Width(500).Crop("fill").Gravity("auto"),
                     Folder = "ljp_erp"
                 };
                 uploadResult = await _cloudinary.UploadAsync(uploadParams);

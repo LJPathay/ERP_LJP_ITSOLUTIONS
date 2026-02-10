@@ -143,24 +143,24 @@ body {
     padding: 0 !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 8px !important;
+    gap: 4px !important;
 }
 
 .sidebar .nav-item {
     width: 100% !important;
-    padding: 0 10px !important;
+    padding: 0 12px !important;
 }
 
 .sidebar .nav-link {
     color: rgba(255, 255, 255, 0.7) !important;
-    padding: 14px 22px !important;
-    border-radius: 15px !important;
+    padding: 8px 14px !important;
+    border-radius: 12px !important;
     transition: all 0.2s ease !important;
     display: flex !important;
     align-items: center !important;
-    gap: 15px !important;
+    gap: 12px !important;
     font-weight: 500 !important;
-    font-size: 1rem !important;
+    font-size: 0.95rem !important;
     width: 100% !important;
     background: transparent !important;
     text-decoration: none !important;

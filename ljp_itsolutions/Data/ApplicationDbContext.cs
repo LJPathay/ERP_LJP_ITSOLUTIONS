@@ -21,6 +21,9 @@ namespace ljp_itsolutions.Data
         public DbSet<InventoryLog> InventoryLogs { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<SystemSetting> SystemSettings { get; set; }
+        public DbSet<Ingredient> Ingredients { get; set; }
+        public DbSet<ProductRecipe> ProductRecipes { get; set; }
+        public DbSet<Expense> Expenses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -69,6 +72,22 @@ namespace ljp_itsolutions.Data
             {
                 b.Property(p => p.DiscountValue).HasPrecision(18, 2);
             });
+            
+            builder.Entity<Ingredient>(b =>
+            {
+                b.Property(i => i.StockQuantity).HasPrecision(18, 3);
+                b.Property(i => i.LowStockThreshold).HasPrecision(18, 3);
+            });
+
+            builder.Entity<ProductRecipe>(b =>
+            {
+                b.Property(pr => pr.QuantityRequired).HasPrecision(18, 5); // Allow small amounts like 0.005 kg
+            });
+
+            builder.Entity<Expense>(b =>
+            {
+                b.Property(e => e.Amount).HasPrecision(18, 2);
+            });
 
             // Seed Roles
             builder.Entity<Role>().HasData(
@@ -98,6 +117,47 @@ namespace ljp_itsolutions.Data
                     IsActive = true,
                     Password = "AQAAAAIAAYagAAAAEEmhXNnUvV8p+L1p0v7wXv9XwQyGZG/0T0T0T0T0T0T0T0T0T0T0T0T0T0T0T0==" // Example hash, usually better to run a small app once to get a real one
                 }
+            );
+            // Seed Products
+            builder.Entity<Product>().HasData(
+                new Product { ProductID = 1, ProductName = "Espresso Blend", CategoryID = 1, Price = 3.50m, StockQuantity = 50, ImageURL = null, IsAvailable = true },
+                new Product { ProductID = 2, ProductName = "Caramel Macchiato", CategoryID = 1, Price = 5.25m, StockQuantity = 30, ImageURL = null, IsAvailable = true },
+                new Product { ProductID = 3, ProductName = "Earl Grey Tea", CategoryID = 2, Price = 4.00m, StockQuantity = 20, ImageURL = null, IsAvailable = true },
+                new Product { ProductID = 4, ProductName = "Chocolate Croissant", CategoryID = 3, Price = 4.50m, StockQuantity = 15, ImageURL = null, IsAvailable = true },
+                new Product { ProductID = 5, ProductName = "Blueberry Muffin", CategoryID = 3, Price = 3.75m, StockQuantity = 5, ImageURL = null, IsAvailable = true }
+            );
+
+            // Seed Ingredients
+            builder.Entity<Ingredient>().HasData(
+                new Ingredient { IngredientID = 1, Name = "Espresso Beans", StockQuantity = 10, Unit = "kg", LowStockThreshold = 2 },
+                new Ingredient { IngredientID = 2, Name = "Fresh Milk", StockQuantity = 20, Unit = "L", LowStockThreshold = 5 },
+                new Ingredient { IngredientID = 3, Name = "Caramel Syrup", StockQuantity = 5000, Unit = "ml", LowStockThreshold = 1000 },
+                new Ingredient { IngredientID = 4, Name = "Fructose", StockQuantity = 5000, Unit = "ml", LowStockThreshold = 1000 },
+                new Ingredient { IngredientID = 5, Name = "Pastry Flour", StockQuantity = 50, Unit = "kg", LowStockThreshold = 10 }
+            );
+
+            // Seed Product Recipes
+            builder.Entity<ProductRecipe>().HasData(
+                // Espresso Blend uses 18g beans
+                new ProductRecipe { RecipeID = 1, ProductID = 1, IngredientID = 1, QuantityRequired = 0.018m },
+                // Caramel Macchiato: 18g beans, 250ml milk, 30ml caramel, 10ml fructose
+                new ProductRecipe { RecipeID = 2, ProductID = 2, IngredientID = 1, QuantityRequired = 0.018m },
+                new ProductRecipe { RecipeID = 3, ProductID = 2, IngredientID = 2, QuantityRequired = 0.250m },
+                new ProductRecipe { RecipeID = 4, ProductID = 2, IngredientID = 3, QuantityRequired = 30m },
+                new ProductRecipe { RecipeID = 5, ProductID = 2, IngredientID = 4, QuantityRequired = 10m }
+            );
+
+            // Seed Expenses
+            builder.Entity<Expense>().HasData(
+                new Expense { ExpenseID = 1, Title = "Electricity Bill - Jan", Amount = 150.00m, Description = "Monthly power consumption", Category = "Utilities", ExpenseDate = new DateTime(2026, 1, 30) },
+                new Expense { ExpenseID = 2, Title = "Milk Supply Restock", Amount = 85.50m, Description = "50L Fresh Milk", Category = "Supplies", ExpenseDate = new DateTime(2026, 2, 5) },
+                new Expense { ExpenseID = 3, Title = "Coffee Beans Cargo", Amount = 320.00m, Description = "20kg Arabica beans", Category = "Supplies", ExpenseDate = new DateTime(2026, 2, 8) }
+            );
+
+            // Seed Promotions
+            builder.Entity<Promotion>().HasData(
+                new Promotion { PromotionID = 1, PromotionName = "Early Bird Discount", DiscountType = "Percentage", DiscountValue = 10, StartDate = new DateTime(2026, 1, 1), EndDate = new DateTime(2026, 12, 31), IsActive = true },
+                new Promotion { PromotionID = 2, PromotionName = "Grand Opening Special", DiscountType = "Fixed", DiscountValue = 5, StartDate = new DateTime(2026, 2, 1), EndDate = new DateTime(2026, 2, 28), IsActive = true }
             );
         }
     }

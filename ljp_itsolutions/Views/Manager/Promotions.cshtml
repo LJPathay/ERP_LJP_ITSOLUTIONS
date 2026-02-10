@@ -1,0 +1,73 @@
+@model IEnumerable<ljp_itsolutions.Models.Promotion>
+@{
+    ViewData["Title"] = "Promotional Campaigns";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Promotional Campaigns</h2>
+            <p class="text-muted">Create and manage discounts for your customers.</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPromotionModal">
+            <i class="fas fa-plus me-2"></i>New Campaign
+        </button>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Campaign Name</th>
+                            <th>Type</th>
+                            <th>Value</th>
+                            <th>Status</th>
+                            <th>Valid Period</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var promo in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">@promo.PromotionName</div>
+                                    <small class="text-muted">Code: PROMO-@promo.PromotionID</small>
+                                </td>
+                                <td>@promo.DiscountType</td>
+                                <td class="fw-bold text-success">
+                                    @(promo.DiscountType == "Percentage" ? $"{promo.DiscountValue}%" : $"${promo.DiscountValue:F2}")
+                                </td>
+                                <td>
+                                    @if (promo.IsActive && promo.EndDate >= DateTime.Now)
+                                    {
+                                        <span class="badge bg-success rounded-pill">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary rounded-pill">Inactive</span>
+                                    }
+                                </td>
+                                <td>
+                                    <small>@promo.StartDate.ToString("MMM dd") - @promo.EndDate.ToString("MMM dd, yyyy")</small>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-sm btn-light"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-sm btn-light text-danger"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">No promotional campaigns found.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
