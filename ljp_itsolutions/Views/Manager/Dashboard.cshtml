@@ -56,7 +56,7 @@
                         </div>
                         <div>
                             <p class="text-muted mb-0 small uppercase fw-bold ls-1">Total Revenue</p>
-                            <h3 class="fw-bold mb-0">$@Model.TotalRevenue.ToString("N2")</h3>
+                            <h3 class="fw-bold mb-0">₱@Model.TotalRevenue.ToString("N2")</h3>
                         </div>
                     </div>
                 </div>
@@ -106,9 +106,20 @@
                                         <td class="ps-4 fw-bold">#@order.OrderID</td>
                                         <td>@order.OrderDate.ToString("MMM dd, hh:mm tt")</td>
                                         <td>@order.Cashier?.FullName</td>
-                                        <td>$@order.FinalAmount.ToString("N2")</td>
+                                        <td>₱@order.FinalAmount.ToString("N2")</td>
                                         <td class="text-end pe-4">
-                                            <span class="badge bg-success bg-opacity-10 text-success">Completed</span>
+                                            @if (order.PaymentStatus == "Paid")
+                                            {
+                                                <span class="badge bg-success bg-opacity-10 text-success">Paid</span>
+                                            }
+                                            else if (order.PaymentStatus == "Voided")
+                                            {
+                                                <span class="badge bg-danger bg-opacity-10 text-danger">Voided</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning bg-opacity-10 text-warning">@order.PaymentStatus</span>
+                                            }
                                         </td>
                                     </tr>
                                 }
@@ -145,7 +156,7 @@
                                     <tr>
                                         <td class="ps-4 fw-bold">@item.ProductName</td>
                                         <td>@item.TotalSold units</td>
-                                        <td class="text-end pe-4">$@item.Revenue.ToString("N2")</td>
+                                        <td class="text-end pe-4">₱@item.Revenue.ToString("N2")</td>
                                     </tr>
                                 }
                                 @if (!Model.TopProducts.Any())

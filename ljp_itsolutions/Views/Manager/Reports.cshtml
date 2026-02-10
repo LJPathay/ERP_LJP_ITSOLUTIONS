@@ -24,13 +24,7 @@
                     <h5 class="fw-bold mb-0">Sales Performance</h5>
                 </div>
                 <div class="card-body">
-                    <div class="chart-placeholder d-flex align-items-center justify-content-center bg-light rounded" style="height: 300px;">
-                        <div class="text-center">
-                            <i class="fas fa-chart-area fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">Interactive Chart Visualization (Placeholder)</p>
-                            <small class="text-muted d-block">Requires Chart.js integration</small>
-                        </div>
-                    </div>
+                    <canvas id="salesChart" height="300"></canvas>
                 </div>
             </div>
         </div>
@@ -40,12 +34,7 @@
                     <h5 class="fw-bold mb-0">Sales by Category</h5>
                 </div>
                 <div class="card-body">
-                    <div class="chart-placeholder d-flex align-items-center justify-content-center bg-light rounded" style="height: 300px;">
-                        <div class="text-center">
-                            <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">Revenue Share Placeholder</p>
-                        </div>
-                    </div>
+                    <canvas id="revenueChart" height="300"></canvas>
                 </div>
             </div>
         </div>
@@ -75,7 +64,7 @@
                                     <span class="fw-bold">@item.ProductName</span>
                                 </td>
                                 <td>@item.TotalSold units</td>
-                                <td>$@item.Revenue.ToString("N2")</td>
+                                <td>₱@item.Revenue.ToString("N2")</td>
                                 <td class="text-end pe-4">
                                     <div class="progress" style="height: 6px; width: 100px; display: inline-flex;">
                                         <div class="progress-bar bg-success" style="width: 75%"></div>
@@ -95,3 +84,57 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Sales Volume Chart
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            new Chart(salesCtx, {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(ViewBag.ChartLabels)),
+                    datasets: [{
+                        label: 'Units Sold',
+                        data: @Html.Raw(Json.Serialize(ViewBag.ChartData)),
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // Revenue Chart
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(revenueCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(ViewBag.ChartLabels)),
+                    datasets: [{
+                        label: 'Revenue (₱)',
+                        data: @Html.Raw(Json.Serialize(ViewBag.RevenueData)),
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        });
+    </script>
+}

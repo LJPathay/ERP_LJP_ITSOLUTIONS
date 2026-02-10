@@ -200,6 +200,11 @@ namespace ljp_itsolutions.Controllers
                 .Take(10)
                 .ToListAsync();
 
+            // Prepare Chart Data
+            ViewBag.ChartLabels = topProducts.Select(p => p.ProductName).ToList();
+            ViewBag.ChartData = topProducts.Select(p => p.TotalSold).ToList();
+            ViewBag.RevenueData = topProducts.Select(p => p.Revenue).ToList();
+
             return View(topProducts);
         }
 
@@ -208,6 +213,26 @@ namespace ljp_itsolutions.Controllers
             var revenue = await _db.Orders.SumAsync(o => o.FinalAmount);
             var expenses = await _db.Expenses.SumAsync(e => e.Amount);
             
+            // Financial Trends (Last 6 Months)
+            var last6Months = Enumerable.Range(0, 6).Select(i => DateTime.Today.AddMonths(-5 + i)).ToList();
+            var trendLabels = new List<string>();
+            var incomeTrend = new List<decimal>();
+            var expenseTrend = new List<decimal>();
+
+            foreach (var month in last6Months)
+            {
+                var start = new DateTime(month.Year, month.Month, 1);
+                var end = start.AddMonths(1).AddSeconds(-1);
+                
+                trendLabels.Add(month.ToString("MMM"));
+                incomeTrend.Add(await _db.Orders.Where(o => o.OrderDate >= start && o.OrderDate <= end).SumAsync(o => o.FinalAmount));
+                expenseTrend.Add(await _db.Expenses.Where(e => e.ExpenseDate >= start && e.ExpenseDate <= end).SumAsync(e => e.Amount));
+            }
+
+            ViewBag.TrendLabels = trendLabels;
+            ViewBag.IncomeTrend = incomeTrend;
+            ViewBag.ExpenseTrend = expenseTrend;
+
             var viewModel = new FinanceViewModel
             {
                 TotalRevenue = revenue,
@@ -227,7 +252,6 @@ namespace ljp_itsolutions.Controllers
 
         public async Task<IActionResult> Marketing()
         {
-            // Simplified marketing performance: Sales by Promotion
             var performance = await _db.Orders
                 .Where(o => o.PromotionID != null)
                 .GroupBy(o => o.Promotion.PromotionName)
@@ -235,6 +259,18 @@ namespace ljp_itsolutions.Controllers
                 .ToListAsync();
 
             ViewBag.Performance = performance;
+            ViewBag.ActivePromos = await _db.Promotions.CountAsync(p => p.IsActive);
+            ViewBag.TotalPromoUses = await _db.Orders.CountAsync(o => o.PromotionID != null);
+            ViewBag.TotalPromoRevenue = await _db.Orders.Where(o => o.PromotionID != null).SumAsync(o => o.FinalAmount);
+            ViewBag.AvgDiscount = await _db.Orders.Where(o => o.PromotionID != null).AnyAsync() 
+                ? await _db.Orders.Where(o => o.PromotionID != null).AverageAsync(o => o.DiscountAmount) 
+                : 0;
+
+            // Chart Data
+            ViewBag.PromoLabels = performance.Select(p => p.Name).ToList();
+            ViewBag.PromoRevenue = performance.Select(p => p.Revenue).ToList();
+            ViewBag.PromoCounts = performance.Select(p => p.Count).ToList();
+
             return View();
         }
 
@@ -259,6 +295,105 @@ namespace ljp_itsolutions.Controllers
                 TempData["SuccessMessage"] = "Transaction voided successfully!";
             }
             return RedirectToAction("Transactions");
+        }
+
+        // --- EXPENSE CRUD ---
+        [HttpPost]
+        public async Task<IActionResult> CreateExpense(Expense expense)
+        {
+            if (ModelState.IsValid)
+            {
+                _db.Expenses.Add(expense);
+                await _db.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Expense recorded successfully!";
+            }
+            return RedirectToAction("Finance");
+        }
+
+        // --- INGREDIENT CRUD ---
+        [HttpPost]
+        public async Task<IActionResult> CreateIngredient(Ingredient ingredient)
+        {
+            if (ModelState.IsValid)
+            {
+                _db.Ingredients.Add(ingredient);
+                await _db.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Ingredient added successfully!";
+            }
+            return RedirectToAction("Inventory");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditIngredient(Ingredient ingredient)
+        {
+            var existing = await _db.Ingredients.FindAsync(ingredient.IngredientID);
+            if (existing != null)
+            {
+                existing.Name = ingredient.Name;
+                existing.StockQuantity = ingredient.StockQuantity;
+                existing.Unit = ingredient.Unit;
+                existing.LowStockThreshold = ingredient.LowStockThreshold;
+                await _db.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Ingredient updated successfully!";
+            }
+            return RedirectToAction("Inventory");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteIngredient(int id)
+        {
+            var ingredient = await _db.Ingredients.FindAsync(id);
+            if (ingredient != null)
+            {
+                _db.Ingredients.Remove(ingredient);
+                await _db.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Ingredient removed successfully!";
+            }
+            return RedirectToAction("Inventory");
+        }
+
+        // --- PROMOTION CRUD ---
+        [HttpPost]
+        public async Task<IActionResult> CreatePromotion(Promotion promotion)
+        {
+            if (ModelState.IsValid)
+            {
+                _db.Promotions.Add(promotion);
+                await _db.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Promotion campaign created!";
+            }
+            return RedirectToAction("Promotions");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditPromotion(Promotion promotion)
+        {
+            var existing = await _db.Promotions.FindAsync(promotion.PromotionID);
+            if (existing != null)
+            {
+                existing.PromotionName = promotion.PromotionName;
+                existing.DiscountType = promotion.DiscountType;
+                existing.DiscountValue = promotion.DiscountValue;
+                existing.StartDate = promotion.StartDate;
+                existing.EndDate = promotion.EndDate;
+                existing.IsActive = promotion.IsActive;
+                await _db.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Promotion updated successfully!";
+            }
+            return RedirectToAction("Promotions");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeletePromotion(int id)
+        {
+            var promotion = await _db.Promotions.FindAsync(id);
+            if (promotion != null)
+            {
+                _db.Promotions.Remove(promotion);
+                await _db.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Promotion deleted!";
+            }
+            return RedirectToAction("Promotions");
         }
     }
 }

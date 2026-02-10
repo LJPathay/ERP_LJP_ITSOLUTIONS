@@ -39,7 +39,7 @@
                     <div>
                         <p class="text-muted mb-0 small uppercase fw-bold ls-1">Price Range</p>
                         <h4 class="fw-bold mb-0">
-                            $@(Model.Any() ? Model.Min(p => p.Price).ToString("F2") : "0.00") - $@(Model.Any() ? Model.Max(p => p.Price).ToString("F2") : "0.00")
+                            ₱@(Model.Any() ? Model.Min(p => p.Price).ToString("F2") : "0.00") - ₱@(Model.Any() ? Model.Max(p => p.Price).ToString("F2") : "0.00")
                         </h4>
                     </div>
                 </div>
@@ -99,7 +99,7 @@
                                     </div>
                                 </td>
                                 <td><span class="badge bg-info bg-opacity-10 text-info">@item.Category?.CategoryName</span></td>
-                                <td>$@item.Price.ToString("F2")</td>
+                                <td>₱@item.Price.ToString("F2")</td>
                                 <td>
                                     <form asp-action="UpdateStock" method="post" class="d-flex align-items-center" style="max-width: 120px;">
                                         <input type="hidden" name="id" value="@item.ProductID" />
@@ -172,7 +172,7 @@
                             </select>
                         </div>
                         <div class="col">
-                            <label class="form-label">Price ($)</label>
+                            <label class="form-label">Price (₱)</label>
                             <input type="number" step="0.01" name="Price" class="form-control" required placeholder="0.00" />
                         </div>
                     </div>
@@ -222,7 +222,7 @@
                             </select>
                         </div>
                         <div class="col">
-                            <label class="form-label">Price ($)</label>
+                            <label class="form-label">Price (₱)</label>
                             <input type="number" step="0.01" name="Price" id="edit-price" class="form-control" required />
                         </div>
                     </div>

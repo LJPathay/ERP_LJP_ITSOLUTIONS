@@ -19,12 +19,7 @@
                     <h5 class="fw-bold mb-0">Campaign Success Rate</h5>
                 </div>
                 <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-center h-100 py-5">
-                        <div class="text-center text-muted">
-                            <i class="fas fa-chart-line fa-4x mb-3 opacity-25"></i>
-                            <p>Visual performance analytics will appear here as more data is collected.</p>
-                        </div>
-                    </div>
+                    <canvas id="campaignChart" height="300"></canvas>
                 </div>
             </div>
         </div>
@@ -44,7 +39,7 @@
                                         <h6 class="fw-bold mb-0">@item.Name</h6>
                                         <small class="text-muted">@item.Count uses</small>
                                     </div>
-                                    <span class="fw-bold text-success">$@item.Revenue.ToString("N2")</span>
+                                    <span class="fw-bold text-success">₱@item.Revenue.ToString("N2")</span>
                                 </div>
                             }
                         }
@@ -62,31 +57,74 @@
     <div class="row g-4">
         <div class="col-md-3">
             <div class="card border-0 shadow-sm p-4 text-center">
-                <h6 class="text-muted small uppercase fw-bold mb-2">Social Reach</h6>
-                <h3 class="fw-bold mb-0">--</h3>
-                <small class="text-info mt-2"><i class="fas fa-info-circle me-1"></i>Connect Social API</small>
+                <h6 class="text-muted small uppercase fw-bold mb-2">Active Campaigns</h6>
+                <h3 class="fw-bold mb-0">@ViewBag.ActivePromos</h3>
+                <small class="text-info mt-2"><i class="fas fa-bullhorn me-1"></i>Current Live</small>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card border-0 shadow-sm p-4 text-center">
-                <h6 class="text-muted small uppercase fw-bold mb-2">Customer Growth</h6>
-                <h3 class="fw-bold mb-0">+12%</h3>
-                <small class="text-success mt-2"><i class="fas fa-caret-up me-1"></i>Vs last month</small>
+                <h6 class="text-muted small uppercase fw-bold mb-2">Total Promo Uses</h6>
+                <h3 class="fw-bold mb-0">@ViewBag.TotalPromoUses</h3>
+                <small class="text-success mt-2"><i class="fas fa-check-circle me-1"></i>Orders with discount</small>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card border-0 shadow-sm p-4 text-center">
-                <h6 class="text-muted small uppercase fw-bold mb-2">Coupon ROI</h6>
-                <h3 class="fw-bold mb-0">4.5x</h3>
-                <small class="text-success mt-2"><i class="fas fa-check me-1"></i>Healthy</small>
+                <h6 class="text-muted small uppercase fw-bold mb-2">Avg. Discount</h6>
+                <h3 class="fw-bold mb-0">₱@ViewBag.AvgDiscount.ToString("N2")</h3>
+                <small class="text-danger mt-2"><i class="fas fa-tag me-1"></i>Average per order</small>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card border-0 shadow-sm p-4 text-center text-white bg-primary">
-                <h6 class="text-light small uppercase fw-bold mb-2">Conversion Rate</h6>
-                <h3 class="fw-bold mb-0">2.8%</h3>
-                <small class="text-light mt-2">Active traffic</small>
+                <h6 class="text-light small uppercase fw-bold mb-2">Promo Revenue</h6>
+                <h3 class="fw-bold mb-0">₱@ViewBag.TotalPromoRevenue.ToString("N0")</h3>
+                <small class="text-light mt-2">Driven by campaigns</small>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const ctx = document.getElementById('campaignChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar', // Changed from line to bar for better comparison
+                data: {
+                    labels: @Html.Raw(Json.Serialize(ViewBag.PromoLabels)),
+                    datasets: [{
+                        label: 'Revenue Generated (₱)',
+                        data: @Html.Raw(Json.Serialize(ViewBag.PromoRevenue)),
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return '₱' + value; }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Revenue: ₱' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

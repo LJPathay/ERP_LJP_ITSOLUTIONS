@@ -34,7 +34,7 @@
                                 </td>
                                 <td>@order.OrderDate.ToString("MMM dd, yyyy HH:mm")</td>
                                 <td>@order.Cashier?.FullName</td>
-                                <td class="fw-bold">$@order.FinalAmount.ToString("F2")</td>
+                                <td class="fw-bold">₱@order.FinalAmount.ToString("F2")</td>
                                 <td>
                                     @if (order.PaymentStatus == "Paid")
                                     {
