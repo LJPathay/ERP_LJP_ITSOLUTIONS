@@ -65,7 +65,6 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-// Initialize database and seed data
 using (var scope = app.Services.CreateScope())
 {
     ljp_itsolutions.Data.DbInitializer.Initialize(app.Services);

@@ -38,8 +38,7 @@ namespace ljp_itsolutions.Models
 
         public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
         public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
-
-        // Legacy compatibility
+        
         [NotMapped] public Guid Id { get => OrderID; set => OrderID = value; }
         [NotMapped] public List<OrderLine> Lines { get; set; } = new();
     }

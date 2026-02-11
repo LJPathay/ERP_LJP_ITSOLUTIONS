@@ -1,0 +1,335 @@
+/* Manager Pages Shared Styles */
+
+/* Page Headers */
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-header h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+}
+
+.page-header p {
+    color: #6c757d;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* KPI Cards */
+.kpi-card {
+    background: white;
+    border: none;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.kpi-card-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.kpi-card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1;
+}
+
+.kpi-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+/* Modern Tables */
+.modern-table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.modern-table table {
+    margin-bottom: 0;
+}
+
+.modern-table thead {
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.modern-table thead th {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #495057;
+    padding: 1rem 1.5rem;
+    border: none;
+}
+
+.modern-table tbody td {
+    padding: 1rem 1.5rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f3f5;
+    color: #495057;
+}
+
+.modern-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.modern-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.status-badge.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-badge.warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Modern Badge Variants */
+.status-badge.info {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-badge.secondary {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* Enhanced Action Buttons */
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: #64748b;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    background: #eff6ff;
+    transform: translateY(-2px);
+}
+
+.action-btn.danger:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: #fef2f2;
+}
+
+.action-btn.info:hover {
+    border-color: #0ea5e9;
+    color: #0ea5e9;
+    background: #f0f9ff;
+}
+
+/* Sidebar & Navigation Enhancements */
+.sidebar {
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar .nav-link {
+    font-size: 0.9rem !important;
+    padding: 10px 16px !important;
+    letter-spacing: 0.01em;
+}
+
+.sidebar .nav-link i {
+    font-size: 1rem !important;
+    opacity: 0.8;
+}
+
+.sidebar .nav-link.active i {
+    opacity: 1;
+}
+
+.sidebar .dropdown-menu {
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    background: #ffffff !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+    padding: 8px !important;
+}
+
+.sidebar .dropdown-item {
+    font-size: 0.85rem !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    margin-bottom: 2px !important;
+}
+
+.sidebar .dropdown-item:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Page Transitions */
+.animate__fadeInUp {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Layout Header Aesthetic */
+.layout-header {
+    background: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+}
+
+.header-left h1 {
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+}
+
+/* Empty States */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    color: #e2e8f0;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.empty-state h4 {
+    color: #6c757d;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: #adb5bd;
+    margin-bottom: 1.5rem;
+}
+
+/* Modern Modals */
+.modern-modal .modal-content {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.modern-modal .modal-header {
+    border-bottom: 1px solid #f1f3f5;
+    padding: 1.5rem;
+}
+
+.modern-modal .modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.modern-modal .modal-body {
+    padding: 1.5rem;
+}
+
+.modern-modal .modal-footer {
+    border-top: 1px solid #f1f3f5;
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+}
+
+/* Form Controls */
+.modern-form-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.modern-form-control {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.65rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.modern-form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+/* Utility Classes */
+.text-xs {
+    font-size: 0.75rem;
+}
+
+.text-sm {
+    font-size: 0.875rem;
+}
+
+.fw-semibold {
+    font-weight: 600;
+}
+
+.rounded-lg {
+    border-radius: 12px !important;
+}
+
+.shadow-soft {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}

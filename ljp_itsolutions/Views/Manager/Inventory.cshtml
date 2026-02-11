@@ -4,182 +4,128 @@
 }
 
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold mb-1">Inventory Management</h2>
-            <p class="text-muted">Monitor stock levels and manage reorders.</p>
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-danger"><i class="fas fa-exclamation-circle me-2"></i>Low Stock Alerts</button>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addIngredientModal">
-                <i class="fas fa-plus me-2"></i>Add Ingredient
-            </button>
-        </div>
+    <div class="d-flex justify-content-end align-items-center mb-4">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addIngredientModal">
+            <i class="fas fa-plus me-2"></i>Add Ingredient
+        </button>
     </div>
 
     <!-- Inventory Summary -->
     <div class="row g-4 mb-4">
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm text-center p-3">
-                <h6 class="text-muted small uppercase fw-bold mb-2">Total SKU</h6>
-                <h3 class="fw-bold mb-0">@Model.Products.Count</h3>
+            <div class="kpi-card h-100">
+                <div class="kpi-card-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="fas fa-leaf fa-lg"></i>
+                </div>
+                <p class="kpi-card-label">Total Ingredients</p>
+                <h3 class="kpi-card-value">@Model.Ingredients.Count</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm text-center p-3 border-start border-warning border-4">
-                <h6 class="text-muted small uppercase fw-bold mb-2">Low Stock</h6>
-                <h3 class="fw-bold mb-0 text-warning">@Model.LowStockCount</h3>
+            <div class="kpi-card h-100">
+                <div class="kpi-card-icon bg-warning bg-opacity-10 text-warning">
+                    <i class="fas fa-exclamation-triangle fa-lg"></i>
+                </div>
+                <p class="kpi-card-label">Low Stock</p>
+                <h3 class="kpi-card-value text-warning">@Model.LowStockCount</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm text-center p-3 border-start border-danger border-4">
-                <h6 class="text-muted small uppercase fw-bold mb-2">Out of Stock</h6>
-                <h3 class="fw-bold mb-0 text-danger">@Model.OutOfStockCount</h3>
+            <div class="kpi-card h-100">
+                <div class="kpi-card-icon bg-danger bg-opacity-10 text-danger">
+                    <i class="fas fa-times-circle fa-lg"></i>
+                </div>
+                <p class="kpi-card-label">Out of Stock</p>
+                <h3 class="kpi-card-value text-danger">@Model.OutOfStockCount</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm text-center p-3 border-start border-success border-4">
-                <h6 class="text-muted small uppercase fw-bold mb-2">Healthy Stock</h6>
-                <h3 class="fw-bold mb-0 text-success">@Model.HealthyStockCount</h3>
+            <div class="kpi-card h-100">
+                <div class="kpi-card-icon bg-success bg-opacity-10 text-success">
+                    <i class="fas fa-check-circle fa-lg"></i>
+                </div>
+                <p class="kpi-card-label">Healthy Stock</p>
+                <h3 class="kpi-card-value text-success">@Model.HealthyStockCount</h3>
             </div>
         </div>
     </div>
 
-    <!-- Inventory Tabs -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-0 pt-3">
-            <ul class="nav nav-pills card-header-pills" id="inventoryTabs" role="tablist">
-                <li class="nav-item">
-                    <button class="nav-link active" id="products-tab" data-bs-toggle="tab" data-bs-target="#products-content" type="button">
-                        <i class="fas fa-box me-2"></i>Retail Products
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" id="ingredients-tab" data-bs-toggle="tab" data-bs-target="#ingredients-content" type="button">
-                        <i class="fas fa-leaf me-2"></i>Raw Ingredients
-                    </button>
-                </li>
-            </ul>
-        </div>
-        <div class="card-body p-0">
-            <div class="tab-content" id="inventoryTabContent">
-                <!-- Products Tab -->
-                <div class="tab-pane fade show active" id="products-content">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-4">Product Name</th>
-                                    <th>Category</th>
-                                    <th>Current Stock</th>
-                                    <th>Threshold</th>
-                                    <th>Status</th>
-                                    <th class="text-end pe-4">Stock Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in Model.Products)
+    <!-- Ingredients Table -->
+    <div class="modern-table">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Ingredient Name</th>
+                        <th>Current Stock</th>
+                        <th>Unit</th>
+                        <th>Threshold</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Ingredients)
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold">@item.Name</div>
+                                <div class="text-muted text-xs">ID: #@item.IngredientID</div>
+                            </td>
+                            <td>
+                                <span class="fw-bold @(item.StockQuantity < item.LowStockThreshold ? "text-danger" : "")">@item.StockQuantity.ToString("F3")</span>
+                            </td>
+                            <td><span class="text-muted">@item.Unit</span></td>
+                            <td><span class="text-muted">@item.LowStockThreshold @item.Unit</span></td>
+                            <td>
+                                @if (item.StockQuantity == 0)
                                 {
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="fw-bold">@item.ProductName</div>
-                                            <small class="text-muted">ID: @item.ProductID</small>
-                                        </td>
-                                        <td><span class="badge bg-light text-dark">@item.Category?.CategoryName</span></td>
-                                        <td>
-                                            <span class="fw-bold @(item.StockQuantity < 10 ? "text-danger" : "")">@item.StockQuantity</span>
-                                        </td>
-                                        <td>10 units</td>
-                                        <td>
-                                            @if (item.StockQuantity == 0)
-                                            {
-                                                <span class="badge bg-danger rounded-pill">Out of Stock</span>
-                                            }
-                                            else if (item.StockQuantity < 10)
-                                            {
-                                                <span class="badge bg-warning rounded-pill">Low Stock</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-success rounded-pill">In Stock</span>
-                                            }
-                                        </td>
-                                        <td class="text-end pe-4">
-                                            <form asp-action="UpdateStock" method="post" class="d-inline-flex gap-2">
-                                                <input type="hidden" name="id" value="@item.ProductID" />
-                                                <input type="number" name="stock" value="@item.StockQuantity" class="form-control form-control-sm" style="width: 80px;" />
-                                                <button type="submit" class="btn btn-sm btn-primary">Update</button>
-                                            </form>
-                                        </td>
-                                    </tr>
+                                    <span class="status-badge danger">Out of Stock</span>
                                 }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Ingredients Tab -->
-                <div class="tab-pane fade" id="ingredients-content">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-4">Ingredient Name</th>
-                                    <th>Current Stock</th>
-                                    <th>Unit</th>
-                                    <th>Threshold</th>
-                                    <th>Status</th>
-                                    <th class="text-end pe-4">Stock Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in Model.Ingredients)
+                                else if (item.StockQuantity < item.LowStockThreshold)
                                 {
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="fw-bold">@item.Name</div>
-                                            <small class="text-muted">ID: @item.IngredientID</small>
-                                        </td>
-                                        <td>
-                                            <span class="fw-bold @(item.StockQuantity < item.LowStockThreshold ? "text-danger" : "")">@item.StockQuantity.ToString("F3")</span>
-                                        </td>
-                                        <td>@item.Unit</td>
-                                        <td>@item.LowStockThreshold @item.Unit</td>
-                                        <td>
-                                            @if (item.StockQuantity == 0)
-                                            {
-                                                <span class="badge bg-danger rounded-pill">Out of Stock</span>
-                                            }
-                                            else if (item.StockQuantity < item.LowStockThreshold)
-                                            {
-                                                <span class="badge bg-warning rounded-pill">Low Stock</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-success rounded-pill">In Stock</span>
-                                            }
-                                        </td>
-                                        <td class="text-end pe-4">
-                                            <button class="btn btn-sm btn-light btn-edit-ingredient" 
-                                                    data-id="@item.IngredientID"
-                                                    data-name="@item.Name"
-                                                    data-stock="@item.StockQuantity"
-                                                    data-unit="@item.Unit"
-                                                    data-threshold="@item.LowStockThreshold">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <form asp-action="DeleteIngredient" method="post" class="d-inline" onsubmit="return confirm('Remove this ingredient?');">
-                                                <input type="hidden" name="id" value="@item.IngredientID" />
-                                                <button type="submit" class="btn btn-sm btn-light text-danger"><i class="fas fa-trash"></i></button>
-                                            </form>
-                                        </td>
-                                    </tr>
+                                    <span class="status-badge warning">Low Stock</span>
                                 }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+                                else
+                                {
+                                    <span class="status-badge success">In Stock</span>
+                                }
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button class="action-btn btn-edit-ingredient" 
+                                            data-id="@item.IngredientID"
+                                            data-name="@item.Name"
+                                            data-stock="@item.StockQuantity"
+                                            data-unit="@item.Unit"
+                                            data-threshold="@item.LowStockThreshold">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <form asp-action="DeleteIngredient" method="post" class="d-inline" onsubmit="return confirm('Remove this ingredient?');">
+                                        <input type="hidden" name="id" value="@item.IngredientID" />
+                                        <button type="submit" class="action-btn danger"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Ingredients.Any())
+                    {
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <i class="fas fa-box-open empty-state-icon"></i>
+                                    <h4>No Ingredients Found</h4>
+                                    <p>Start by adding some raw materials to your inventory.</p>
+                                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addIngredientModal">
+                                        <i class="fas fa-plus me-2"></i>Add First Ingredient
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

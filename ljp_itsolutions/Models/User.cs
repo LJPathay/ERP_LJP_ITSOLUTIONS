@@ -19,7 +19,7 @@ namespace ljp_itsolutions.Models
 
         public string? Email { get; set; }
 
-        public string? Password { get; set; } // This acts as PasswordHash
+        public string? Password { get; set; } 
 
         public int RoleID { get; set; }
         [ForeignKey("RoleID")]

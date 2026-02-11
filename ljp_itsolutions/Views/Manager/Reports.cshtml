@@ -19,68 +19,82 @@
 
     <div class="row g-4 mb-4">
         <div class="col-lg-7">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0 py-3">
-                    <h5 class="fw-bold mb-0">Sales Performance</h5>
+            <div class="card border-0 shadow-soft rounded-lg overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Sales Volume</h5>
+                    <span class="text-muted text-xs">Unit Sales History</span>
                 </div>
                 <div class="card-body">
-                    <canvas id="salesChart" height="300"></canvas>
+                    <div style="height: 350px;">
+                        <canvas id="salesChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-lg-5">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0 py-3">
-                    <h5 class="fw-bold mb-0">Sales by Category</h5>
+            <div class="card border-0 shadow-soft rounded-lg overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="fw-bold mb-0">Revenue Distribution</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="revenueChart" height="300"></canvas>
+                    <div style="height: 350px;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
+    <div class="modern-table mb-4">
+        <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
             <h5 class="fw-bold mb-0">Top Performing Products</h5>
-            <a href="#" class="btn btn-link btn-sm text-decoration-none">Export Summary</a>
+            <button class="btn btn-sm btn-outline-primary rounded-pill px-4"><i class="fas fa-file-export me-2"></i>Export Summary</button>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Product Name</th>
+                        <th>Total Sold</th>
+                        <th>Revenue Generated</th>
+                        <th class="text-end pe-4">Sales Progress</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
                         <tr>
-                            <th class="ps-4">Product</th>
-                            <th>Total Sold</th>
-                            <th>Revenue</th>
-                            <th class="text-end pe-4">Progress</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model)
-                        {
-                            <tr>
-                                <td class="ps-4">
-                                    <span class="fw-bold">@item.ProductName</span>
-                                </td>
-                                <td>@item.TotalSold units</td>
-                                <td>₱@item.Revenue.ToString("N2")</td>
-                                <td class="text-end pe-4">
-                                    <div class="progress" style="height: 6px; width: 100px; display: inline-flex;">
-                                        <div class="progress-bar bg-success" style="width: 75%"></div>
+                            <td class="ps-4">
+                                <span class="fw-bold text-dark">@item.ProductName</span>
+                            </td>
+                            <td><span class="badge bg-light text-dark rounded-pill">@item.TotalSold units</span></td>
+                            <td class="fw-bold text-success">₱@item.Revenue.ToString("N2")</td>
+                            <td class="text-end pe-4">
+                                @{
+                                    var progress = Math.Min(100, (int)(item.TotalSold * 1.5)); // Simulated progress
+                                }
+                                <div class="d-flex align-items-center justify-content-end">
+                                    <div class="progress rounded-pill me-2" style="height: 6px; width: 100px;">
+                                        <div class="progress-bar bg-primary" style="width: @progress%"></div>
                                     </div>
-                                </td>
-                            </tr>
-                        }
-                        @if (!Model.Any())
-                        {
-                            <tr>
-                                <td colspan="4" class="text-center py-4 text-muted">No sales data found for the selected period.</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                                    <span class="text-xs text-muted">@progress%</span>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state p-5">
+                                    <i class="fas fa-chart-pie empty-state-icon fa-2x"></i>
+                                    <p class="text-muted">No sales data found for the selected period.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -89,6 +103,17 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 12, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } }
+                    }
+                }
+            };
+
             // Sales Volume Chart
             const salesCtx = document.getElementById('salesChart').getContext('2d');
             new Chart(salesCtx, {
@@ -98,16 +123,20 @@
                     datasets: [{
                         label: 'Units Sold',
                         data: @Html.Raw(Json.Serialize(ViewBag.ChartData)),
-                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 6,
+                        hoverBackgroundColor: '#2563eb'
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    ...chartOptions,
                     scales: {
-                        y: { beginAtZero: true }
+                        y: { 
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.03)' },
+                            ticks: { font: { size: 11 } }
+                        },
+                        x: { grid: { display: false }, ticks: { font: { size: 11 } } }
                     }
                 }
             });
@@ -119,22 +148,22 @@
                 data: {
                     labels: @Html.Raw(Json.Serialize(ViewBag.ChartLabels)),
                     datasets: [{
-                        label: 'Revenue (₱)',
                         data: @Html.Raw(Json.Serialize(ViewBag.RevenueData)),
                         backgroundColor: [
-                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+                            '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'
                         ],
-                        hoverOffset: 4
+                        borderWidth: 0,
+                        cutout: '70%'
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
-                }
+                options: chartOptions
             });
         });
     </script>
 }
+
+<style>
+    .shadow-soft { box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+    .rounded-lg { border-radius: 16px; }
+    .text-xs { font-size: 0.75rem; }
+</style>

@@ -2,7 +2,7 @@
 @{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
-    
+
     bool IsDashboardActive() => currentController == "Admin" && (currentAction == "Index" || currentAction == "Dashboard");
     bool IsUsersActive() => currentController == "Admin" && (currentAction == "Users" || currentAction == "ManageUsers");
     bool IsAuditLogsActive() => currentController == "Admin" && (currentAction == "AuditLogs" || currentAction == "Audit");

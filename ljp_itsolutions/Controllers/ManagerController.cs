@@ -27,7 +27,6 @@ namespace ljp_itsolutions.Controllers
         public async Task<IActionResult> Dashboard()
         {
             var today = DateTime.Today;
-            var lowStockThreshold = 10;
 
             var viewModel = new ManagerDashboardViewModel
             {
@@ -35,9 +34,9 @@ namespace ljp_itsolutions.Controllers
                 TotalUsers = await _db.Users.CountAsync(),
                 TotalOrders = await _db.Orders.CountAsync(),
                 TotalRevenue = await _db.Orders.SumAsync(o => o.FinalAmount),
-                LowStockProducts = await _db.Products
-                    .Where(p => p.StockQuantity < lowStockThreshold)
-                    .OrderBy(p => p.StockQuantity)
+                LowStockIngredients = await _db.Ingredients
+                    .Where(i => i.StockQuantity < i.LowStockThreshold)
+                    .OrderBy(i => i.StockQuantity)
                     .Take(5)
                     .ToListAsync(),
                 RecentOrders = await _db.Orders
@@ -169,18 +168,14 @@ namespace ljp_itsolutions.Controllers
         {
             var products = await _db.Products.Include(p => p.Category).ToListAsync();
             var ingredients = await _db.Ingredients.ToListAsync();
-            var lowStockThreshold = 10;
 
             var viewModel = new InventoryViewModel
             {
                 Products = products,
                 Ingredients = ingredients,
-                LowStockCount = products.Count(p => p.StockQuantity > 0 && p.StockQuantity < lowStockThreshold) 
-                              + ingredients.Count(i => i.StockQuantity > 0 && i.StockQuantity < i.LowStockThreshold),
-                OutOfStockCount = products.Count(p => p.StockQuantity == 0)
-                                + ingredients.Count(i => i.StockQuantity == 0),
-                HealthyStockCount = products.Count(p => p.StockQuantity >= lowStockThreshold)
-                                  + ingredients.Count(i => i.StockQuantity >= i.LowStockThreshold)
+                LowStockCount = ingredients.Count(i => i.StockQuantity > 0 && i.StockQuantity < i.LowStockThreshold),
+                OutOfStockCount = ingredients.Count(i => i.StockQuantity == 0),
+                HealthyStockCount = ingredients.Count(i => i.StockQuantity >= i.LowStockThreshold)
             };
 
             return View(viewModel);
@@ -200,7 +195,6 @@ namespace ljp_itsolutions.Controllers
                 .Take(10)
                 .ToListAsync();
 
-            // Prepare Chart Data
             ViewBag.ChartLabels = topProducts.Select(p => p.ProductName).ToList();
             ViewBag.ChartData = topProducts.Select(p => p.TotalSold).ToList();
             ViewBag.RevenueData = topProducts.Select(p => p.Revenue).ToList();
@@ -213,7 +207,6 @@ namespace ljp_itsolutions.Controllers
             var revenue = await _db.Orders.SumAsync(o => o.FinalAmount);
             var expenses = await _db.Expenses.SumAsync(e => e.Amount);
             
-            // Financial Trends (Last 6 Months)
             var last6Months = Enumerable.Range(0, 6).Select(i => DateTime.Today.AddMonths(-5 + i)).ToList();
             var trendLabels = new List<string>();
             var incomeTrend = new List<decimal>();
@@ -381,6 +374,69 @@ namespace ljp_itsolutions.Controllers
                 TempData["SuccessMessage"] = "Promotion updated successfully!";
             }
             return RedirectToAction("Promotions");
+        }
+
+
+        public async Task<IActionResult> Recipes()
+        {
+            var products = await _db.Products
+                .Include(p => p.Category)
+                .Include(p => p.ProductRecipes)
+                    .ThenInclude(pr => pr.Ingredient)
+                .ToListAsync();
+            
+            ViewBag.Ingredients = await _db.Ingredients.ToListAsync();
+            return View(products);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetProductRecipes(int productId)
+        {
+            var recipes = await _db.ProductRecipes
+                .Where(pr => pr.ProductID == productId)
+                .Select(pr => new 
+                { 
+                    ingredientID = pr.IngredientID, 
+                    quantityRequired = pr.QuantityRequired 
+                })
+                .ToListAsync();
+            
+            return Json(recipes);
+        }
+
+        public class RecipeItemDto
+        {
+            public int IngredientID { get; set; }
+            public decimal QuantityRequired { get; set; }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateRecipe(int ProductID, List<RecipeItemDto> Recipes)
+        {
+            // Remove existing recipes for this product
+            var existingRecipes = await _db.ProductRecipes
+                .Where(pr => pr.ProductID == ProductID)
+                .ToListAsync();
+            
+            _db.ProductRecipes.RemoveRange(existingRecipes);
+
+            // Add new recipes (filter out empty selections)
+            if (Recipes != null)
+            {
+                foreach (var recipe in Recipes.Where(r => r.IngredientID > 0 && r.QuantityRequired > 0))
+                {
+                    _db.ProductRecipes.Add(new ProductRecipe
+                    {
+                        ProductID = ProductID,
+                        IngredientID = recipe.IngredientID,
+                        QuantityRequired = recipe.QuantityRequired
+                    });
+                }
+            }
+
+            await _db.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Recipe updated successfully!";
+            return RedirectToAction("Recipes");
         }
 
         [HttpPost]

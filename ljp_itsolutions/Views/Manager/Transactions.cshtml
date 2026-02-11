@@ -11,67 +11,89 @@
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+    <div class="modern-table">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Transaction ID</th>
+                        <th>Date & Time</th>
+                        <th>Cashier</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Manager Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model)
+                    {
                         <tr>
-                            <th class="ps-4">Transaction ID</th>
-                            <th>Date</th>
-                            <th>Cashier</th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                            <th class="text-end pe-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var order in Model)
-                        {
-                            <tr>
-                                <td class="ps-4">
-                                    <span class="fw-bold text-primary">#@order.OrderID.ToString().Substring(0, 8)</span>
-                                </td>
-                                <td>@order.OrderDate.ToString("MMM dd, yyyy HH:mm")</td>
-                                <td>@order.Cashier?.FullName</td>
-                                <td class="fw-bold">₱@order.FinalAmount.ToString("F2")</td>
-                                <td>
-                                    @if (order.PaymentStatus == "Paid")
-                                    {
-                                        <span class="badge bg-success rounded-pill">Paid</span>
-                                    }
-                                    else if (order.PaymentStatus == "Voided")
-                                    {
-                                        <span class="badge bg-secondary rounded-pill">Voided</span>
-                                    }
-                                    else if (order.PaymentStatus == "Refunded")
-                                    {
-                                        <span class="badge bg-info rounded-pill">Refunded</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-warning rounded-pill">@order.PaymentStatus</span>
-                                    }
-                                </td>
-                                <td class="text-end pe-4">
-                                    @if (order.PaymentStatus == "Paid")
-                                    {
+                            <td class="ps-4">
+                                <span class="fw-bold text-primary">#@order.OrderID.ToString().Substring(0, 8)</span>
+                            </td>
+                            <td>
+                                <div class="text-xs text-muted">@order.OrderDate.ToString("MMM dd, yyyy")</div>
+                                <div class="fw-semibold">@order.OrderDate.ToString("HH:mm")</div>
+                            </td>
+                            <td>@order.Cashier?.FullName</td>
+                            <td class="fw-bold text-dark">₱@order.FinalAmount.ToString("N2")</td>
+                            <td>
+                                @if (order.PaymentStatus == "Paid")
+                                {
+                                    <span class="status-badge success">Paid</span>
+                                }
+                                else if (order.PaymentStatus == "Voided")
+                                {
+                                    <span class="status-badge danger">Voided</span>
+                                }
+                                else if (order.PaymentStatus == "Refunded")
+                                {
+                                    <span class="status-badge info">Refunded</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge warning">@order.PaymentStatus</span>
+                                }
+                            </td>
+                            <td class="text-end pe-4">
+                                @if (order.PaymentStatus == "Paid")
+                                {
+                                    <div class="d-flex justify-content-end gap-2">
                                         <form asp-action="VoidOrder" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to VOID this transaction? This cannot be undone.')">
                                             <input type="hidden" name="id" value="@order.OrderID" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <button type="submit" class="action-btn danger btn-sm" title="Void Transaction">
                                                 <i class="fas fa-ban me-1"></i>Void
                                             </button>
                                         </form>
-                                        <button class="btn btn-sm btn-outline-info ms-2">
+                                        <button class="action-btn info btn-sm" title="Issue Refund">
                                             <i class="fas fa-undo me-1"></i>Refund
                                         </button>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted text-xs italic">Locked</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state p-5">
+                                    <i class="fas fa-history empty-state-icon fa-2x"></i>
+                                    <p class="text-muted">No transaction records found.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+
+<style>
+    .text-xs { font-size: 0.75rem; }
+</style>

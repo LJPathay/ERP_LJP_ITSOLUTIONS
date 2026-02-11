@@ -1,0 +1,55 @@
+@using ljp_itsolutions.ViewComponents
+@model List<NotificationItem>
+
+<div class="dropdown">
+    <button class="btn btn-icon shadow-none border-0 bg-transparent p-2 position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="far fa-bell fa-lg text-secondary"></i>
+        @if (Model.Any())
+        {
+            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                <span class="visually-hidden">New alerts</span>
+            </span>
+        }
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 p-0" style="width: 320px;">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold">Notifications (@Model.Count)</h6>
+            @if (Model.Any())
+            {
+                <a href="#" class="text-primary small text-decoration-none">Mark all read</a>
+            }
+        </div>
+        <div class="notification-list" style="max-height: 300px; overflow-y: auto;">
+            @if (Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    <li class="border-bottom">
+                        <a class="dropdown-item p-3 d-flex gap-3 text-wrap" href="#">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-@item.Type bg-opacity-10 text-@item.Type d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                    <i class="@item.IconClass small"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="mb-1 small fw-semibold text-dark">@item.Title</p>
+                                <p class="mb-0 x-small text-muted">@item.Message</p>
+                                <small class="text-muted x-small mt-1 d-block">@item.Time</small>
+                            </div>
+                        </a>
+                    </li>
+                }
+            }
+            else
+            {
+                <li class="p-4 text-center text-muted">
+                    <i class="far fa-bell-slash mb-2 fa-2x opacity-50"></i>
+                    <p class="mb-0 small">No new notifications</p>
+                </li>
+            }
+        </div>
+        <div class="p-2 text-center bg-light rounded-bottom border-top">
+            <a href="#" class="small text-decoration-none fw-semibold">View All Notifications</a>
+        </div>
+    </ul>
+</div>

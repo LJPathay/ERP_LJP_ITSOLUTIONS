@@ -17,7 +17,6 @@ namespace ljp_itsolutions.Data
             {
                 Console.WriteLine("Checking database connection...");
                 
-                // Ensure SystemSettings table exists (manual fix for migration issues)
                 string createTableSql = @"
                     IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SystemSettings]') AND type in (N'U'))
                     BEGIN

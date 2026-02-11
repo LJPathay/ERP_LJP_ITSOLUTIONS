@@ -76,12 +76,6 @@ namespace ljp_itsolutions.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-
-
-
-
-
-
             migrationBuilder.InsertData(
                 table: "Expenses",
                 columns: new[] { "ExpenseID", "Amount", "Category", "Description", "ExpenseDate", "ReferenceNumber", "Title" },
