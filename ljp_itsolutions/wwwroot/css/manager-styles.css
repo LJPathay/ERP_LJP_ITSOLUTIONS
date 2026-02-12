@@ -66,10 +66,24 @@
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    width: 100%;
 }
 
 .modern-table table {
     margin-bottom: 0;
+    width: 100%;
+}
+
+@media (max-width: 991px) {
+    .modern-table {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .modern-table table {
+        min-width: 800px;
+        /* Ensure table columns don't squish too much */
+    }
 }
 
 .modern-table thead {

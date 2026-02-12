@@ -1,0 +1,210 @@
+/* Main login container */
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    flex-wrap: nowrap;
+    background-color: #fbfbf9;
+}
+
+/* Left panel: Background image and branding */
+.cafe-panel {
+    flex: 0 0 45%;
+    min-width: 400px;
+    position: relative;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://images.unsplash.com/photo-1642647916129-3909c75c0267?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    color: #fff;
+}
+
+.cafe-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.cafe-logo img {
+    max-width: 100%;
+    height: auto;
+    max-height: 180px;
+    filter: brightness(0) invert(1);
+}
+
+.cafe-tagline {
+    margin-top: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.1rem;
+    font-weight: 300;
+    letter-spacing: 1px;
+    text-align: center;
+    max-width: 80%;
+}
+
+/* Right panel: Login form */
+.form-panel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.form-wrapper {
+    width: 100%;
+    max-width: 450px;
+}
+
+.mobile-logo {
+    display: none;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.mobile-logo img {
+    height: 80px;
+    width: auto;
+}
+
+.login-card {
+    background: #fff;
+    border-radius: 1.25rem;
+    padding: 2.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+}
+
+.login-header h2 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+.login-header p {
+    color: #6b7280;
+    font-size: 1rem;
+}
+
+.input-group-custom {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 1.1rem;
+}
+
+.form-control-custom {
+    width: 100%;
+    padding: 0.875rem 1rem 0.875rem 3rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.form-control-custom:focus {
+    outline: none;
+    border-color: #d97706;
+    box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.1);
+}
+
+.remember-forgot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+}
+
+.forgot-link {
+    color: #d97706;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.forgot-link:hover {
+    text-decoration: underline;
+}
+
+.footer-text {
+    margin-top: 2rem;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.875rem;
+}
+
+.validation-summary {
+    margin-bottom: 1.5rem;
+}
+
+.validation-message {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Tablet and Smaller Desktop */
+@media (max-width: 1200px) {
+    .cafe-panel {
+        flex: 0 0 40%;
+    }
+}
+
+/* Tablet (Portrait) */
+@media (max-width: 991px) {
+    .login-container {
+        flex-direction: column;
+    }
+
+    .cafe-panel {
+        display: none;
+    }
+
+    .form-panel {
+        padding: 2rem 1rem;
+        min-height: 100vh;
+    }
+
+    .mobile-logo {
+        display: block;
+    }
+
+    .login-card {
+        padding: 2rem 1.5rem;
+    }
+}
+
+/* Mobile Devices */
+@media (max-width: 480px) {
+    .form-panel {
+        padding: 1.5rem 1rem;
+        align-items: flex-start;
+        /* Push content to top on very small screens if needed, or keep center */
+    }
+
+    .login-card {
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    }
+
+    .login-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .mobile-logo img {
+        height: 60px;
+    }
+}

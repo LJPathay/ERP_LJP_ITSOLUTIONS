@@ -4,55 +4,12 @@
     ViewData["Title"] = "Login";
 }
 
-<!-- Font Awesome for Icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-
-<style>
-/* Responsive login layout */
-*{box-sizing:border-box;margin:0;padding:0}
-html, body { height: 100%; margin-bottom: 0; }
-.login-container{min-height:100vh;display:flex;flex-wrap:nowrap}
-/* Left panel: use background image directly and center content */
-.cafe-panel{flex:0 0 45%;min-width:320px;position:relative;background-image:url('https://images.unsplash.com/photo-1642647916129-3909c75c0267?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080');background-size:cover;background-position:center;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2.5rem}
-.cafe-logo{display:flex;align-items:center;justify-content:center;margin-bottom:8px}
-.cafe-logo img{max-width:384px;height:auto;display:block;filter:brightness(0) invert(1)}
-/* Tagline under logo */
-.cafe-tagline{margin-top:8px;color:rgba(255,255,255,0.9);font-size:14px;font-weight:300;letter-spacing:1px;text-align:center}
-.cafe-title{font-size:2rem;font-weight:700;margin-bottom:0.5rem;text-align:center}
-.cafe-subtitle{color:#fde68a;text-align:center}
-.form-panel{flex:1 1 55%;min-width:300px;display:flex;align-items:center;justify-content:center;padding:2.5rem;background-color:#fbfbf9;position:relative;z-index:1}
-.form-wrapper{width:100%;max-width:36rem}
-.login-card{background:#fff;border-radius:1rem;padding:2rem;box-shadow:0 20px 25px rgba(0,0,0,0.06);position:relative;z-index:2}
-.login-header h2{font-size:1.5rem;margin-bottom:0.25rem}
-.login-header p{color:#6b7280;margin-bottom:1rem}
-.input-group-custom{position:relative;margin-bottom:1rem}
-.input-icon{position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);color:#9ca3af;pointer-events:none}
-.form-control-custom{width:100%;padding:0.75rem 0.75rem 0.75rem 2.5rem;border:1px solid #e5e7eb;border-radius:0.5rem}
-.remember-forgot{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
-.btn-signin{width:100%;padding:0.75rem;background:linear-gradient(90deg,#d97706 0%,#c2410c 100%);color:#fff;border:0;border-radius:0.5rem;font-weight:600}
-.footer-text{margin-top:1rem;text-align:center;color:#6b7280}
-.mobile-logo{display:none}
-.validation-summary{font-weight:700;margin-bottom:1rem}
-.validation-message{font-weight:600;color:#b91c1c}
-
-/* Mobile responsive: stack and hide image panel */
-@@media (max-width:991px){
-    .login-container{flex-direction:column}
-    .cafe-panel{display:none}
-    .form-panel{flex-basis:100%;width:100%;padding:1.5rem}
-    .form-wrapper{max-width:100%}
-    .mobile-logo{display:flex;margin-bottom:1rem;align-items:center;justify-content:center;width:140px;height:140px}
-    .mobile-logo img{width:100%;height:auto;display:block;filter:brightness(0) invert(1)}
-}
-}
-</style>
-
 <div class="login-container">
     <div class="cafe-panel">
-            <div class="cafe-logo">
-                <img src="@(Url.Content("~/images/logo.png"))" alt="Coffee Shop ERP" />
-            </div>
-            <div class="cafe-tagline">Smart Customer Engagement &amp; Marketing Analytics</div>
+        <div class="cafe-logo">
+            <img src="@(Url.Content("~/images/logo.png"))" alt="Coffee Shop ERP" />
+        </div>
+        <div class="cafe-tagline">Smart Customer Engagement &amp; Marketing Analytics</div>
     </div>
 
     <div class="form-panel">
@@ -62,56 +19,59 @@ html, body { height: 100%; margin-bottom: 0; }
             </div>
 
             <div class="login-card">
-                <div class="login-header text-center mb-3">
+                <div class="login-header text-center mb-4">
                     <h2>Welcome Back</h2>
                     <p>Please login to your account</p>
                 </div>
 
                 @if (TempData["Message"] != null)
                 {
-                    <div class="alert alert-info">@TempData["Message"]</div>
+                    <div class="alert alert-info border-0 shadow-sm mb-4">
+                        <i class="fas fa-info-circle me-2"></i> @TempData["Message"]
+                    </div>
                 }
 
                 <form asp-action="Login" method="post" novalidate>
                     @Html.AntiForgeryToken()
 
-                    <div asp-validation-summary="ModelOnly" class="text-danger validation-summary"></div>
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3 font-weight-bold"></div>
 
-                    <div class="form-group mb-3">
-                        <label for="UsernameOrEmail" class="form-label">Username or Email</label>
+                    <div class="form-group mb-4">
+                        <label asp-for="UsernameOrEmail" class="form-label fw-bold mb-2">Username or Email</label>
                         <div class="input-group-custom">
                             <i class="fas fa-user input-icon"></i>
-                            <input asp-for="UsernameOrEmail" id="UsernameOrEmail" name="UsernameOrEmail" class="form-control-custom" placeholder="Enter your username or email" />
+                            <input asp-for="UsernameOrEmail" class="form-control-custom" placeholder="Enter your username or email" />
                         </div>
-                        <span asp-validation-for="UsernameOrEmail" class="text-danger validation-message"></span>
+                        <span asp-validation-for="UsernameOrEmail" class="text-danger small"></span>
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label for="Password" class="form-label">Password</label>
+                    <div class="form-group mb-2">
+                        <label asp-for="Password" class="form-label fw-bold mb-2">Password</label>
                         <div class="input-group-custom">
                             <i class="fas fa-lock input-icon"></i>
-                            <input asp-for="Password" id="Password" name="Password" class="form-control-custom" placeholder="Enter your password" />
+                            <input asp-for="Password" type="password" class="form-control-custom" placeholder="Enter your password" />
                         </div>
-                        <span asp-validation-for="Password" class="text-danger validation-message"></span>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
                     </div>
 
-                    <div class="remember-forgot d-flex justify-content-between align-items-center mb-3">
-                        <div class="remember-me d-flex align-items-center">
-                            <input asp-for="RememberMe" id="rememberMe" name="RememberMe" type="checkbox" style="width:1rem;height:1rem;" />
-                            <label for="rememberMe" style="margin-left:0.5rem;">Remember me</label>
+                    <div class="remember-forgot">
+                        <div class="form-check">
+                            <input asp-for="RememberMe" class="form-check-input" type="checkbox" />
+                            <label asp-for="RememberMe" class="form-check-label text-secondary">Remember me</label>
                         </div>
                         <a class="forgot-link" asp-controller="Account" asp-action="ForgotPassword">Forgot password?</a>
                     </div>
 
                     <button type="submit" class="btn-signin">Sign In</button>
+                    <link rel="stylesheet" href="~/css/login-hover.css" asp-append-version="true" />
                 </form>
             </div>
 
-            <p class="footer-text">© 2026 LJP IT SOLUTIONS</p>
+            <p class="footer-text">Â© 2026 LJP IT SOLUTIONS</p>
         </div>
     </div>
 </div>
 
-@section Scripts{
+@section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

@@ -616,23 +616,53 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 991px) {
     .sidebar {
-        width: 100%;
         position: fixed;
+        left: -280px;
         top: 0;
-        left: -100%;
-        height: 100vh;
-        z-index: 1000;
-        transition: left 0.3s ease;
+        bottom: 0;
+        width: 280px !important;
+        min-width: 280px !important;
+        max-width: 280px !important;
+        z-index: 1050;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: none !important;
     }
 
     .sidebar.show {
         left: 0;
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(2px);
+        z-index: 1040;
+    }
+
+    .sidebar-overlay.show {
+        display: block;
     }
 
     .content {
-        margin-left: 0;
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    .layout-header {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+    .layout-body {
+        padding: 1rem !important;
     }
 
     .stat-card {
