@@ -28,13 +28,37 @@ namespace ljp_itsolutions.Data
                     END";
                 db.Database.ExecuteSqlRaw(createTableSql);
 
-                if (!db.Roles.Any())
+                var usersToFix = db.Users.ToList();
+                bool fixedAny = false;
+                foreach (var u in usersToFix)
                 {
-                    Console.WriteLine("Seeding roles...");
-                    db.Roles.Add(new Role { RoleName = Role.Admin });
-                    db.Roles.Add(new Role { RoleName = Role.Manager });
-                    db.Roles.Add(new Role { RoleName = Role.Cashier });
-                    db.Roles.Add(new Role { RoleName = Role.MarketingStaff });
+                    var normalizedRole = u.Role?.Trim();
+                    if (string.IsNullOrEmpty(normalizedRole)) continue;
+
+                    if (string.Equals(normalizedRole, UserRoles.Admin, StringComparison.OrdinalIgnoreCase) && normalizedRole != UserRoles.Admin)
+                    {
+                        u.Role = UserRoles.Admin;
+                        fixedAny = true;
+                    }
+                    else if (string.Equals(normalizedRole, UserRoles.Manager, StringComparison.OrdinalIgnoreCase) && normalizedRole != UserRoles.Manager)
+                    {
+                        u.Role = UserRoles.Manager;
+                        fixedAny = true;
+                    }
+                    else if (string.Equals(normalizedRole, UserRoles.Cashier, StringComparison.OrdinalIgnoreCase) && normalizedRole != UserRoles.Cashier)
+                    {
+                        u.Role = UserRoles.Cashier;
+                        fixedAny = true;
+                    }
+                    else if (string.Equals(normalizedRole, UserRoles.MarketingStaff, StringComparison.OrdinalIgnoreCase) && normalizedRole != UserRoles.MarketingStaff)
+                    {
+                        u.Role = UserRoles.MarketingStaff;
+                        fixedAny = true;
+                    }
+                }
+                if (fixedAny)
+                {
+                    Console.WriteLine("Normalizing user roles to standard casing...");
                     db.SaveChanges();
                 }
 
@@ -51,35 +75,48 @@ namespace ljp_itsolutions.Data
                 // Seed Users
                 var hasher = new PasswordHasher<User>();
 
-                // Helper to seed a user if missing
-                async Task SeedUser(string username, string fullName, string email, string roleName)
+                // Helper to seed or update a user
+                void SeedOrUpdateUser(string username, string fullName, string email, string roleName)
                 {
-                    if (!db.Users.Any(u => u.Username == username))
+                    var user = db.Users.FirstOrDefault(u => u.Username == username);
+                    if (user == null)
                     {
-                        var role = db.Roles.FirstOrDefault(r => r.RoleName == roleName);
-                        if (role != null)
+                        Console.WriteLine($"Seeding user: {username}");
+                        var newUser = new User
                         {
-                            Console.WriteLine($"Seeding user: {username}");
-                            var user = new User
-                            {
-                                UserID = Guid.NewGuid(),
-                                Username = username,
-                                FullName = fullName,
-                                Email = email,
-                                RoleID = role.RoleID,
-                                IsActive = true,
-                                CreatedAt = DateTime.Now
-                            };
-                            user.Password = hasher.HashPassword(user, "123");
-                            db.Users.Add(user);
+                            UserID = Guid.NewGuid(),
+                            Username = username,
+                            FullName = fullName,
+                            Email = email,
+                            Role = roleName,
+                            IsActive = true,
+                            CreatedAt = DateTime.Now
+                        };
+                        newUser.Password = hasher.HashPassword(newUser, "123");
+                        db.Users.Add(newUser);
+                    }
+                    else
+                    {
+                        // Ensure role and other basic info is correct
+                        bool modified = false;
+                        if (string.IsNullOrWhiteSpace(user.Role) || !string.Equals(user.Role, roleName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            user.Role = roleName;
+                            modified = true;
+                        }
+                        
+                        if (modified)
+                        {
+                            Console.WriteLine($"Updating user data for: {username}");
+                            db.Users.Update(user);
                         }
                     }
                 }
 
-                SeedUser("admin", "System Admin", "admin@coffee.local", Role.Admin).Wait();
-                SeedUser("manager", "Store Manager", "manager@coffee.local", Role.Manager).Wait();
-                SeedUser("cashier", "Store Cashier", "cashier@coffee.local", Role.Cashier).Wait();
-                SeedUser("marketing", "Marketing Staff", "marketing@coffee.local", Role.MarketingStaff).Wait();
+                SeedOrUpdateUser("admin", "System Admin", "admin@coffee.local", UserRoles.Admin);
+                SeedOrUpdateUser("manager", "Store Manager", "manager@coffee.local", UserRoles.Manager);
+                SeedOrUpdateUser("cashier", "Store Cashier", "cashier@coffee.local", UserRoles.Cashier);
+                SeedOrUpdateUser("marketing", "Marketing Staff", "marketing@coffee.local", UserRoles.MarketingStaff);
 
                 db.SaveChanges();
 

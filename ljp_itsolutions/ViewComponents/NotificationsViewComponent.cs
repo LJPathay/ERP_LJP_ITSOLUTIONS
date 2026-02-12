@@ -20,48 +20,50 @@ namespace ljp_itsolutions.ViewComponents
         {
             var notifications = new List<NotificationItem>();
 
-            // Check Low Stock Products Logic Removed as per requirement
-            /* 
-             * Products are now treated as menu items with ingredient-based inventory.
-             * Stock tracking for individual products is disabled.
-             */
-
-            // Check Low Stock Ingredients
-            var lowStockIngredients = await _context.Ingredients
-                .Where(i => i.StockQuantity <= i.LowStockThreshold)
-                .OrderBy(i => i.StockQuantity)
-                .Take(3)
-                .ToListAsync();
-
-            foreach (var i in lowStockIngredients)
+            try
             {
-                notifications.Add(new NotificationItem
+                // Check Low Stock Ingredients
+                var lowStockIngredients = await _context.Ingredients
+                    .Where(i => i.StockQuantity <= i.LowStockThreshold)
+                    .OrderBy(i => i.StockQuantity)
+                    .Take(3)
+                    .ToListAsync();
+
+                foreach (var i in lowStockIngredients)
                 {
-                    Title = "Low Ingredient Stock",
-                    Message = $"{i.Name} needs restocking ({i.StockQuantity:0.##} {i.Unit}).",
-                    Time = "Just now",
-                    Type = "danger",
-                    IconClass = "fas fa-cube"
-                });
+                    notifications.Add(new NotificationItem
+                    {
+                        Title = "Low Ingredient Stock",
+                        Message = $"{i.Name} needs restocking ({i.StockQuantity:0.##} {i.Unit}).",
+                        Time = "Just now",
+                        Type = "danger",
+                        IconClass = "fas fa-cube"
+                    });
+                }
+
+                // Check Recent Large Orders (e.g., > 500)
+                var recentLargeOrder = await _context.Orders
+                    .Where(o => o.TotalAmount > 500)
+                    .OrderByDescending(o => o.OrderDate)
+                    .FirstOrDefaultAsync();
+
+                if (recentLargeOrder != null && (DateTime.Now - recentLargeOrder.OrderDate).TotalHours < 24)
+                {
+                    var timeAgo = GetTimeAgo(recentLargeOrder.OrderDate);
+                    notifications.Add(new NotificationItem
+                    {
+                        Title = "High Value Order",
+                        Message = $"Order #{recentLargeOrder.OrderID.ToString().Substring(0, 8)} for {recentLargeOrder.FinalAmount:C} received!",
+                        Time = timeAgo,
+                        Type = "success",
+                        IconClass = "fas fa-star"
+                    });
+                }
             }
-
-            // Check Recent Large Orders (e.g., > 500)
-            var recentLargeOrder = await _context.Orders
-                .Where(o => o.TotalAmount > 500)
-                .OrderByDescending(o => o.OrderDate)
-                .FirstOrDefaultAsync();
-
-            if (recentLargeOrder != null && (DateTime.Now - recentLargeOrder.OrderDate).TotalHours < 24)
+            catch (Exception ex)
             {
-                var timeAgo = GetTimeAgo(recentLargeOrder.OrderDate);
-                notifications.Add(new NotificationItem
-                {
-                    Title = "High Value Order",
-                    Message = $"Order #{recentLargeOrder.OrderID} for {recentLargeOrder.FinalAmount:C} received!",
-                    Time = timeAgo,
-                    Type = "success",
-                    IconClass = "fas fa-star"
-                });
+                // Log error and return empty list to prevent UI crash
+                Console.WriteLine($"Notification Error: {ex.Message}");
             }
 
             return View(notifications);

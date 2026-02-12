@@ -151,17 +151,17 @@
                                             </div>
                                         </td>
                                         <td>
-                                            @if (staff.Role.RoleName == "Admin")
+                                            @if (staff.Role == "Admin")
                                             {
                                                 <span class="badge bg-danger">Admin</span>
                                             }
-                                            else if (staff.Role.RoleName == "Manager")
+                                            else if (staff.Role == "Manager")
                                             {
                                                 <span class="badge bg-primary">Manager</span>
                                             }
                                             else
                                             {
-                                                <span class="badge bg-secondary">@staff.Role.RoleName</span>
+                                                <span class="badge bg-secondary">@staff.Role</span>
                                             }
                                         </td>
                                         <td>

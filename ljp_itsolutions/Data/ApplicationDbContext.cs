@@ -10,7 +10,6 @@ namespace ljp_itsolutions.Data
         }
 
         public DbSet<User> Users { get; set; }
-        public DbSet<Role> Roles { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Customer> Customers { get; set; }
@@ -24,6 +23,7 @@ namespace ljp_itsolutions.Data
         public DbSet<Ingredient> Ingredients { get; set; }
         public DbSet<ProductRecipe> ProductRecipes { get; set; }
         public DbSet<Expense> Expenses { get; set; }
+        public DbSet<RewardRedemption> RewardRedemptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -89,13 +89,6 @@ namespace ljp_itsolutions.Data
                 b.Property(e => e.Amount).HasPrecision(18, 2);
             });
 
-            // Seed Roles
-            builder.Entity<Role>().HasData(
-                new Role { RoleID = 1, RoleName = Role.Admin },
-                new Role { RoleID = 2, RoleName = Role.Manager },
-                new Role { RoleID = 3, RoleName = Role.Cashier },
-                new Role { RoleID = 4, RoleName = Role.MarketingStaff }
-            );
 
             // Seed Categories
             builder.Entity<Category>().HasData(
@@ -113,7 +106,7 @@ namespace ljp_itsolutions.Data
                     Username = "admin",
                     FullName = "System Admin",
                     Email = "admin@coffee.local",
-                    RoleID = 1,
+                    Role = UserRoles.Admin,
                     IsActive = true,
                     Password = "AQAAAAIAAYagAAAAEEmhXNnUvV8p+L1p0v7wXv9XwQyGZG/0T0T0T0T0T0T0T0T0T0T0T0T0T0T0T0==" // Example hash, usually better to run a small app once to get a real one
                 }

@@ -52,7 +52,7 @@
                                     <td class="ps-4 fw-bold">#@order.OrderID.ToString().Substring(0, 8).ToUpper()</td>
                                     <td>@order.OrderDate.ToString("MMM dd, yyyy HH:mm")</td>
                                     <td>@order.OrderDetails.Count</td>
-                                    <td class="fw-bold text-dark">$@order.FinalAmount.ToString("F2")</td>
+                                    <td class="fw-bold text-dark">₱@order.FinalAmount.ToString("F2")</td>
                                     <td>
                                         <span class="badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-2">@order.PaymentStatus</span>
                                     </td>

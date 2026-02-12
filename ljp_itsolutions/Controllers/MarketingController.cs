@@ -92,10 +92,13 @@ namespace ljp_itsolutions.Controllers
             return View(topCustomers);
         }
 
-        public IActionResult RewardRedemptionLogs()
+        public async Task<IActionResult> RewardRedemptionLogs()
         {
-            // Dummy data for now as we don't have redemption logs in the DB schema yet
-            return View();
+            var logs = await _db.RewardRedemptions
+                .Include(r => r.Customer)
+                .OrderByDescending(r => r.RedemptionDate)
+                .ToListAsync();
+            return View(logs);
         }
 
         // 📈 Reports
@@ -109,9 +112,22 @@ namespace ljp_itsolutions.Controllers
             return View(salesData);
         }
 
-        public IActionResult CampaignReports()
+        public async Task<IActionResult> CampaignReports()
         {
-            return View();
+            var campaigns = await _db.Promotions
+                .Include(p => p.Orders)
+                .Select(p => new
+                {
+                    p.PromotionName,
+                    p.StartDate,
+                    p.EndDate,
+                    p.IsActive,
+                    UsageCount = p.Orders.Count,
+                    TotalSalesValue = p.Orders.Sum(o => o.FinalAmount),
+                    TotalDiscountGiven = p.Orders.Sum(o => o.DiscountAmount)
+                })
+                .ToListAsync();
+            return View(campaigns);
         }
     }
 }

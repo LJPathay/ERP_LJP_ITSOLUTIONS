@@ -1,3 +1,4 @@
+@model IEnumerable<dynamic>
 @{
     ViewData["Title"] = "Campaign Reports";
 }
@@ -8,43 +9,65 @@
             <h2 class="fw-bold mb-1">📜 Campaign Reports</h2>
             <p class="text-muted">Detailed outcomes and analytics for past campaigns</p>
         </div>
-        <button class="btn btn-primary"><i class="fas fa-file-export me-2"></i>Generate New Report</button>
+        <button class="btn btn-primary"><i class="fas fa-file-export me-2"></i>Export All Data</button>
     </div>
 
     <div class="row g-4">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-body p-4 d-flex gap-4">
-                    <div class="report-icon fs-2 text-primary p-3 bg-primary-subtle rounded-4 h-auto d-flex align-items-center">
-                        <i class="fas fa-file-pdf"></i>
-                    </div>
-                    <div>
-                        <h6 class="fw-bold mb-1">Year-End Holiday Sale 2025</h6>
-                        <p class="small text-muted mb-3">Generated on Dec 31, 2025 • 2.4 MB</p>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-light rounded-pill px-3">Download</button>
-                            <button class="btn btn-sm btn-light rounded-pill px-3">View Online</button>
+        @if (Model != null && Model.Any())
+        {
+            foreach (var campaign in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card border-0 shadow-sm rounded-4 h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="report-icon fs-3 text-primary p-3 bg-primary-subtle rounded-4">
+                                    <i class="fas fa-bullhorn"></i>
+                                </div>
+                                @if (campaign.IsActive)
+                                {
+                                    <span class="badge bg-success rounded-pill">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary rounded-pill">Inactive</span>
+                                }
+                            </div>
+                            
+                            <h5 class="fw-bold mb-1">@campaign.PromotionName</h5>
+                            <p class="small text-muted mb-4">@campaign.StartDate.ToString("MMM dd") - @campaign.EndDate.ToString("MMM dd, yyyy")</p>
+                            
+                            <div class="row g-2 mb-4">
+                                <div class="col-6">
+                                    <div class="bg-light p-3 rounded-3 text-center">
+                                        <div class="small text-muted mb-1">Usage</div>
+                                        <div class="fw-bold fs-5">@campaign.UsageCount</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="bg-light p-3 rounded-3 text-center">
+                                        <div class="small text-muted mb-1">Sales</div>
+                                        <div class="fw-bold fs-5">₱@campaign.TotalSalesValue.ToString("N0")</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="small text-muted">Discount Given: <span class="fw-bold text-danger">₱@campaign.TotalDiscountGiven.ToString("N2")</span></div>
+                                <button class="btn btn-sm btn-outline-primary rounded-pill px-3">View Details</button>
+                            </div>
                         </div>
                     </div>
                 </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-chart-bar fa-4x text-muted opacity-25 mb-3"></i>
+                <h4>No Campaigns Found</h4>
+                <p class="text-muted">Create a promotion to see campaign analytics here.</p>
             </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-body p-4 d-flex gap-4">
-                    <div class="report-icon fs-2 text-success p-3 bg-success-subtle rounded-4 h-auto d-flex align-items-center">
-                        <i class="fas fa-file-excel"></i>
-                    </div>
-                    <div>
-                        <h6 class="fw-bold mb-1">Summer Tea Kickoff Performance</h6>
-                        <p class="small text-muted mb-3">Generated on Aug 15, 2025 • 1.1 MB</p>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-light rounded-pill px-3">Download</button>
-                            <button class="btn btn-sm btn-light rounded-pill px-3">View Online</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        }
     </div>
 </div>

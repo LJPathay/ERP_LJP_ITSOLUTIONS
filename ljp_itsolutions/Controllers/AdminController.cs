@@ -64,11 +64,10 @@ namespace ljp_itsolutions.Controllers
             }
 
             var users = query
-                .Include(u => u.Role)
                 .OrderByDescending(u => u.CreatedAt)
                 .ToList();
             
-            ViewBag.Roles = _db.Roles.ToList();
+            ViewBag.Roles = new List<string> { UserRoles.Admin, UserRoles.Manager, UserRoles.Cashier, UserRoles.MarketingStaff };
             ViewBag.ShowArchived = showArchived;
             return View(users);
         }
@@ -114,7 +113,7 @@ namespace ljp_itsolutions.Controllers
             user.FullName = updatedUser.FullName;
             user.Username = updatedUser.Username;
             user.Email = updatedUser.Email;
-            user.RoleID = updatedUser.RoleID;
+            user.Role = updatedUser.Role;
             user.IsActive = updatedUser.IsActive;
 
             // Only update password if provided? The original code didn't hold password update here.
@@ -349,9 +348,8 @@ namespace ljp_itsolutions.Controllers
                 .Sum(o => (decimal?)o.FinalAmount) ?? 0;
             
             var staff = _db.Users
-                .Include(u => u.Role)
                 .Where(u => u.IsActive)
-                .OrderBy(u => u.Role.RoleName)
+                .OrderBy(u => u.Role)
                 .Take(10)
                 .ToList();
 
@@ -398,14 +396,12 @@ namespace ljp_itsolutions.Controllers
             }
             
             var roleDistribution = _db.Users
-                .Include(u => u.Role)
-                .GroupBy(u => u.Role.RoleName)
+                .GroupBy(u => u.Role)
                 .Select(g => new { Role = g.Key, Count = g.Count() })
                 .ToList();
             
             var recentActivityLogs = _db.AuditLogs
                 .Include(a => a.User)
-                .ThenInclude(u => u.Role)
                 .OrderByDescending(a => a.Timestamp)
                 .Take(5)
                 .ToList();
@@ -520,7 +516,7 @@ namespace ljp_itsolutions.Controllers
 
                 // Fetch data - using AsNoTracking to avoid tracking overhead
                 // Warning: fetching all data might be heavy for large DBs, but okay for this scope
-                var users = await _db.Users.AsNoTracking().Include(u => u.Role).ToListAsync();
+                var users = await _db.Users.AsNoTracking().ToListAsync();
                 var products = await _db.Products.AsNoTracking().ToListAsync();
                 var orders = await _db.Orders.AsNoTracking().Include(o => o.OrderDetails).ToListAsync();
                 var settings = await _db.SystemSettings.AsNoTracking().ToListAsync();

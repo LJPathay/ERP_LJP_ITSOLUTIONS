@@ -34,7 +34,7 @@ builder.Services.AddDbContext<ljp_itsolutions.Data.ApplicationDbContext>(options
     options.UseSqlServer(connectionString, sqlServerOptionsAction: sqlOptions =>
     {
         sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 10,
+            maxRetryCount: 15, // Increased to handle transient cloud DB issues
             maxRetryDelay: TimeSpan.FromSeconds(30),
             errorNumbersToAdd: null);
     }));

@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = "Manage Users";
     ViewData["PageTitle"] = "Manage Users";
-    var roles = ViewBag.Roles as IEnumerable<ljp_itsolutions.Models.Role>;
+    var roles = ViewBag.Roles as IEnumerable<string>;
 }
 
 <div class="container-fluid">
@@ -105,8 +105,8 @@
                                             <td>@user.Username</td>
                                             <td>@user.Email</td>
                                             <td>
-                                                <span class="badge @(user.Role?.RoleName == "Admin" ? "bg-danger" : "bg-info")">
-                                                    @(user.Role?.RoleName ?? "No Role")
+                                                <span class="badge @(string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? "bg-danger" : "bg-info")">
+                                                    @(user.Role ?? "No Role")
                                                 </span>
                                             </td>
                                             <td>
@@ -129,7 +129,7 @@
                                                                 data-fullname="@user.FullName"
                                                                 data-username="@user.Username"
                                                                 data-email="@user.Email"
-                                                                data-roleid="@user.RoleID"
+                                                                data-role="@user.Role"
                                                                 data-active="@user.IsActive.ToString().ToLower()"
                                                                 data-bs-toggle="modal" 
                                                                 data-bs-target="#editUserModal" title="Edit">
@@ -152,7 +152,7 @@
                                                         </form>
                                                     }
                                                     
-                                                    @if (!user.IsActive || user.Role?.RoleName != "Admin") 
+                                                    @if (!user.IsActive || user.Role != "Admin") 
                                                     {
                                                         <button class="btn btn-sm btn-outline-danger delete-user-btn" 
                                                                 data-id="@user.UserID" 
@@ -215,13 +215,13 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Role</label>
-                        <select name="RoleID" class="form-select" required>
+                        <select name="Role" class="form-select" required>
                             <option value="">Select role</option>
                             @if (roles != null)
                             {
                                 foreach (var role in roles)
                                 {
-                                    <option value="@role.RoleID">@role.RoleName</option>
+                                    <option value="@role">@role</option>
                                 }
                             }
                         </select>
@@ -262,12 +262,12 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Role</label>
-                        <select name="RoleID" id="edit-roleid" class="form-select" required>
+                        <select name="Role" id="edit-role" class="form-select" required>
                             @if (roles != null)
                             {
                                 foreach (var role in roles)
                                 {
-                                    <option value="@role.RoleID">@role.RoleName</option>
+                                    <option value="@role">@role</option>
                                 }
                             }
                         </select>
@@ -319,7 +319,7 @@
                 $('#edit-fullname').val($(this).data('fullname'));
                 $('#edit-username').val($(this).data('username'));
                 $('#edit-email').val($(this).data('email'));
-                $('#edit-roleid').val($(this).data('roleid'));
+                $('#edit-role').val($(this).data('role'));
                 $('#edit-isactive').prop('checked', $(this).data('active') === true);
             });
 

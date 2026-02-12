@@ -1,25 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ljp_itsolutions.Models
 {
-    public class Role
-    {
-        [Key]
-        public int RoleID { get; set; }
-
-        [Required]
-        [StringLength(50)]
-        public string RoleName { get; set; } = string.Empty;
-
-        public virtual ICollection<User> Users { get; set; } = new List<User>();
-
-        public const string Admin = "Admin";
-        public const string Manager = "Manager";
-        public const string Cashier = "Cashier";
-        public const string MarketingStaff = "MarketingStaff";
-    }
 
     public class Category
     {
@@ -78,5 +63,23 @@ namespace ljp_itsolutions.Models
         [Key]
         public string SettingKey { get; set; } = string.Empty;
         public string SettingValue { get; set; } = string.Empty;
+    }
+
+    public class RewardRedemption
+    {
+        [Key]
+        public int RedemptionID { get; set; }
+
+        public int CustomerID { get; set; }
+        [ForeignKey("CustomerID")]
+        public virtual Customer Customer { get; set; } = null!;
+
+        [Required]
+        [StringLength(100)]
+        public string RewardName { get; set; } = string.Empty;
+
+        public int PointsRedeemed { get; set; }
+
+        public DateTime RedemptionDate { get; set; } = DateTime.Now;
     }
 }

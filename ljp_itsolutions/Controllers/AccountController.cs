@@ -45,7 +45,7 @@ namespace ljp_itsolutions.Controllers
             ljp_itsolutions.Models.User? user = null;
             if (!string.IsNullOrWhiteSpace(model.UsernameOrEmail))
             {
-                user = await _db.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Username == model.UsernameOrEmail || u.Email == model.UsernameOrEmail);
+                user = await _db.Users.FirstOrDefaultAsync(u => u.Username == model.UsernameOrEmail || u.Email == model.UsernameOrEmail);
             }
 
             if (user == null)
@@ -73,7 +73,7 @@ namespace ljp_itsolutions.Controllers
                 return View(model);
             }
 
-            var roleName = user.Role?.RoleName ?? Role.Admin;
+            var roleName = user.Role;
 
             var claims = new List<Claim>
             {
@@ -86,17 +86,23 @@ namespace ljp_itsolutions.Controllers
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
 
+            // Set session variables for layout consistency
+            HttpContext.Session.SetString("UserRole", roleName);
+            HttpContext.Session.SetString("Username", user.Username);
+
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
 
-            return roleName switch
-            {
-                Role.Admin => RedirectToAction("Dashboard", "Admin"),
-                Role.Manager => RedirectToAction("Dashboard", "Manager"),
-                Role.Cashier => RedirectToAction("Index", "POS"),
-                Role.MarketingStaff => RedirectToAction("Dashboard", "Marketing"),
-                _ => RedirectToAction("Index", "Home"),
-            };
+            if (string.Equals(roleName, UserRoles.Admin, StringComparison.OrdinalIgnoreCase))
+                return RedirectToAction("Dashboard", "Admin");
+            if (string.Equals(roleName, UserRoles.Manager, StringComparison.OrdinalIgnoreCase))
+                return RedirectToAction("Dashboard", "Manager");
+            if (string.Equals(roleName, UserRoles.Cashier, StringComparison.OrdinalIgnoreCase))
+                return RedirectToAction("Index", "POS");
+            if (string.Equals(roleName, UserRoles.MarketingStaff, StringComparison.OrdinalIgnoreCase))
+                return RedirectToAction("Dashboard", "Marketing");
+
+            return RedirectToAction("Index", "Home");
         }
 
         [AllowAnonymous]

@@ -31,19 +31,19 @@
                 {
                     @RenderSection("Navigation")
                 }
-                else if (userRole == "Cashier")
+                else if (string.Equals(userRole, "Cashier", StringComparison.OrdinalIgnoreCase))
                 {
                     <partial name="_CashierNavigation" />
                 }
-                else if (userRole == "MarketingStaff" || ViewContext.RouteData.Values["controller"]?.ToString() == "Marketing")
+                else if (string.Equals(userRole, "MarketingStaff", StringComparison.OrdinalIgnoreCase) || ViewContext.RouteData.Values["controller"]?.ToString() == "Marketing")
                 {
                     <partial name="_MarketingNavigation" />
                 }
-                else if (userRole == "Manager" || ViewContext.RouteData.Values["controller"]?.ToString() == "Manager")
+                else if (string.Equals(userRole, "Manager", StringComparison.OrdinalIgnoreCase) || ViewContext.RouteData.Values["controller"]?.ToString() == "Manager")
                 {
                     <partial name="_ManagerNavigation" />
                 }
-                else if (userRole == "Admin" || ViewContext.RouteData.Values["controller"]?.ToString() == "Admin")
+                else if (string.Equals(userRole, "Admin", StringComparison.OrdinalIgnoreCase) || ViewContext.RouteData.Values["controller"]?.ToString() == "Admin")
                 {
                     <partial name="_AdminNavigation" />
                 }
@@ -126,7 +126,7 @@
                             </div>
                             <div class="text-start d-none d-md-block">
                                 <p class="mb-0 small fw-bold text-dark">@username</p>
-                                <p class="mb-0 x-small text-muted">@userRole</p>
+                                <p class="mb-0 x-small text-muted fw-bold">Role: @userRole</p>
                             </div>
                             <i class="fas fa-chevron-down x-small text-muted ms-1"></i>
                         </button>

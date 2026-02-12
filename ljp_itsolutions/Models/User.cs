@@ -21,9 +21,8 @@ namespace ljp_itsolutions.Models
 
         public string? Password { get; set; } 
 
-        public int RoleID { get; set; }
-        [ForeignKey("RoleID")]
-        public virtual Role Role { get; set; } = null!;
+        [Required]
+        public string Role { get; set; } = string.Empty;
 
         public bool IsActive { get; set; } = true;
 

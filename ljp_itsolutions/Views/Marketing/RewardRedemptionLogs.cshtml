@@ -1,3 +1,4 @@
+@model IEnumerable<ljp_itsolutions.Models.RewardRedemption>
 @{
     ViewData["Title"] = "Reward Redemption Logs";
 }
@@ -8,14 +9,60 @@
         <p class="text-muted">Track when and where customers are spending their hard-earned points</p>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4 empty-state text-center p-5">
-        <div class="py-5">
-            <div class="bg-light-subtle rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 120px; height: 120px;">
-                <i class="fas fa-history fa-4x text-muted opacity-25"></i>
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Customer</th>
+                            <th>Reward</th>
+                            <th>Points Redeemed</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var log in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="avatar-sm bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                <i class="fas fa-user small"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">@log.Customer.FullName</div>
+                                                <div class="small text-muted">@log.Customer.PhoneNumber</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success-subtle text-success border-0 px-3 py-2 rounded-pill">
+                                            <i class="fas fa-gift me-1"></i> @log.RewardName
+                                        </span>
+                                    </td>
+                                    <td class="fw-bold text-primary">@log.PointsRedeemed pts</td>
+                                    <td class="text-muted">@log.RedemptionDate.ToString("MMM dd, yyyy HH:mm")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-5">
+                                    <div class="py-4">
+                                        <i class="fas fa-history fa-4x text-muted opacity-25 mb-3"></i>
+                                        <h4 class="fw-bold">No Redemptions Yet</h4>
+                                        <p class="text-muted mx-auto" style="max-width: 400px;">When customers start redeeming their points, those transactions will appear here.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
-            <h4 class="fw-bold">No Redemptions Yet</h4>
-            <p class="text-muted mx-auto" style="max-width: 400px;">When customers start redeeming their points for rewards on the POS or mobile app, those transactions will appear here for audit and tracking.</p>
-            <button class="btn btn-primary rounded-pill px-4 mt-3">Configure Rewards Bloom</button>
         </div>
     </div>
 </div>
