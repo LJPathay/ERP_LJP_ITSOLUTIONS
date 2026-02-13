@@ -1,0 +1,129 @@
+@model dynamic
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "System SuperAdmin Dashboard";
+}
+
+<div class="container-fluid">
+    <div class="mb-4 d-none">
+        <h2 class="fw-bold">System SuperAdmin Dashboard</h2>
+        <p class="text-muted mb-0">Full control over the system configuration, users, and data.</p>
+    </div>
+
+    <!-- Quick Actions (Moved Up) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card-custom border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0">
+                            <i class="fas fa-bolt text-warning me-2"></i>Critical System Tasks
+                        </h6>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-3 col-sm-6">
+                            <a href="@Url.Action("Users")" class="btn btn-outline-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center gap-2">
+                                <i class="fas fa-user-shield fa-lg"></i>
+                                <span>Identity & Access</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="@Url.Action("SystemSettings")" class="btn btn-outline-secondary w-100 py-3 d-flex flex-column align-items-center justify-content-center gap-2">
+                                <i class="fas fa-sliders-h fa-lg"></i>
+                                <span>Global Settings</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="@Url.Action("Backups")" class="btn btn-outline-success w-100 py-3 d-flex flex-column align-items-center justify-content-center gap-2">
+                                <i class="fas fa-cloud-download-alt fa-lg"></i>
+                                <span>Backups</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="@Url.Action("AuditLogs")" class="btn btn-outline-info w-100 py-3 d-flex flex-column align-items-center justify-content-center gap-2">
+                                <i class="fas fa-history fa-lg"></i>
+                                <span>Audit Logs</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Business Overview Section (Improved) -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card-custom border-0 shadow-lg overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+                <div class="card-body text-white p-4">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 px-3">Live Status</span>
+                                <h4 class="fw-bold mb-0">Business Health Overview</h4>
+                            </div>
+                            <p class="text-white-50 mb-4">Global system-wide performance and engagement metrics.</p>
+                            <div class="row g-3">
+                                <div class="col-sm-4">
+                                    <div class="p-3 bg-white bg-opacity-5 rounded-lg border border-white border-opacity-10 backdrop-blur">
+                                        <p class="text-white-50 small mb-1">Growth Index</p>
+                                        <h4 class="fw-bold mb-0 text-success">@Model.GrowthIndex</h4>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="p-3 bg-white bg-opacity-5 rounded-lg border border-white border-opacity-10 backdrop-blur">
+                                        <p class="text-white-50 small mb-1">System Uptime</p>
+                                        <h4 class="fw-bold mb-0 text-info">@Model.SystemUptime</h4>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="p-3 bg-white bg-opacity-5 rounded-lg border border-white border-opacity-10 backdrop-blur">
+                                        <p class="text-white-50 small mb-1">Service Health</p>
+                                        <h4 class="fw-bold mb-0 text-success">Optimal</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 d-none d-lg-block text-end">
+                            <i class="fas fa-microchip fa-8x opacity-10"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card-custom">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Recent System Logs</h5>
+                    <a href="@Url.Action("AuditLogs")" class="btn btn-sm btn-link">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-custom mb-0">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var log in Model.AuditLogs)
+                                {
+                                    <tr>
+                                        <td>@(log.User?.FullName ?? "System")</td>
+                                        <td>@log.Action</td>
+                                        <td>@log.Timestamp.ToString("MMM dd, HH:mm:ss")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -4,7 +4,7 @@
 }
 
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 d-none">
         <div>
             <h2 class="fw-bold mb-1">Manager Overview</h2>
             <p class="text-muted">Quick insights into your store operations.</p>
@@ -15,42 +15,50 @@
         </div>
     </div>
 
-    <!-- KPI Cards -->
+    <!-- KPI Cards (Improved with Depth) -->
     <div class="row g-4 mb-4">
         <div class="col-md-3">
-            <div class="kpi-card h-100">
-                <div class="kpi-card-icon bg-primary bg-opacity-10 text-primary">
-                    <i class="fas fa-coffee fa-lg"></i>
+            <div class="card-custom border-0 shadow-sm transition-hover" style="background: linear-gradient(135deg, white 0%, #f1f5f9 100%); border-radius: 1.25rem;">
+                <div class="card-body p-4 text-center">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3" style="width: 54px; height: 54px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-coffee fa-lg"></i>
+                    </div>
+                    <p class="text-secondary small fw-bold text-uppercase mb-1">Stock Portfolio</p>
+                    <h2 class="fw-bold mb-0">@Model.TotalProducts</h2>
                 </div>
-                <p class="kpi-card-label">Total Products</p>
-                <h3 class="kpi-card-value">@Model.TotalProducts</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="kpi-card h-100">
-                <div class="kpi-card-icon bg-success bg-opacity-10 text-success">
-                    <i class="fas fa-shopping-cart fa-lg"></i>
+            <div class="card-custom border-0 shadow-sm transition-hover" style="background: linear-gradient(135deg, white 0%, #f0fdf4 100%); border-radius: 1.25rem;">
+                <div class="card-body p-4 text-center">
+                    <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3" style="width: 54px; height: 54px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-shopping-cart fa-lg"></i>
+                    </div>
+                    <p class="text-secondary small fw-bold text-uppercase mb-1">Total Demand</p>
+                    <h2 class="fw-bold mb-0">@Model.TotalOrders</h2>
                 </div>
-                <p class="kpi-card-label">Total Orders</p>
-                <h3 class="kpi-card-value">@Model.TotalOrders</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="kpi-card h-100">
-                <div class="kpi-card-icon bg-info bg-opacity-10 text-info">
-                    <i class="fas fa-dollar-sign fa-lg"></i>
+            <div class="card-custom border-0 shadow-sm transition-hover" style="background: linear-gradient(135deg, white 0%, #f0f9ff 100%); border-radius: 1.25rem;">
+                <div class="card-body p-4 text-center">
+                    <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3" style="width: 54px; height: 54px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-peso-sign fa-lg"></i>
+                    </div>
+                    <p class="text-secondary small fw-bold text-uppercase mb-1">Gross Earnings</p>
+                    <h2 class="fw-bold mb-0">₱@Model.TotalRevenue.ToString("N0")</h2>
                 </div>
-                <p class="kpi-card-label">Total Revenue</p>
-                <h3 class="kpi-card-value">₱@Model.TotalRevenue.ToString("N2")</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="kpi-card h-100">
-                <div class="kpi-card-icon bg-warning bg-opacity-10 text-warning">
-                    <i class="fas fa-users fa-lg"></i>
+            <div class="card-custom border-0 shadow-sm transition-hover" style="background: linear-gradient(135deg, white 0%, #fefce8 100%); border-radius: 1.25rem;">
+                <div class="card-body p-4 text-center">
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3" style="width: 54px; height: 54px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-user-shield fa-lg"></i>
+                    </div>
+                    <p class="text-secondary small fw-bold text-uppercase mb-1">Team Presence</p>
+                    <h2 class="fw-bold mb-0">@Model.TotalUsers</h2>
                 </div>
-                <p class="kpi-card-label">Active Users</p>
-                <h3 class="kpi-card-value">@Model.TotalUsers</h3>
             </div>
         </div>
     </div>

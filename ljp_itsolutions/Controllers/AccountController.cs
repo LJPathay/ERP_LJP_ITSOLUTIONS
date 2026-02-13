@@ -93,6 +93,8 @@ namespace ljp_itsolutions.Controllers
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
 
+            if (string.Equals(roleName, UserRoles.SuperAdmin, StringComparison.OrdinalIgnoreCase))
+                return RedirectToAction("Dashboard", "SuperAdmin");
             if (string.Equals(roleName, UserRoles.Admin, StringComparison.OrdinalIgnoreCase))
                 return RedirectToAction("Dashboard", "Admin");
             if (string.Equals(roleName, UserRoles.Manager, StringComparison.OrdinalIgnoreCase))

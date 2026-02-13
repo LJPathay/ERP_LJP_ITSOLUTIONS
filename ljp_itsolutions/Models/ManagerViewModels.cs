@@ -9,14 +9,14 @@ namespace ljp_itsolutions.Models
         public int TotalUsers { get; set; }
         public int TotalOrders { get; set; }
         public decimal TotalRevenue { get; set; }
-        public List<Ingredient> LowStockIngredients { get; set; }
-        public List<Order> RecentOrders { get; set; }
-        public List<ProductSalesSummary> TopProducts { get; set; }
+        public List<Ingredient> LowStockIngredients { get; set; } = new();
+        public List<Order> RecentOrders { get; set; } = new();
+        public List<ProductSalesSummary> TopProducts { get; set; } = new();
     }
 
     public class ProductSalesSummary
     {
-        public string ProductName { get; set; }
+        public string? ProductName { get; set; }
         public int TotalSold { get; set; }
         public decimal Revenue { get; set; }
     }

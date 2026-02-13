@@ -146,6 +146,25 @@
     font-size: 0.875rem;
 }
 
+.btn-signin {
+    width: 100%;
+    padding: 0.75rem;
+    background: linear-gradient(90deg, #d97706 0%, #c2410c 100%);
+    color: #fff;
+    border: 0;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    margin-top: 1rem;
+}
+
+.btn-signin:hover {
+    background: linear-gradient(90deg, #c2410c 0%, #9a2c0a 100%);
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
+}
+
 .validation-summary {
     margin-bottom: 1.5rem;
 }

@@ -301,6 +301,15 @@
     transform: scale(0.98);
 }
 
+.transition-hover {
+    transition: all 0.2s ease-in-out !important;
+}
+
+.transition-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
 /* Animations */
 @keyframes fadeIn {
     from {

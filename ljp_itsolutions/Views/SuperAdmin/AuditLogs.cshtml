@@ -1,0 +1,40 @@
+@model IEnumerable<ljp_itsolutions.Models.AuditLog>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "System Audit Logs";
+}
+
+<div class="container-fluid">
+    <div class="mb-4">
+        <h2 class="fw-bold">System Audit Logs</h2>
+        <p class="text-muted">Security and activity history for all roles.</p>
+    </div>
+
+    <div class="card-custom">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th>DateTime</th>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model)
+                        {
+                            <tr>
+                                <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td>@((log.User?.FullName) ?? "System")</td>
+                                <td>@(log.User?.Role ?? "N/A")</td>
+                                <td>@log.Action</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

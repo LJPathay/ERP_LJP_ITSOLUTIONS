@@ -1,0 +1,85 @@
+@model IEnumerable<ljp_itsolutions.Models.Ingredient>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Inventory Overview";
+}
+
+<div class="container-fluid">
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card border-0 shadow-sm">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted small mb-1">Low Stock Ingredients</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.LowStockCount</h3>
+                    </div>
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card border-0 shadow-sm">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted small mb-1">Out of Stock</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.OutOfStockCount</h3>
+                    </div>
+                    <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card border-0 shadow-sm">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted small mb-1">Total Items Tracker</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.TotalCount</h3>
+                    </div>
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-custom border-0 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom">
+            <h5 class="fw-bold mb-0">Raw Material Status</h5>
+            <a href="@Url.Action("Inventory", "Manager")" class="btn btn-sm btn-outline-primary rounded-pill">Manage Inventory</a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Ingredient Name</th>
+                            <th>Current Stock</th>
+                            <th>Unit</th>
+                            <th>Threshold</th>
+                            <th class="text-end pe-4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            var statusClass = item.StockQuantity == 0 ? "bg-danger" : (item.StockQuantity < item.LowStockThreshold ? "bg-warning text-dark" : "bg-success");
+                            var statusText = item.StockQuantity == 0 ? "Out of Stock" : (item.StockQuantity < item.LowStockThreshold ? "Low Stock" : "Healthy");
+                            <tr>
+                                <td class="ps-4 fw-bold">@item.Name</td>
+                                <td>@item.StockQuantity.ToString("F2")</td>
+                                <td><span class="text-muted">@item.Unit</span></td>
+                                <td><span class="text-muted small">@item.LowStockThreshold @item.Unit</span></td>
+                                <td class="text-end pe-4"><span class="badge @statusClass">@statusText</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

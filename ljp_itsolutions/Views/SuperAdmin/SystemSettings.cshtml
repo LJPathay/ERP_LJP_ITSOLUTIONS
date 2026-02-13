@@ -1,0 +1,52 @@
+@model Dictionary<string, string>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "System Configuration";
+    string GetVal(string key, string defaultVal = "") => Model.ContainsKey(key) ? Model[key] : defaultVal;
+    bool GetBool(string key) => Model.ContainsKey(key) && Model[key].ToLower() == "true";
+}
+
+<div class="container-fluid">
+    <form asp-action="UpdateSettings" method="post">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">System Configuration</h2>
+                <p class="text-muted">Master settings for the entire ERP system.</p>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Configuration</button>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card-custom">
+                    <div class="card-header bg-white"><h6 class="fw-bold mb-0">Core Settings</h6></div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">System Name</label>
+                            <input type="text" name="SystemName" class="form-control" value="@GetVal("SystemName")">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Primary Currency</label>
+                            <input type="text" name="Currency" class="form-control" value="@GetVal("Currency")">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                 <div class="card-custom">
+                    <div class="card-header bg-white"><h6 class="fw-bold mb-0">Security Policies</h6></div>
+                    <div class="card-body">
+                         <div class="mb-3">
+                            <label class="form-label">Session Duration (Min)</label>
+                            <input type="number" name="SessionTimeout" class="form-control" value="@GetVal("SessionTimeout")">
+                        </div>
+                        <div class="form-check form-switch">
+                            <input type="checkbox" name="TwoFactorAuth" class="form-check-input" value="true" @(GetBool("TwoFactorAuth") ? "checked" : "")>
+                            <label class="form-check-label">Force 2FA</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

@@ -107,8 +107,8 @@ namespace ljp_itsolutions.Data
                     FullName = "System Admin",
                     Email = "admin@coffee.local",
                     Role = UserRoles.Admin,
-                    IsActive = true,
-                    Password = "AQAAAAIAAYagAAAAEEmhXNnUvV8p+L1p0v7wXv9XwQyGZG/0T0T0T0T0T0T0T0T0T0T0T0T0T0T0T0==" // Example hash, usually better to run a small app once to get a real one
+                    IsActive = true
+                    // Password hash removed here as DbInitializer handles robust seeding/resetting to '123'
                 }
             );
             // Seed Products

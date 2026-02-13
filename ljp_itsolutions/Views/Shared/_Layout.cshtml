@@ -43,6 +43,10 @@
                 {
                     <partial name="_ManagerNavigation" />
                 }
+                else if (string.Equals(userRole, "SuperAdmin", StringComparison.OrdinalIgnoreCase))
+                {
+                    <partial name="_SuperAdminNavigation" />
+                }
                 else if (string.Equals(userRole, "Admin", StringComparison.OrdinalIgnoreCase) || ViewContext.RouteData.Values["controller"]?.ToString() == "Admin")
                 {
                     <partial name="_AdminNavigation" />
@@ -105,9 +109,10 @@
                         <i class="fas fa-bars fa-lg"></i>
                     </button>
                     <div>
-                        <h1 class="h3 mb-0 fw-bold text-dark">@ViewData["Title"]</h1>
-                        <div class="text-muted small mt-1">
-                            <i class="far fa-clock me-1"></i>@DateTime.Now.ToString("dddd, MMMM d, yyyy")
+                        <h1 class="h4 mb-0 fw-bold text-dark tracking-tight">@ViewData["Title"]</h1>
+                        <div class="text-muted x-small d-flex align-items-center gap-2 mt-1">
+                            <i class="far fa-calendar-alt opacity-50"></i>
+                            <span>@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
                         </div>
                     </div>
                 </div>

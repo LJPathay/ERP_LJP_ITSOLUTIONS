@@ -30,7 +30,7 @@
         </div>
 
         <div class="products-grid" id="productsGrid">
-            @foreach (var product in Model)
+            @foreach (var product in products)
             {
                 <div class="product-card" data-category="@product.Category?.CategoryName" onclick="addToCart('@product.ProductID', '@product.ProductName', @product.Price)">
                     <div class="product-image-container">
@@ -100,16 +100,50 @@
                     <i class="fas fa-credit-card mb-1"></i>
                     <span>Card</span>
                 </button>
-                <button class="payment-btn" onclick="setPayment('E-Wallet')">
-                    <i class="fas fa-wallet mb-1"></i>
-                    <span>E-Wallet</span>
+                <button class="payment-btn" onclick="setPayment('Paymongo')">
+                    <i class="fas fa-qrcode mb-1"></i>
+                    <span>Paymongo (GCash/Maya)</span>
                 </button>
             </div>
 
-            <button class="pay-now-btn" onclick="processPayment()">
-                <i class="fas fa-check-circle"></i>
-                <span>Confirm & Pay</span>
+            <button class="pay-now-btn transition-hover" onclick="processPayment()">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fas fa-coins"></i>
+                    <span>Finalize Transaction</span>
+                </div>
             </button>
+        </div>
+    <div class="cart-section">
+        ... (rest of cart footer)
+    </div>
+</div>
+
+<!-- Paymongo Simulation Modal -->
+<div class="modal fade" id="paymongoModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">Paymongo E-Wallet</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-qrcode fa-10x text-dark opacity-75"></i>
+                </div>
+                <h4 class="fw-bold mb-2">Scan to Pay</h4>
+                <p class="text-muted mb-4">Scan the QR code with GCash or Maya app to complete the transaction.</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <div class="p-2 border rounded-3 bg-light">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/GCash_logo.svg/1200px-GCash_logo.svg.png" height="20" />
+                    </div>
+                    <div class="p-2 border rounded-3 bg-light">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Maya_logo.svg/512px-Maya_logo.svg.png" height="20" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn btn-primary w-100 py-2 fw-bold" onclick="finalizePaymongo()">I Have Paid</button>
+            </div>
         </div>
     </div>
 </div>
@@ -242,7 +276,27 @@
                 alert('Please add items to cart first.');
                 return;
             }
+
+            if (paymentMethod === 'Paymongo') {
+                const modal = new bootstrap.Modal(document.getElementById('paymongoModal'));
+                modal.show();
+                return;
+            }
             
+            submitOrder();
+        }
+
+        function finalizePaymongo() {
+            const btn = event.target;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Verifying...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                submitOrder();
+            }, 2000);
+        }
+
+        function submitOrder() {
             const productIds = cart.flatMap(item => Array(item.qty).fill(item.id));
             
             const form = document.createElement('form');
@@ -257,15 +311,12 @@
                 form.appendChild(input);
             });
 
-            // Add payment method
             const payInput = document.createElement('input');
             payInput.type = 'hidden';
             payInput.name = 'paymentMethod';
             payInput.value = paymentMethod;
             form.appendChild(payInput);
 
-
-            // Add Promo Code
             const promoCode = document.getElementById('promoCode').value;
             if (promoCode) {
                 const promoInput = document.createElement('input');

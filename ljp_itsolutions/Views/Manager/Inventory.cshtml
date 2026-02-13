@@ -4,7 +4,8 @@
 }
 
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-end align-items-center mb-4">
+    <!-- header div removed to fix double header -->
+    <div class="d-flex justify-content-end align-items-center mb-4 d-none">
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addIngredientModal">
             <i class="fas fa-plus me-2"></i>Add Ingredient
         </button>
@@ -48,6 +49,13 @@
                 <h3 class="kpi-card-value text-success">@Model.HealthyStockCount</h3>
             </div>
         </div>
+    </div>
+
+    <!-- Action Bar below KPIs -->
+    <div class="d-flex justify-content-end mb-4">
+        <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addIngredientModal">
+            <i class="fas fa-plus me-2"></i>Add New Ingredient
+        </button>
     </div>
 
     <!-- Ingredients Table -->

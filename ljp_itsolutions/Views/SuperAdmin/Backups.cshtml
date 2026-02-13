@@ -1,0 +1,43 @@
+@model IEnumerable<System.IO.FileInfo>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Database Backups";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Database Backups</h2>
+            <p class="text-muted">Manual recovery points for system data.</p>
+        </div>
+        <form asp-action="CreateBackup" method="post">
+            <button type="submit" class="btn btn-primary">Create New Snapshot</button>
+        </form>
+    </div>
+
+    <div class="card-custom">
+        <div class="card-body p-0">
+             <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Date</th>
+                            <th>Size</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var file in Model)
+                        {
+                            <tr>
+                                <td>@file.Name</td>
+                                <td>@file.CreationTime.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@((file.Length / 1024.0).ToString("N2")) KB</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

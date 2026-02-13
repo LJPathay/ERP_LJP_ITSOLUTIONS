@@ -15,6 +15,9 @@ namespace ljp_itsolutions.Data
 
             try
             {
+                Console.WriteLine("Applying pending migrations...");
+                db.Database.Migrate();
+
                 Console.WriteLine("Checking database connection...");
                 
                 string createTableSql = @"
@@ -38,6 +41,11 @@ namespace ljp_itsolutions.Data
                     if (string.Equals(normalizedRole, UserRoles.Admin, StringComparison.OrdinalIgnoreCase) && normalizedRole != UserRoles.Admin)
                     {
                         u.Role = UserRoles.Admin;
+                        fixedAny = true;
+                    }
+                    else if (string.Equals(normalizedRole, UserRoles.SuperAdmin, StringComparison.OrdinalIgnoreCase) && normalizedRole != UserRoles.SuperAdmin)
+                    {
+                        u.Role = UserRoles.SuperAdmin;
                         fixedAny = true;
                     }
                     else if (string.Equals(normalizedRole, UserRoles.Manager, StringComparison.OrdinalIgnoreCase) && normalizedRole != UserRoles.Manager)
@@ -104,6 +112,16 @@ namespace ljp_itsolutions.Data
                             user.Role = roleName;
                             modified = true;
                         }
+
+                        // ALWAYS reset password to '123' if it's missing or to ensure access in published env
+                        // This helps if the DB was manually tampered with or if hashes are incompatible
+                        var passwordCheck = hasher.VerifyHashedPassword(user, user.Password ?? "", "123");
+                        if (passwordCheck != PasswordVerificationResult.Success)
+                        {
+                            Console.WriteLine($"Resetting password for: {username}");
+                            user.Password = hasher.HashPassword(user, "123");
+                            modified = true;
+                        }
                         
                         if (modified)
                         {
@@ -113,6 +131,7 @@ namespace ljp_itsolutions.Data
                     }
                 }
 
+                SeedOrUpdateUser("superadmin", "System SuperAdmin", "superadmin@coffee.local", UserRoles.SuperAdmin);
                 SeedOrUpdateUser("admin", "System Admin", "admin@coffee.local", UserRoles.Admin);
                 SeedOrUpdateUser("manager", "Store Manager", "manager@coffee.local", UserRoles.Manager);
                 SeedOrUpdateUser("cashier", "Store Cashier", "cashier@coffee.local", UserRoles.Cashier);

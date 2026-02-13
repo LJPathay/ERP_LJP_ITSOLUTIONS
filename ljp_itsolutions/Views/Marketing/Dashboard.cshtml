@@ -19,61 +19,53 @@
         </div>
     </div>
 
-    <!-- Quick Stats -->
+    <!-- Quick Stats (Standardized) -->
     <div class="row g-4 mb-4">
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100 kpi-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="icon-box bg-primary-subtle text-primary rounded-3 p-3">
-                            <i class="fas fa-users fs-4"></i>
-                        </div>
-                        <h6 class="mb-0 text-muted fw-semibold">Total Customers</h6>
+            <div class="card-custom border-0 shadow-sm transition-hover" style="background: linear-gradient(135deg, white 0%, #f1f5f9 100%); border-radius: 1.25rem;">
+                <div class="card-body p-4 text-center">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3" style="width: 52px; height: 52px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-user-friends fa-lg"></i>
                     </div>
-                    <h3 class="fw-bold mb-1">@Model.TotalCustomers</h3>
-                    <div class="text-success small"><i class="fas fa-arrow-up me-1"></i>12% from last month</div>
+                    <p class="text-secondary small fw-bold text-uppercase mb-1">Total Reach</p>
+                    <h2 class="fw-bold mb-1">@Model.TotalCustomers</h2>
+                    <div class="text-success x-small fw-bold"><i class="fas fa-caret-up me-1"></i>+12% growth</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100 kpi-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="icon-box bg-success-subtle text-success rounded-3 p-3">
-                            <i class="fas fa-tags fs-4"></i>
-                        </div>
-                        <h6 class="mb-0 text-muted fw-semibold">Active Promos</h6>
+            <div class="card-custom border-0 shadow-sm transition-hover" style="background: linear-gradient(135deg, white 0%, #f0fdf4 100%); border-radius: 1.25rem;">
+                <div class="card-body p-4 text-center">
+                    <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3" style="width: 52px; height: 52px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-tags fa-lg"></i>
                     </div>
-                    <h3 class="fw-bold mb-1">@Model.ActivePromotions</h3>
-                    <div class="text-success small"><i class="fas fa-check me-1"></i>3 newly launched</div>
+                    <p class="text-secondary small fw-bold text-uppercase mb-1">Active Offers</p>
+                    <h2 class="fw-bold mb-1">@Model.ActivePromotions</h2>
+                    <div class="text-success x-small fw-bold"><i class="fas fa-bullhorn me-1"></i>Live status</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100 kpi-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="icon-box bg-warning-subtle text-warning rounded-3 p-3">
-                            <i class="fas fa-star fs-4"></i>
-                        </div>
-                        <h6 class="mb-0 text-muted fw-semibold">Loyalty Points</h6>
+            <div class="card-custom border-0 shadow-sm transition-hover" style="background: linear-gradient(135deg, white 0%, #fff7ed 100%); border-radius: 1.25rem;">
+                <div class="card-body p-4 text-center">
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3" style="width: 52px; height: 52px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-star fa-lg"></i>
                     </div>
-                    <h3 class="fw-bold mb-1">@Model.TotalPointsAwarded</h3>
-                    <div class="small text-muted">Total awarded across all users</div>
+                    <p class="text-secondary small fw-bold text-uppercase mb-1">Loyalty Points</p>
+                    <h2 class="fw-bold mb-1">@Model.TotalPointsAwarded</h2>
+                    <div class="text-muted x-small">System-wide total</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100 kpi-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="icon-box bg-info-subtle text-info rounded-3 p-3">
-                            <i class="fas fa-shopping-cart fs-4"></i>
-                        </div>
-                        <h6 class="mb-0 text-muted fw-semibold">Conversion Rate</h6>
+            <div class="card-custom border-0 shadow-sm transition-hover" style="background: linear-gradient(135deg, white 0%, #f0f9ff 100%); border-radius: 1.25rem;">
+                <div class="card-body p-4 text-center">
+                    <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3" style="width: 52px; height: 52px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-chart-line fa-lg"></i>
                     </div>
-                    <h3 class="fw-bold mb-1">4.2%</h3>
-                    <div class="text-danger small"><i class="fas fa-arrow-down me-1"></i>0.5% decrease</div>
+                    <p class="text-secondary small fw-bold text-uppercase mb-1">Success Rate</p>
+                    <h2 class="fw-bold mb-1">4.2%</h2>
+                    <div class="text-danger x-small fw-bold"><i class="fas fa-caret-down me-1"></i>-0.5% shift</div>
                 </div>
             </div>
         </div>
@@ -141,8 +133,3 @@
     </div>
 </div>
 
-<style>
-    .kpi-card { transition: transform 0.2s; cursor: pointer; }
-    .kpi-card:hover { transform: translateY(-5px); }
-    .icon-box { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
-</style>

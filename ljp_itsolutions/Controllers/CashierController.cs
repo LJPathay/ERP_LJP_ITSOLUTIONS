@@ -45,7 +45,7 @@ namespace ljp_itsolutions.Controllers
                 CashierID = cashierId,
                 CustomerID = customerId,
                 PaymentMethod = paymentMethod,
-                PaymentStatus = "Completed"
+                PaymentStatus = paymentMethod == "Paymongo" ? "Paid (Digital)" : "Completed"
             };
 
             // Basic Promotion handling

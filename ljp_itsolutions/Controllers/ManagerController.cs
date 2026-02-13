@@ -247,7 +247,7 @@ namespace ljp_itsolutions.Controllers
         {
             var performance = await _db.Orders
                 .Where(o => o.PromotionID != null)
-                .GroupBy(o => o.Promotion.PromotionName)
+                .GroupBy(o => o.Promotion!.PromotionName)
                 .Select(g => new { Name = g.Key, Count = g.Count(), Revenue = g.Sum(o => o.FinalAmount) })
                 .ToListAsync();
 

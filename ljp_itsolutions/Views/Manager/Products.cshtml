@@ -1,7 +1,7 @@
 @model IEnumerable<ljp_itsolutions.Models.Product>
 @{
     ViewData["Title"] = "Product Management";
-    var categories = ViewBag.Categories as IEnumerable<ljp_itsolutions.Models.Category>;
+    var categories = (ViewBag.Categories as IEnumerable<ljp_itsolutions.Models.Category>) ?? Enumerable.Empty<ljp_itsolutions.Models.Category>();
 }
 
 <div class="container-fluid py-4">
