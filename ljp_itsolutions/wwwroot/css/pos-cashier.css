@@ -255,9 +255,19 @@
 
 .payment-methods {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
     margin: 20px 0;
+}
+
+.payment-details-box {
+    padding: 15px;
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    margin-bottom: 20px;
+    animation: fadeIn 0.3s ease;
 }
 
 .payment-btn {

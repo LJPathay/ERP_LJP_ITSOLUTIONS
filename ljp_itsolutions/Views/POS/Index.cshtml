@@ -62,11 +62,11 @@
             <button class="btn btn-sm btn-outline-danger" onclick="clearCart()">Clear</button>
         </div>
 
-        <div class="cart-items" id="cartItems">
-            <div class="text-center text-muted py-5" id="emptyCartMsg">
-                <i class="fas fa-shopping-basket fa-3x mb-3 opacity-20"></i>
-                <p>No items in cart</p>
-            </div>
+        <div class="cart-items" id="cartItems" style="display:none">
+        </div>
+        <div class="text-center text-muted py-5" id="emptyCartMsg">
+            <i class="fas fa-shopping-basket fa-3x mb-3 opacity-20"></i>
+            <p>No items in cart</p>
         </div>
 
         <div class="cart-footer">
@@ -96,14 +96,24 @@
                     <i class="fas fa-money-bill-wave mb-1"></i>
                     <span>Cash</span>
                 </button>
-                <button class="payment-btn" onclick="setPayment('Card')">
-                    <i class="fas fa-credit-card mb-1"></i>
-                    <span>Card</span>
-                </button>
                 <button class="payment-btn" onclick="setPayment('Paymongo')">
                     <i class="fas fa-qrcode mb-1"></i>
-                    <span>Paymongo (GCash/Maya)</span>
+                    <span>E-Wallet</span>
                 </button>
+            </div>
+
+            <div id="cashDetails" class="payment-details-box mt-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted">Cash Received:</span>
+                    <div class="input-group input-group-sm w-50">
+                        <span class="input-group-text bg-light border-end-0">₱</span>
+                        <input type="number" id="cashReceived" class="form-control border-start-0 text-end fw-bold" placeholder="0.00" oninput="calculateChange()">
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted">Change:</span>
+                    <span id="changeAmount" class="fw-bold text-success fs-5">₱0.00</span>
+                </div>
             </div>
 
             <button class="pay-now-btn transition-hover" onclick="processPayment()">
@@ -127,22 +137,26 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center py-5">
-                <div class="mb-4">
-                    <i class="fas fa-qrcode fa-10x text-dark opacity-75"></i>
+                <div class="mb-4 d-flex justify-content-center align-items-center" style="min-height: 250px;">
+                    <div id="qrContainer" class="p-3 bg-white border rounded shadow-sm d-flex align-items-center justify-content-center" style="width: 250px; height: 250px;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
                 </div>
                 <h4 class="fw-bold mb-2">Scan to Pay</h4>
-                <p class="text-muted mb-4">Scan the QR code with GCash or Maya app to complete the transaction.</p>
-                <div class="d-flex justify-content-center gap-3">
-                    <div class="p-2 border rounded-3 bg-light">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/GCash_logo.svg/1200px-GCash_logo.svg.png" height="20" />
+                <p id="qrInstruction" class="text-muted mb-4 small">Generating your unique QR Ph code...</p>
+                <div class="d-flex justify-content-center gap-4">
+                    <div class="p-2 border rounded bg-light d-flex align-items-center justify-content-center" style="width: 100px; height: 50px;">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/GCash_logo.svg/512px-GCash_logo.svg.png" style="max-height: 25px; max-width: 80px;" alt="GCash" />
                     </div>
-                    <div class="p-2 border rounded-3 bg-light">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Maya_logo.svg/512px-Maya_logo.svg.png" height="20" />
+                    <div class="p-2 border rounded bg-light d-flex align-items-center justify-content-center" style="width: 100px; height: 50px;">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Maya_logo.svg/512px-Maya_logo.svg.png" style="max-height: 25px; max-width: 80px;" alt="Maya" />
                     </div>
                 </div>
             </div>
             <div class="modal-footer bg-light border-0">
-                <button type="button" class="btn btn-primary w-100 py-2 fw-bold" onclick="finalizePaymongo()">I Have Paid</button>
+                <button type="button" id="paymongoDoneBtn" class="btn btn-primary w-100 py-2 fw-bold" onclick="window.location.href='@Url.Action("TransactionHistory", "Cashier")'" disabled>Waiting for Payment...</button>
             </div>
         </div>
     </div>
@@ -179,19 +193,21 @@
             renderCart();
         }
 
+        let totalAmount = 0;
+
         function renderCart() {
             const cartContainer = document.getElementById('cartItems');
             const emptyMsg = document.getElementById('emptyCartMsg');
             
             if (cart.length === 0) {
-                cartContainer.innerHTML = '';
-                cartContainer.appendChild(emptyMsg);
-                emptyMsg.style.display = 'block';
+                cartContainer.style.display = 'none';
+                if (emptyMsg) emptyMsg.style.display = 'block';
                 updateTotals(0);
                 return;
             }
 
-            emptyMsg.style.display = 'none';
+            if (emptyMsg) emptyMsg.style.display = 'none';
+            cartContainer.style.display = 'block';
             cartContainer.innerHTML = cart.map(item => `
                 <div class="cart-item">
                     <div class="cart-item-info">
@@ -213,11 +229,30 @@
 
         function updateTotals(subtotal) {
             const tax = subtotal * 0.05;
-            const total = subtotal + tax;
+            totalAmount = subtotal + tax;
 
             document.getElementById('subtotal').innerText = `₱${subtotal.toFixed(2)}`;
             document.getElementById('tax').innerText = `₱${tax.toFixed(2)}`;
-            document.getElementById('total').innerText = `₱${total.toFixed(2)}`;
+            document.getElementById('total').innerText = `₱${totalAmount.toFixed(2)}`;
+            
+            if (paymentMethod === 'Cash') {
+                calculateChange();
+            }
+        }
+
+        function calculateChange() {
+            const cash = parseFloat(document.getElementById('cashReceived').value) || 0;
+            const change = cash - totalAmount;
+            const changeDisplay = document.getElementById('changeAmount');
+            
+            changeDisplay.innerText = `₱${Math.max(0, change).toFixed(2)}`;
+            if (change < 0 && cash > 0) {
+                changeDisplay.classList.add('text-danger');
+                changeDisplay.classList.remove('text-success');
+            } else {
+                changeDisplay.classList.remove('text-danger');
+                changeDisplay.classList.add('text-success');
+            }
         }
 
         function searchProducts() {
@@ -267,8 +302,15 @@
         function setPayment(method) {
             paymentMethod = method;
             document.querySelectorAll('.payment-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.innerText.includes(method));
+                btn.classList.toggle('active', btn.onclick.toString().includes(method));
             });
+
+            const cashDetails = document.getElementById('cashDetails');
+            if (method === 'Cash') {
+                cashDetails.style.display = 'block';
+            } else {
+                cashDetails.style.display = 'none';
+            }
         }
 
         function processPayment() {
@@ -277,23 +319,107 @@
                 return;
             }
 
+            if (paymentMethod === 'Cash') {
+                const cash = parseFloat(document.getElementById('cashReceived').value) || 0;
+                if (cash < totalAmount) {
+                    alert('Insufficient cash provided.');
+                    return;
+                }
+            }
+
             if (paymentMethod === 'Paymongo') {
-                const modal = new bootstrap.Modal(document.getElementById('paymongoModal'));
-                modal.show();
+                generateRealQR();
                 return;
             }
             
             submitOrder();
         }
 
-        function finalizePaymongo() {
+        async function generateRealQR() {
+            const modalEl = document.getElementById('paymongoModal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+
+            const qrContainer = document.getElementById('qrContainer');
+            const qrInstruction = document.getElementById('qrInstruction');
+            const doneBtn = document.getElementById('paymongoDoneBtn');
+
+            const productIds = cart.flatMap(item => Array(item.qty).fill(item.id));
+            const promoCode = document.getElementById('promoCode').value;
+
+            try {
+                const response = await fetch('@Url.Action("CreatePayMongoOrder", "Cashier")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    },
+                    body: JSON.stringify({ productIds, promoCode })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    qrContainer.innerHTML = `<img src="${data.qrCodeUrl}" alt="Real QR Ph" class="img-fluid" />`;
+                    qrInstruction.innerText = "Scan this QR Ph code with GCash or Maya to pay.";
+                    doneBtn.innerText = "I Have Paid / Complete Order";
+                    doneBtn.disabled = false;
+                } else {
+                    const error = await response.text();
+                    qrContainer.innerHTML = `<div class="text-danger p-3"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br><small>${error}</small></div>`;
+                    qrInstruction.innerText = "Error generating QR code.";
+                }
+            } catch (err) {
+                qrContainer.innerHTML = `<div class="text-danger p-3"><i class="fas fa-wifi fa-2x mb-2"></i><br><small>Connection Error</small></div>`;
+                qrInstruction.innerText = "Please check your internet connection.";
+            }
+        }
+
+        async function finalizePaymongo() {
             const btn = event.target;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Verifying...';
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating QR Ph...';
             btn.disabled = true;
 
-            setTimeout(() => {
-                submitOrder();
-            }, 2000);
+            const productIds = cart.flatMap(item => Array(item.qty).fill(item.id));
+            const promoCode = document.getElementById('promoCode').value;
+
+            try {
+                const response = await fetch('@Url.Action("CreatePayMongoOrder", "Cashier")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    },
+                    body: JSON.stringify({ productIds, promoCode })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Update QR Code Image in Modal
+                    const qrImg = document.querySelector('#paymongoModal img[alt="Payment QR Code"]');
+                    if (qrImg) {
+                        qrImg.src = data.qrCodeUrl;
+                    }
+
+                    // Change button behavior to "Done"
+                    btn.innerHTML = 'Complete Order';
+                    btn.disabled = false;
+                    btn.onclick = () => window.location.href = '@Url.Action("TransactionHistory", "Cashier")';
+                    
+                    // Optional: start polling for status if webhook is test-only
+                } else {
+                    const error = await response.text();
+                    alert('Error: ' + error);
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error. Please check your internet.');
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
         }
 
         function submitOrder() {
