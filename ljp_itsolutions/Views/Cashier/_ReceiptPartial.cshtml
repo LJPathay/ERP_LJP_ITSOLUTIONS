@@ -1,74 +1,231 @@
 @model ljp_itsolutions.Models.Order
 @{
     Layout = null;
+    var cashierName = Model.Cashier?.FullName ?? "Staff";
+    var receiptNo = Model.OrderID.ToString().Substring(0, 8).ToUpper();
 }
 
-<div class="receipt-content p-4">
-    <!-- Receipt Info -->
-    <div class="mb-4 pb-3 border-bottom border-dark border-opacity-10">
-        <div class="d-flex justify-content-between mb-1">
-            <span class="text-muted small">Order ID:</span>
-            <span class="fw-bold">#@Model.OrderID.ToString().Substring(0, 8).ToUpper()</span>
+<div class="thermal-receipt-container">
+    <div class="thermal-receipt shadow-sm">
+        <!-- Header Ribbon -->
+        <div class="receipt-header text-center pt-3">
+            <h2 class="receipt-title my-2">CASH RECEIPT</h2>
+            <div class="separator">------------------------------------------</div>
         </div>
-        <div class="d-flex justify-content-between mb-1">
-            <span class="text-muted small">Date & Time:</span>
-            <span>@Model.OrderDate.ToString("MMM dd, yyyy hh:mm tt")</span>
-        </div>
-        <div class="d-flex justify-content-between">
-            <span class="text-muted small">Cashier:</span>
-            <span>@(Model.Cashier?.FullName ?? "Staff")</span>
-        </div>
-    </div>
 
-    <!-- Items List -->
-    <div class="px-1">
-        <table class="table table-borderless table-sm mb-4">
-            <thead>
-                <tr class="border-bottom border-dark border-opacity-10">
-                    <th class="ps-0 py-2 small">Item</th>
-                    <th class="text-center py-2 small">Qty</th>
-                    <th class="text-end pe-0 py-2 small">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.OrderDetails)
-                {
-                    <tr>
-                        <td class="ps-0 py-2">
-                            <div class="fw-bold">@item.Product?.ProductName</div>
-                        </td>
-                        <td class="text-center py-2 align-middle">@item.Quantity</td>
-                        <td class="text-end pe-0 py-2 align-middle fw-bold">₱@item.Subtotal.ToString("F2")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Totals -->
-    <div class="pt-3 border-top border-dark border-opacity-25 mb-4">
-        <div class="d-flex justify-content-between">
-            <h4 class="fw-bold mb-0">Total Due</h4>
-            <h4 class="fw-bold mb-0 text-primary">₱@Model.FinalAmount.ToString("F2")</h4>
+        <!-- Metadata -->
+        <div class="receipt-metadata px-4 mb-3">
+            <div class="receipt-row">
+                <span class="label">Receipt :</span>
+                <span class="value">@receiptNo</span>
+            </div>
+            <div class="receipt-row">
+                <span class="label">Manager :</span>
+                <span class="value">@cashierName</span>
+            </div>
+            <div class="receipt-row mt-2">
+                <span class="value text-uppercase">@Model.OrderDate.ToString("dd/MM/yyyy HH:mm:ss")</span>
+            </div>
+            <div class="receipt-row">
+                <span class="label">Address</span>
+            </div>
+            
+            <div class="receipt-row mt-2">
+                <span class="label">Client :</span>
+                <span class="value">@(Model.Customer?.FullName ?? "Guest")</span>
+            </div>
+            <div class="receipt-row">
+                <span class="label">Location :</span>
+                <span class="value">Store #001</span>
+            </div>
         </div>
-    </div>
 
-    <!-- Footer Message -->
-    <div class="text-center py-4">
-        <p class="mb-0 fw-bold text-uppercase">Thank You For Your Business!</p>
+        <!-- Items -->
+        <div class="receipt-items px-4 mb-3">
+            @{ int i = 1; }
+            @foreach (var item in Model.OrderDetails)
+            {
+                <div class="item-entry">
+                    <div class="item-name">@i. @item.Product?.ProductName</div>
+                    <div class="item-cost-row">
+                        <span class="cost-label">Cost</span>
+                        <span class="dots"></span>
+                        <span class="cost-value">₱@item.Subtotal.ToString("N2")</span>
+                    </div>
+                </div>
+                i++;
+            }
+        </div>
+
+        <!-- Totals -->
+        <div class="receipt-totals px-4">
+            <div class="separator text-center">------------------------------------------</div>
+            <div class="item-cost-row fw-bold py-1">
+                <span class="cost-label">Total</span>
+                <span class="dots border-dark"></span>
+                <span class="cost-value">₱@Model.FinalAmount.ToString("N2")</span>
+            </div>
+            <div class="separator text-center">------------------------------------------</div>
+            <div class="card-info mt-2 text-center small text-uppercase" style="letter-spacing: 1px;">
+                XXXX XXXX XXXX 1234 @Model.PaymentMethod
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="receipt-footer text-center mt-4 pb-5">
+            <p class="mb-2 fw-bold text-uppercase">Thank You For Your Business!</p>
+            
+            <div class="barcode-container my-3">
+                <span class="barcode-number">@receiptNo</span>
+            </div>
+
+        <!-- Torn Edge Effect -->
+        <div class="torn-edge"></div>
     </div>
 </div>
 
 <style>
-    .x-small { font-size: 0.75rem; }
-    .receipt-content { line-height: 1.4; }
-    
+    :root {
+        --receipt-width: 380px;
+    }
+
+    .thermal-receipt-container {
+        background: #f0f0f0; /* Contrast background for the paper */
+        padding: 40px 20px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .thermal-receipt {
+        font-family: 'Courier New', Courier, monospace;
+        color: #1a1a1a;
+        width: 100%;
+        max-width: var(--receipt-width);
+        background: #fff;
+        position: relative;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding-bottom: 20px;
+    }
+
+    .receipt-title {
+        font-size: 1.5rem;
+        font-weight: 900;
+        letter-spacing: 2px;
+        color: #000;
+    }
+
+    .separator {
+        font-size: 0.9rem;
+        letter-spacing: -1px;
+        color: #444;
+        margin: 5px 0;
+    }
+
+    .receipt-row {
+        display: flex;
+        justify-content: flex-start;
+        font-size: 0.9rem;
+        line-height: 1.3;
+        margin-bottom: 2px;
+    }
+
+    .receipt-row .label {
+        width: 90px;
+        font-weight: 600;
+    }
+
+    .item-entry {
+        margin-bottom: 10px;
+        font-size: 0.9rem;
+    }
+
+    .item-name {
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .item-cost-row {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .item-cost-row .dots {
+        flex-grow: 1;
+        border-bottom: 1px dotted #888;
+        height: 14px;
+        margin: 0 5px;
+    }
+
+    .barcode-visual {
+        font-size: 2rem;
+        letter-spacing: -2px;
+        font-weight: 100;
+        color: #000;
+        line-height: 0.8;
+    }
+
+    .barcode-number {
+        font-size: 0.8rem;
+        display: block;
+        letter-spacing: 4px;
+        margin-top: 5px;
+    }
+
+    .support-info {
+        font-size: 0.75rem;
+        line-height: 1.4;
+        color: #666;
+    }
+
+    /* Torn Edge Effect */
+    .torn-edge {
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        width: 100%;
+        height: 15px;
+        background: radial-gradient(circle, transparent, transparent 50%, #f0f0f0 50%, #f0f0f0 100%) 0 -10px/20px 20px repeat-x;
+        /* Matches the container background color */
+    }
+
     @@media print {
-        .modal-header, .modal-footer, .btn-close { display: none !important; }
-        .modal-content { border: none !important; box-shadow: none !important; }
-        .bg-primary.bg-opacity-10 { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
+        @@page {
+            margin: 0;
+            size: auto;
+        }
+        
         body * { visibility: hidden; }
-        #receiptModalContent, #receiptModalContent * { visibility: visible; }
-        #receiptModalContent { position: absolute; left: 0; top: 0; width: 100%; }
+        
+        .thermal-receipt-container {
+            background: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            display: block !important;
+        }
+
+        .thermal-receipt {
+            visibility: visible !important;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 20px;
+            box-shadow: none !important;
+            width: 320px !important;
+        }
+
+        .thermal-receipt * {
+            visibility: visible !important;
+        }
+
+        .torn-edge {
+            display: none !important;
+        }
+
+        #receiptModalContent {
+            visibility: visible !important;
+            background: none !important;
+        }
     }
 </style>
