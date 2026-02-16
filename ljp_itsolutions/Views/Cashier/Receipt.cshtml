@@ -1,0 +1,139 @@
+@model ljp_itsolutions.Models.Order
+@{
+    ViewData["Title"] = "Order Receipt";
+    var totalItems = Model.OrderDetails.Sum(d => d.Quantity);
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg receipt-card">
+                <div class="card-body p-0">
+                    <!-- Receipt Header -->
+                    <div class="receipt-header text-center p-4 bg-light border-bottom">
+                        <img src="@Url.Content("~/images/logo.png")" alt="LJP IT SOLUTIONS" class="mb-3" style="height: 60px; filter: grayscale(1);" />
+                        <h4 class="fw-bold mb-1">LJP IT SOLUTIONS</h4>
+                        <p class="text-muted small mb-0">123 Coffee Lane, Tech City</p>
+                        <p class="text-muted small">Tel: (02) 123-4567</p>
+                    </div>
+
+                    <!-- Receipt Info -->
+                    <div class="p-4 border-bottom bg-white">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Order ID:</span>
+                            <span class="fw-bold small">#@Model.OrderID.ToString().Substring(0, 8).ToUpper()</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Date & Time:</span>
+                            <span class="small">@Model.OrderDate.ToString("MMM dd, yyyy hh:mm tt")</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Cashier:</span>
+                            <span class="small">@(Model.Cashier?.FullName ?? "Unknown")</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">Status:</span>
+                            <span class="badge @(Model.PaymentStatus == "Paid" ? "bg-success" : "bg-info")">@Model.PaymentStatus</span>
+                        </div>
+                    </div>
+
+                    <!-- Items List -->
+                    <div class="p-4 bg-white">
+                        <table class="table table-borderless table-sm mb-0">
+                            <thead>
+                                <tr class="border-bottom">
+                                    <th class="ps-0 py-2">Item</th>
+                                    <th class="text-center py-2">Qty</th>
+                                    <th class="text-end pe-0 py-2">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.OrderDetails)
+                                {
+                                    <tr>
+                                        <td class="ps-0 py-2">
+                                            <div class="fw-bold">@item.Product?.ProductName</div>
+                                            <div class="text-muted x-small">₱@item.UnitPrice.ToString("F2") ea</div>
+                                        </td>
+                                        <td class="text-center py-2 align-middle">@item.Quantity</td>
+                                        <td class="text-end pe-0 py-2 align-middle fw-bold">₱@item.Subtotal.ToString("F2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Totals -->
+                    <div class="p-4 bg-light border-top border-bottom border-dark border-opacity-10">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Subtotal</span>
+                            <span>₱@Model.TotalAmount.ToString("F2")</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">VAT (5%) Included</span>
+                            <span>₱@( (Model.TotalAmount * 0.05m).ToString("F2") )</span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-3">
+                            <h4 class="fw-bold mb-0">Total Due</h4>
+                            <h4 class="fw-bold mb-0 text-primary">₱@Model.FinalAmount.ToString("F2")</h4>
+                        </div>
+                    </div>
+
+                    <!-- Footer Message -->
+                    <div class="p-4 text-center bg-white">
+                        <div class="barcode mb-3 opacity-50" style="font-family: 'Libre Barcode 39', cursive; font-size: 3rem;">
+                            *@Model.OrderID.ToString().Substring(0, 8)*
+                        </div>
+                        <p class="mb-0 fw-bold">Thank You For Your Business!</p>
+                        <p class="text-muted small">Please come again.</p>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons (Hidden on Print) -->
+                <div class="card-footer p-4 border-0 bg-white d-print-none">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <button onclick="window.print()" class="btn btn-outline-dark w-100 py-2">
+                                <i class="fas fa-print me-2"></i>Print Receipt
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <a href="@Url.Action("Index", "POS")" class="btn btn-primary w-100 py-2">
+                                <i class="fas fa-plus me-2"></i>New Order
+                            </a>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <a href="@Url.Action("TransactionHistory", "Cashier")" class="btn btn-link text-muted w-100 text-decoration-none small">
+                                Return to Transactions History
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        body { background: white !important; }
+        .sidebar, .layout-header, .app-header { display: none !important; }
+        .content { margin: 0 !important; padding: 0 !important; }
+        .receipt-card { box-shadow: none !important; border: 1px solid #eee !important; }
+        .container { width: 100% !important; max-width: 100% !important; padding: 0 !important; }
+    }
+    
+    .receipt-card {
+        border-radius: 1.5rem;
+        overflow: hidden;
+    }
+    
+    .receipt-header {
+        border-top-left-radius: 1.5rem;
+        border-top-right-radius: 1.5rem;
+    }
+    
+    .x-small {
+        font-size: 0.75rem;
+    }
+</style>

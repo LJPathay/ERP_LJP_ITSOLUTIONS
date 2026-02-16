@@ -4,12 +4,8 @@
 }
 
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold mb-1">Financial Intelligence</h2>
-            <p class="text-muted">Analyze your revenue, expenses, and net profitability.</p>
-        </div>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+    <div class="d-flex justify-content-end mb-4">
+        <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
             <i class="fas fa-plus me-2"></i>Record New Expense
         </button>
     </div>
@@ -17,7 +13,7 @@
     <!-- Financial Summary Cards -->
     <div class="row g-4 mb-4">
         <div class="col-md-4">
-            <div class="kpi-card h-100">
+            <div class="kpi-card h-100 transition-hover">
                 <div class="kpi-card-icon bg-success bg-opacity-10 text-success">
                     <i class="fas fa-arrow-up fa-lg"></i>
                 </div>
@@ -26,7 +22,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="kpi-card h-100">
+            <div class="kpi-card h-100 transition-hover">
                 <div class="kpi-card-icon bg-danger bg-opacity-10 text-danger">
                     <i class="fas fa-arrow-down fa-lg"></i>
                 </div>
@@ -35,11 +31,11 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="kpi-card h-100 bg-dark text-white">
-                <div class="kpi-card-icon bg-primary text-white">
+            <div class="kpi-card h-100 transition-hover">
+                <div class="kpi-card-icon bg-primary bg-opacity-10 text-primary">
                     <i class="fas fa-wallet fa-lg"></i>
                 </div>
-                <p class="kpi-card-label text-light opacity-75">Net Profit</p>
+                <p class="kpi-card-label">Net Profit</p>
                 <h3 class="kpi-card-value text-primary">₱@Model.NetProfit.ToString("N2")</h3>
             </div>
         </div>

@@ -4,34 +4,27 @@
 }
 
 <div class="container-fluid py-4">
-    <div class="mb-4">
-        <h2 class="fw-bold mb-1">⭐ Loyalty Program Overview</h2>
-        <p class="text-muted">Analyze your top customers and point distributions</p>
-    </div>
-
     <div class="row g-4 mb-4">
         <div class="col-md-6">
             <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h5 class="fw-bold">Point Distibution by Tier</h5>
+                <div class="card-header bg-white border-0 pt-4 px-4 text-center">
+                    <h5 class="fw-bold mb-0">Customer Tier Distribution</h5>
                 </div>
-                <div class="card-body p-4 d-flex align-items-center justify-content-center bg-light-subtle rounded-bottom-4" style="min-height: 250px;">
-                    <div class="text-center text-muted">
-                        <i class="fas fa-chart-pie fa-3x mb-3 opacity-25"></i>
-                        <p>Tier Distribution Chart</p>
+                <div class="card-body p-4">
+                    <div style="height: 250px;">
+                        <canvas id="tierChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-6">
             <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h5 class="fw-bold">Monthly Redemption Trends</h5>
+                <div class="card-header bg-white border-0 pt-4 px-4 text-center">
+                    <h5 class="fw-bold mb-0">Top Points Distribution</h5>
                 </div>
-                <div class="card-body p-4 d-flex align-items-center justify-content-center bg-light-subtle rounded-bottom-4" style="min-height: 250px;">
-                    <div class="text-center text-muted">
-                        <i class="fas fa-chart-line fa-3x mb-3 opacity-25"></i>
-                        <p>Redemption Trends Chart</p>
+                <div class="card-body p-4">
+                    <div style="height: 250px;">
+                        <canvas id="pointsDistributionChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -40,18 +33,17 @@
 
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-header bg-white border-0 pt-4 px-4">
-            <h5 class="fw-bold">Top Points Holders</h5>
+            <h5 class="fw-bold">Global Rankings (Top 10)</h5>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead>
-                        <tr class="bg-light">
+                    <thead class="bg-light">
+                        <tr>
                             <th class="ps-4">Rank</th>
                             <th>Customer</th>
                             <th>Total Points</th>
-                            <th>Estimated Wallet Value</th>
-                            <th class="pe-4 text-end">Action</th>
+                            <th class="pe-4 text-end">Tier Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -60,16 +52,17 @@
                         {
                             <tr>
                                 <td class="ps-4">
-                                    <span class="badge @(rank <= 3 ? "bg-warning text-dark" : "bg-light text-dark") rounded-circle p-2" style="width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;">@rank</span>
+                                    <span class="badge @(rank <= 3 ? "bg-warning text-dark shadow-sm" : "bg-light text-dark") rounded-circle p-2" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem;">@rank</span>
                                 </td>
                                 <td>
                                     <div class="fw-bold">@customer.FullName</div>
-                                    <small class="text-muted">Member since @DateTime.Now.AddMonths(-rank*2).ToShortDateString()</small>
+                                    <small class="text-muted">Member ID: #CST-@customer.CustomerID</small>
                                 </td>
                                 <td class="fw-bold text-primary">@customer.Points.ToString("N0")</td>
-                                <td>$@((customer.Points * 0.05).ToString("F2"))</td>
                                 <td class="pe-4 text-end">
-                                    <button class="btn btn-sm btn-light">Reward</button>
+                                    @if (customer.Points > 1000) { <span class="badge bg-warning text-dark">Gold Elite</span> }
+                                    else if (customer.Points > 500) { <span class="badge bg-secondary">Silver Pro</span> }
+                                    else { <span class="badge bg-light text-dark">Bronze Member</span> }
                                 </td>
                             </tr>
                             rank++;
@@ -80,3 +73,55 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Tier Distribution Chart
+        const tierCtx = document.getElementById('tierChart').getContext('2d');
+        new Chart(tierCtx, {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(Json.Serialize(ViewBag.TierLabels)),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(ViewBag.TierData)),
+                    backgroundColor: ['#fbbf24', '#94a3b8', '#d1d5db'],
+                    borderWidth: 0,
+                    hoverOffset: 15
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
+                },
+                cutout: '70%'
+            }
+        });
+
+        // Top Points Distribution
+        const pointsCtx = document.getElementById('pointsDistributionChart').getContext('2d');
+        new Chart(pointsCtx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.Select(c => c.FullName.Split(' ')[0]))),
+                datasets: [{
+                    label: 'Points',
+                    data: @Html.Raw(Json.Serialize(Model.Select(c => c.Points))),
+                    backgroundColor: '#4f46e5',
+                    borderRadius: 8,
+                    barThickness: 20
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { display: false } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    </script>
+}

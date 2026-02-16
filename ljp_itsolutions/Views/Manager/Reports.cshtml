@@ -4,16 +4,13 @@
 }
 
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 d-none">
-        <div>
-            <h2 class="fw-bold mb-1">Business Intelligence</h2>
-            <p class="text-muted">Analytics and sales performance reports.</p>
-        </div>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-end mb-4 gap-2">
         <div class="d-flex gap-2">
             <input type="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-01")" />
             <span class="align-self-center">to</span>
             <input type="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
-            <button class="btn btn-primary">Filter</button>
+            <button class="btn btn-primary rounded-pill px-4">Filter</button>
         </div>
     </div>
 

@@ -4,21 +4,6 @@
 }
 
 <div class="marketing-dashboard py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold mb-1">Marketing Analytics</h2>
-            <p class="text-muted">Overview of your campaigns and customer engagement</p>
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary border-0 shadow-sm bg-white">
-                <i class="fas fa-download me-2"></i>Export Report
-            </button>
-            <a asp-action="CreateCampaign" class="btn btn-primary shadow-sm">
-                <i class="fas fa-plus me-2"></i>New Campaign
-            </a>
-        </div>
-    </div>
-
     <!-- Quick Stats (Standardized) -->
     <div class="row g-4 mb-4">
         <div class="col-md-3">
@@ -63,30 +48,24 @@
                     <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3" style="width: 52px; height: 52px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-chart-line fa-lg"></i>
                     </div>
-                    <p class="text-secondary small fw-bold text-uppercase mb-1">Success Rate</p>
-                    <h2 class="fw-bold mb-1">4.2%</h2>
-                    <div class="text-danger x-small fw-bold"><i class="fas fa-caret-down me-1"></i>-0.5% shift</div>
+                    <p class="text-secondary small fw-bold text-uppercase mb-1">Conversions</p>
+                    <h2 class="fw-bold mb-1">@Model.TotalOrders</h2>
+                    <div class="text-success x-small fw-bold"><i class="fas fa-caret-up me-1"></i>+4.2% shift</div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="row g-4">
-        <!-- Main Chart Placeholder -->
+        <!-- Main Chart -->
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between">
                     <h5 class="fw-bold">Campaign Performance</h5>
-                    <select class="form-select form-select-sm w-auto border-0 bg-light">
-                        <option>Last 30 Days</option>
-                        <option>Last 6 Months</option>
-                    </select>
+                    <span class="x-small text-muted">Weekly Transaction Volume</span>
                 </div>
-                <div class="card-body p-4 d-flex align-items-center justify-content-center bg-light-subtle rounded-bottom-4" style="min-height: 300px;">
-                    <div class="text-center text-muted">
-                        <i class="fas fa-chart-line fa-3x mb-3 opacity-25"></i>
-                        <p>Chart Visualization Placeholder</p>
-                    </div>
+                <div class="card-body p-4">
+                    <canvas id="performanceChart" style="min-height: 300px; width: 100%;"></canvas>
                 </div>
             </div>
         </div>
@@ -99,30 +78,21 @@
                 </div>
                 <div class="card-body px-0">
                     <div class="list-group list-group-flush">
-                        <div class="list-group-item border-0 py-3 px-4 d-flex align-items-center gap-3">
-                            <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">JD</div>
-                            <div class="flex-fill">
-                                <p class="mb-0 fw-bold">Jane Doe</p>
-                                <small class="text-muted">1,240 Points</small>
+                        @foreach (var customer in Model.TopCustomers)
+                        {
+                            <div class="list-group-item border-0 py-3 px-4 d-flex align-items-center gap-3 transition-hover">
+                                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
+                                    @customer.FullName.Substring(0, 1)
+                                </div>
+                                <div class="flex-fill">
+                                    <p class="mb-0 fw-bold">@customer.FullName</p>
+                                    <small class="text-muted">@customer.Points Points</small>
+                                </div>
+                                <button class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="generateReward(@customer.CustomerID)">
+                                    <i class="fas fa-gift me-1"></i>Reward
+                                </button>
                             </div>
-                            <span class="badge bg-success-subtle text-success">Elite</span>
-                        </div>
-                        <div class="list-group-item border-0 py-3 px-4 d-flex align-items-center gap-3">
-                            <div class="avatar bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">JS</div>
-                            <div class="flex-fill">
-                                <p class="mb-0 fw-bold">John Smith</p>
-                                <small class="text-muted">950 Points</small>
-                            </div>
-                            <span class="badge bg-primary-subtle text-primary">Pro</span>
-                        </div>
-                        <div class="list-group-item border-0 py-3 px-4 d-flex align-items-center gap-3">
-                            <div class="avatar bg-info text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">AW</div>
-                            <div class="flex-fill">
-                                <p class="mb-0 fw-bold">Alice Wong</p>
-                                <small class="text-muted">820 Points</small>
-                            </div>
-                            <span class="badge bg-primary-subtle text-primary">Pro</span>
-                        </div>
+                        }
                     </div>
                 </div>
                 <div class="card-footer bg-white border-0 text-center pb-4">
@@ -132,4 +102,62 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Performance Chart Initialization
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.ChartLabels)),
+                datasets: [{
+                    label: 'Transactions',
+                    data: @Html.Raw(Json.Serialize(Model.ChartData)),
+                    borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#4f46e5',
+                    pointBorderColor: '#fff',
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { display: false } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        async function generateReward(customerId) {
+            if (!confirm('Generate a 15% discount promo code for this customer?')) return;
+            
+            try {
+                const response = await fetch('@Url.Action("GenerateReward", "Marketing")?customerId=' + customerId, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert('Success! Code: ' + data.promoCode + '\n' + data.message);
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                alert('Error generating reward.');
+            }
+        }
+    </script>
+}
 

@@ -4,12 +4,7 @@
 }
 
 <div class="container-fluid py-4">
-    <div class="mb-4">
-        <h2 class="fw-bold mb-1">🎯 Campaign Performance</h2>
-        <p class="text-muted">Track how your promotions are driving sales</p>
-    </div>
-
-    <div class="card border-0 shadow-sm rounded-4">
+    <div class="card border-0 shadow-sm rounded-4 mt-2">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -31,7 +26,7 @@
                                     <small class="text-muted">Type: Active Campaign</small>
                                 </td>
                                 <td class="text-center fw-bold">@item.UsageCount</td>
-                                <td class="text-end text-danger fw-bold">-$@item.TotalDiscountedAmount.ToString("F2")</td>
+                                <td class="text-end text-danger fw-bold">-₱@item.TotalDiscountedAmount.ToString("N2")</td>
                                 <td class="text-center">
                                     @if (item.UsageCount > 50) { <span class="badge bg-success-subtle text-success">High ROI</span> }
                                     else if (item.UsageCount > 10) { <span class="badge bg-warning-subtle text-warning">Medium ROI</span> }

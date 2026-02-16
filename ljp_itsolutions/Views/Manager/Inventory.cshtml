@@ -4,17 +4,11 @@
 }
 
 <div class="container-fluid py-4">
-    <!-- header div removed to fix double header -->
-    <div class="d-flex justify-content-end align-items-center mb-4 d-none">
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addIngredientModal">
-            <i class="fas fa-plus me-2"></i>Add Ingredient
-        </button>
-    </div>
 
     <!-- Inventory Summary -->
     <div class="row g-4 mb-4">
         <div class="col-md-3">
-            <div class="kpi-card h-100">
+            <div class="kpi-card h-100 transition-hover">
                 <div class="kpi-card-icon bg-primary bg-opacity-10 text-primary">
                     <i class="fas fa-leaf fa-lg"></i>
                 </div>
@@ -23,30 +17,30 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="kpi-card h-100">
+            <div class="kpi-card h-100 transition-hover">
                 <div class="kpi-card-icon bg-warning bg-opacity-10 text-warning">
                     <i class="fas fa-exclamation-triangle fa-lg"></i>
                 </div>
                 <p class="kpi-card-label">Low Stock</p>
-                <h3 class="kpi-card-value text-warning">@Model.LowStockCount</h3>
+                <h3 class="kpi-card-value">@Model.LowStockCount</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="kpi-card h-100">
+            <div class="kpi-card h-100 transition-hover">
                 <div class="kpi-card-icon bg-danger bg-opacity-10 text-danger">
                     <i class="fas fa-times-circle fa-lg"></i>
                 </div>
                 <p class="kpi-card-label">Out of Stock</p>
-                <h3 class="kpi-card-value text-danger">@Model.OutOfStockCount</h3>
+                <h3 class="kpi-card-value">@Model.OutOfStockCount</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="kpi-card h-100">
+            <div class="kpi-card h-100 transition-hover">
                 <div class="kpi-card-icon bg-success bg-opacity-10 text-success">
                     <i class="fas fa-check-circle fa-lg"></i>
                 </div>
                 <p class="kpi-card-label">Healthy Stock</p>
-                <h3 class="kpi-card-value text-success">@Model.HealthyStockCount</h3>
+                <h3 class="kpi-card-value">@Model.HealthyStockCount</h3>
             </div>
         </div>
     </div>
@@ -61,7 +55,7 @@
     <!-- Ingredients Table -->
     <div class="modern-table">
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
+            <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
                         <th class="ps-4">Ingredient Name</th>
@@ -81,10 +75,10 @@
                                 <div class="text-muted text-xs">ID: #@item.IngredientID</div>
                             </td>
                             <td>
-                                <span class="fw-bold @(item.StockQuantity < item.LowStockThreshold ? "text-danger" : "")">@item.StockQuantity.ToString("F3")</span>
+                                <span class="fw-bold @(item.StockQuantity < item.LowStockThreshold ? "text-danger" : "")">@item.StockQuantity.ToString("N2")</span>
                             </td>
                             <td><span class="text-muted">@item.Unit</span></td>
-                            <td><span class="text-muted">@item.LowStockThreshold @item.Unit</span></td>
+                            <td><span class="text-muted">@item.LowStockThreshold.ToString("N2") @item.Unit</span></td>
                             <td>
                                 @if (item.StockQuantity == 0)
                                 {

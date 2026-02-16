@@ -27,15 +27,73 @@ namespace ljp_itsolutions.Controllers
             var totalOrders = await _db.Orders.CountAsync();
             var totalPointsAwarded = await _db.Customers.SumAsync(c => (long)c.Points);
 
+            var topCustomers = await _db.Customers
+                .OrderByDescending(c => c.Points)
+                .Take(5)
+                .Select(c => new { c.CustomerID, c.FullName, c.Points })
+                .ToListAsync();
+
+            // Prepare Chart Data: Last 7 days of sales activity
+            var last7Days = Enumerable.Range(0, 7)
+                .Select(i => DateTime.Today.AddDays(-i))
+                .OrderBy(d => d)
+                .ToList();
+
+            var salesActivity = await _db.Orders
+                .Where(o => o.OrderDate >= last7Days.First())
+                .GroupBy(o => o.OrderDate.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var chartLabels = last7Days.Select(d => d.ToString("MMM dd")).ToList();
+            var chartData = last7Days.Select(d => salesActivity.FirstOrDefault(s => s.Date == d)?.Count ?? 0).ToList();
+
             var model = new
             {
                 TotalCustomers = totalCustomers,
                 ActivePromotions = activePromotions,
                 TotalOrders = totalOrders,
-                TotalPointsAwarded = totalPointsAwarded
+                TotalPointsAwarded = totalPointsAwarded,
+                TopCustomers = topCustomers,
+                ChartLabels = chartLabels,
+                ChartData = chartData
             };
 
             return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GenerateReward(int customerId)
+        {
+            var customer = await _db.Customers.FindAsync(customerId);
+            if (customer == null) return NotFound();
+
+            if (customer.Points < 10) 
+                return Json(new { success = false, message = "Customer needs at least 10 points for a reward." });
+
+            // Create a unique promo code
+            var cleanName = customer.FullName.Replace(" ", "").ToUpper();
+            if (cleanName.Length > 5) cleanName = cleanName.Substring(0, 5);
+            var promoCode = $"REWARD-{cleanName}-{Guid.NewGuid().ToString().Substring(0, 4).ToUpper()}";
+
+            var promotion = new Promotion
+            {
+                PromotionName = $"Loyalty Reward - {customer.FullName}",
+                DiscountType = "Percentage",
+                DiscountValue = 15, // 15% off reward
+                StartDate = DateTime.Now,
+                EndDate = DateTime.Now.AddDays(30),
+                IsActive = true
+            };
+
+            _db.Promotions.Add(promotion);
+            
+            // Deduct points (optional logic - let's deduct 10 points per reward)
+            customer.Points -= 10;
+            
+            await _db.SaveChangesAsync();
+
+            return Json(new { success = true, promoCode = promoCode, message = $"15% Discount code generated for {customer.FullName}!" });
         }
 
         // 🎯 Promotions
@@ -85,11 +143,22 @@ namespace ljp_itsolutions.Controllers
 
         public async Task<IActionResult> LoyaltyOverview()
         {
-            var topCustomers = await _db.Customers
-                .OrderByDescending(c => c.Points)
-                .Take(10)
-                .ToListAsync();
-            return View(topCustomers);
+            var customers = await _db.Customers.ToListAsync();
+            
+            // Data for Tier Distribution Chart
+            var tiers = new
+            {
+                Gold = customers.Count(c => c.Points > 1000),
+                Silver = customers.Count(c => c.Points > 500 && c.Points <= 1000),
+                Bronze = customers.Count(c => c.Points <= 500)
+            };
+
+            var topHolders = customers.OrderByDescending(c => c.Points).Take(10).ToList();
+
+            ViewBag.TierLabels = new[] { "Gold (>1000)", "Silver (501-1000)", "Bronze (0-500)" };
+            ViewBag.TierData = new[] { tiers.Gold, tiers.Silver, tiers.Bronze };
+
+            return View(topHolders);
         }
 
         public async Task<IActionResult> RewardRedemptionLogs()

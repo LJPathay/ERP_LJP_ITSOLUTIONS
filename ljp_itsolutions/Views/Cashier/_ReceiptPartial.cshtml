@@ -1,0 +1,74 @@
+@model ljp_itsolutions.Models.Order
+@{
+    Layout = null;
+}
+
+<div class="receipt-content p-4">
+    <!-- Receipt Info -->
+    <div class="mb-4 pb-3 border-bottom border-dark border-opacity-10">
+        <div class="d-flex justify-content-between mb-1">
+            <span class="text-muted small">Order ID:</span>
+            <span class="fw-bold">#@Model.OrderID.ToString().Substring(0, 8).ToUpper()</span>
+        </div>
+        <div class="d-flex justify-content-between mb-1">
+            <span class="text-muted small">Date & Time:</span>
+            <span>@Model.OrderDate.ToString("MMM dd, yyyy hh:mm tt")</span>
+        </div>
+        <div class="d-flex justify-content-between">
+            <span class="text-muted small">Cashier:</span>
+            <span>@(Model.Cashier?.FullName ?? "Staff")</span>
+        </div>
+    </div>
+
+    <!-- Items List -->
+    <div class="px-1">
+        <table class="table table-borderless table-sm mb-4">
+            <thead>
+                <tr class="border-bottom border-dark border-opacity-10">
+                    <th class="ps-0 py-2 small">Item</th>
+                    <th class="text-center py-2 small">Qty</th>
+                    <th class="text-end pe-0 py-2 small">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.OrderDetails)
+                {
+                    <tr>
+                        <td class="ps-0 py-2">
+                            <div class="fw-bold">@item.Product?.ProductName</div>
+                        </td>
+                        <td class="text-center py-2 align-middle">@item.Quantity</td>
+                        <td class="text-end pe-0 py-2 align-middle fw-bold">₱@item.Subtotal.ToString("F2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Totals -->
+    <div class="pt-3 border-top border-dark border-opacity-25 mb-4">
+        <div class="d-flex justify-content-between">
+            <h4 class="fw-bold mb-0">Total Due</h4>
+            <h4 class="fw-bold mb-0 text-primary">₱@Model.FinalAmount.ToString("F2")</h4>
+        </div>
+    </div>
+
+    <!-- Footer Message -->
+    <div class="text-center py-4">
+        <p class="mb-0 fw-bold text-uppercase">Thank You For Your Business!</p>
+    </div>
+</div>
+
+<style>
+    .x-small { font-size: 0.75rem; }
+    .receipt-content { line-height: 1.4; }
+    
+    @@media print {
+        .modal-header, .modal-footer, .btn-close { display: none !important; }
+        .modal-content { border: none !important; box-shadow: none !important; }
+        .bg-primary.bg-opacity-10 { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
+        body * { visibility: hidden; }
+        #receiptModalContent, #receiptModalContent * { visibility: visible; }
+        #receiptModalContent { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+</style>

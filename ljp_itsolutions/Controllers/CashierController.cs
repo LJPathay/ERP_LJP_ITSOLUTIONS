@@ -22,6 +22,21 @@ namespace ljp_itsolutions.Controllers
             _payMongoService = payMongoService;
         }
 
+        public class OrderRequest
+        {
+            public List<int>? ProductIds { get; set; }
+            public string PaymentMethod { get; set; } = "Cash";
+            public int? CustomerId { get; set; }
+            public string? PromoCode { get; set; }
+            public decimal? CashReceived { get; set; }
+        }
+
+        public class CustomerRequest
+        {
+            public string FullName { get; set; } = string.Empty;
+            public string? PhoneNumber { get; set; }
+        }
+
         public async Task<IActionResult> CreateOrder()
         {
             var products = await _db.Products.Include(p => p.Category).Where(p => p.IsAvailable).ToListAsync();
@@ -29,121 +44,164 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PlaceOrder(List<int> productIds, string paymentMethod = "Cash", int? customerId = null, string? promoCode = null)
+        public async Task<IActionResult> PlaceOrder([FromBody] OrderRequest request)
         {
+            var productIds = request.ProductIds;
+            var paymentMethod = request.PaymentMethod;
+            var customerId = request.CustomerId;
+            var promoCode = request.PromoCode;
+
             if (productIds == null || !productIds.Any())
+            {
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return Json(new { success = false, message = "No products selected." });
                 return RedirectToAction("Index", "POS");
-
-            // 1. Get current user ID from claims
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!Guid.TryParse(userIdClaim, out var cashierId))
-                return Challenge();
-
-            // 2. Create the order
-            var order = new Order
-            {
-                OrderID = Guid.NewGuid(),
-                OrderDate = DateTime.Now,
-                CashierID = cashierId,
-                CustomerID = customerId,
-                PaymentMethod = paymentMethod,
-                PaymentStatus = paymentMethod == "Paymongo" ? "Paid (Digital)" : "Completed"
-            };
-
-            // Basic Promotion handling
-            if (!string.IsNullOrEmpty(promoCode))
-            {
-                var promotion = await _db.Promotions.FirstOrDefaultAsync(p => p.PromotionName == promoCode && p.IsActive);
-                if (promotion != null)
-                {
-                    order.PromotionID = promotion.PromotionID;
-                }
             }
 
-            // 3. Group IDs to simplify quantity handling
-            var productGroups = productIds.GroupBy(id => id);
-            decimal total = 0;
-
-            foreach (var group in productGroups)
+            try 
             {
-                var product = await _db.Products
-                    .Include(p => p.ProductRecipes)
-                    .ThenInclude(pr => pr.Ingredient)
-                    .FirstOrDefaultAsync(p => p.ProductID == group.Key);
+                //Get current user ID from claims
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!Guid.TryParse(userIdClaim, out var cashierId))
+                    return Challenge();
 
-                if (product != null)
+                //Create the order
+                var order = new Order
                 {
-                    int qty = group.Count();
-                    var detail = new OrderDetail
-                    {
-                        OrderID = order.OrderID,
-                        ProductID = product.ProductID,
-                        Quantity = qty,
-                        UnitPrice = product.Price,
-                        Subtotal = product.Price * qty
-                    };
-                    order.OrderDetails.Add(detail);
-                    total += detail.Subtotal;
+                    OrderID = Guid.NewGuid(),
+                    OrderDate = DateTime.Now,
+                    CashierID = cashierId,
+                    CustomerID = customerId,
+                    PaymentMethod = paymentMethod,
+                    PaymentStatus = paymentMethod == "Paymongo" ? "Paid (Digital)" : "Completed"
+                };
 
-                    // Update Inventory
-                    if (product.ProductRecipes != null && product.ProductRecipes.Any())
+                // Basic Promotion handling
+                if (!string.IsNullOrEmpty(promoCode))
+                {
+                    var promotion = await _db.Promotions.FirstOrDefaultAsync(p => p.PromotionName == promoCode && p.IsActive);
+                    if (promotion != null)
                     {
-                        foreach (var recipe in product.ProductRecipes)
+                        order.PromotionID = promotion.PromotionID;
+                    }
+                }
+
+                // Group IDs to simplify quantity handling
+                var productGroups = productIds.GroupBy(id => id);
+                decimal total = 0;
+
+                foreach (var group in productGroups)
+                {
+                    var product = await _db.Products
+                        .Include(p => p.ProductRecipes)
+                        .ThenInclude(pr => pr.Ingredient)
+                        .FirstOrDefaultAsync(p => p.ProductID == group.Key);
+
+                    if (product != null)
+                    {
+                        int qty = group.Count();
+                        var detail = new OrderDetail
                         {
-                            recipe.Ingredient.StockQuantity -= (recipe.QuantityRequired * qty);
-                            
-                            // Log ingredient usage
-                            _db.InventoryLogs.Add(new InventoryLog
+                            OrderID = order.OrderID,
+                            ProductID = product.ProductID,
+                            Quantity = qty,
+                            UnitPrice = product.Price,
+                            Subtotal = product.Price * qty
+                        };
+                        order.OrderDetails.Add(detail);
+                        total += detail.Subtotal;
+
+                        // Update Inventory
+                        if (product.ProductRecipes != null && product.ProductRecipes.Any())
+                        {
+                            foreach (var recipe in product.ProductRecipes)
                             {
-                                ProductID = product.ProductID,
-                                QuantityChange = (int)-(recipe.QuantityRequired * qty), // Casting to int for legacy log, though ingredients use decimal
-                                ChangeType = "Recipe Deduction",
-                                LogDate = DateTime.Now,
-                                Remarks = $"Used {recipe.Ingredient.Name} for Order #{order.OrderID.ToString().Substring(0, 8)}"
-                            });
+                                recipe.Ingredient.StockQuantity -= (recipe.QuantityRequired * qty);
+                                
+                                // Log ingredient usage
+                                _db.InventoryLogs.Add(new InventoryLog
+                                {
+                                    ProductID = product.ProductID,
+                                    QuantityChange = (int)-(recipe.QuantityRequired * qty),
+                                    ChangeType = "Recipe Deduction",
+                                    LogDate = DateTime.Now,
+                                    Remarks = $"Used {recipe.Ingredient.Name} for Order #{order.OrderID.ToString().Substring(0, 8)}"
+                                });
+                            }
+                        }
+                        else
+                        {
+                            product.StockQuantity -= qty;
                         }
                     }
-                    else
+                }
+
+                order.TotalAmount = total;
+                order.FinalAmount = total;
+
+                // Record Payment
+                order.Payments.Add(new Payment
+                {
+                    OrderID = order.OrderID,
+                    PaymentDate = DateTime.Now,
+                    AmountPaid = total,
+                    PaymentMethod = paymentMethod,
+                    PaymentStatus = "Success"
+                });
+
+                // Create Inventory Log
+                foreach (var detail in order.OrderDetails)
+                {
+                    _db.InventoryLogs.Add(new InventoryLog
                     {
-                        // Fallback: update product stock if no recipe defined
-                        product.StockQuantity -= qty;
+                        ProductID = detail.ProductID,
+                        QuantityChange = -detail.Quantity,
+                        ChangeType = "Sale",
+                        LogDate = DateTime.Now,
+                        Remarks = $"Order #{order.OrderID.ToString().Substring(0, 8)}"
+                    });
+                }
+
+                // 6. Update Customer Loyalty Points (1 pt per 3 coffees)
+                if (order.CustomerID.HasValue)
+                {
+                    var customer = await _db.Customers.FindAsync(order.CustomerID.Value);
+                    if (customer != null)
+                    {
+                        var coffeeCount = order.OrderDetails
+                            .Where(d => d.Product != null && d.Product.Category != null && d.Product.Category.CategoryName == "Coffee")
+                            .Sum(d => d.Quantity);
+                        
+                        if (coffeeCount >= 3)
+                        {
+                            customer.Points += (coffeeCount / 3);
+                        }
                     }
                 }
-            }
 
-            order.TotalAmount = total;
-            order.FinalAmount = total; // No discount for now
+                _db.Orders.Add(order);
+                await _db.SaveChangesAsync();
 
-            // 4. Record Payment
-            order.Payments.Add(new Payment
-            {
-                OrderID = order.OrderID,
-                PaymentDate = DateTime.Now,
-                AmountPaid = total,
-                PaymentMethod = paymentMethod,
-                PaymentStatus = "Success"
-            });
-
-            // 5. Create Inventory Log
-            foreach (var detail in order.OrderDetails)
-            {
-                _db.InventoryLogs.Add(new InventoryLog
+                // Only set TempData if it's a full page redirect (not AJAX)
+                if (Request.Headers["X-Requested-With"] != "XMLHttpRequest")
                 {
-                    ProductID = detail.ProductID,
-                    QuantityChange = -detail.Quantity,
-                    ChangeType = "Sale",
-                    LogDate = DateTime.Now,
-                    Remarks = $"Order #{order.OrderID.ToString().Substring(0, 8)}"
-                });
+                    TempData["SuccessMessage"] = "Order placed successfully!";
+                }
+                
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = true, orderId = order.OrderID });
+                }
+
+                return RedirectToAction("Receipt", new { id = order.OrderID });
             }
-
-            _db.Orders.Add(order);
-            await _db.SaveChangesAsync();
-
-            // Notify UI (via TempData for simple redirect)
-            TempData["SuccessMessage"] = "Order placed successfully!";
-            
-            return RedirectToAction("TransactionHistory");
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error in PlaceOrder: " + ex.ToString());
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return Json(new { success = false, message = "Server error placing order." });
+                throw;
+            }
         }
 
         public async Task<IActionResult> TransactionHistory()
@@ -162,12 +220,12 @@ namespace ljp_itsolutions.Controllers
             if (request.ProductIds == null || !request.ProductIds.Any())
                 return BadRequest("No products selected.");
 
-            // 1. Get current user ID
+            //  Get current user ID
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!Guid.TryParse(userIdClaim, out var cashierId))
                 return Unauthorized();
 
-            // 2. Create the order
+            // Create the order
             var order = new Order
             {
                 OrderID = Guid.NewGuid(),
@@ -177,13 +235,14 @@ namespace ljp_itsolutions.Controllers
                 PaymentStatus = "Pending"
             };
 
-            // 3. Process products and recipes
+            // Process products and recipes
             var productGroups = request.ProductIds.GroupBy(id => id);
             decimal total = 0;
 
             foreach (var group in productGroups)
             {
                 var product = await _db.Products
+                    .Include(p => p.Category)
                     .Include(p => p.ProductRecipes)
                     .ThenInclude(pr => pr.Ingredient)
                     .FirstOrDefaultAsync(p => p.ProductID == group.Key);
@@ -202,7 +261,7 @@ namespace ljp_itsolutions.Controllers
                     order.OrderDetails.Add(detail);
                     total += detail.Subtotal;
 
-                    // Deduct inventory (logic from PlaceOrder)
+                    // Deduct inventory 
                     if (product.ProductRecipes != null && product.ProductRecipes.Any())
                     {
                         foreach (var recipe in product.ProductRecipes)
@@ -242,6 +301,78 @@ namespace ljp_itsolutions.Controllers
         {
             public List<int> ProductIds { get; set; } = new();
             public string? PromoCode { get; set; }
+        }
+
+        public async Task<IActionResult> Receipt(Guid id)
+        {
+            var order = await _db.Orders
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(d => d.Product)
+                .Include(o => o.Cashier)
+                .Include(o => o.Payments)
+                .FirstOrDefaultAsync(o => o.OrderID == id);
+
+            if (order == null)
+                return NotFound();
+
+            return View(order);
+        }
+
+        public async Task<IActionResult> GetReceiptPartial(Guid id)
+        {
+            try 
+            {
+                var order = await _db.Orders
+                    .Include(o => o.OrderDetails)
+                        .ThenInclude(d => d.Product)
+                    .Include(o => o.Cashier)
+                    .Include(o => o.Payments)
+                    .FirstOrDefaultAsync(o => o.OrderID == id);
+
+                if (order == null)
+                    return NotFound();
+
+                return PartialView("_ReceiptPartial", order);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error in GetReceiptPartial: " + ex.ToString());
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SearchCustomers(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return Json(new List<object>());
+
+            var customers = await _db.Customers
+                .Where(c => c.FullName.Contains(query) || (c.PhoneNumber != null && c.PhoneNumber.Contains(query)))
+                .Take(5)
+                .Select(c => new { c.CustomerID, c.FullName, c.PhoneNumber, c.Points })
+                .ToListAsync();
+
+            return Json(customers);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RegisterCustomer([FromBody] CustomerRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.FullName))
+                return Json(new { success = false, message = "Name is required." });
+
+            var customer = new Customer
+            {
+                FullName = request.FullName,
+                PhoneNumber = request.PhoneNumber,
+                Points = 0
+            };
+
+            _db.Customers.Add(customer);
+            await _db.SaveChangesAsync();
+
+            return Json(new { success = true, customerId = customer.CustomerID, fullName = customer.FullName });
         }
 
         public IActionResult ProcessPayment(Guid orderId, decimal amount)

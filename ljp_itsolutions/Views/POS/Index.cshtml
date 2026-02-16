@@ -62,6 +62,43 @@
             <button class="btn btn-sm btn-outline-danger" onclick="clearCart()">Clear</button>
         </div>
 
+        <!-- Customer Loyalty Section -->
+        <div class="customer-loyalty-section px-3 py-2 bg-light border-bottom">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-bold text-muted">Customer Loyalty</span>
+                <button class="btn btn-link btn-sm p-0 text-decoration-none" onclick="showRegisterModal()">
+                    <i class="fas fa-user-plus me-1"></i>New
+                </button>
+            </div>
+            <div class="position-relative">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted small"></i></span>
+                    <input type="text" id="customerSearch" class="form-control border-start-0" placeholder="Search phone or name..." oninput="searchCustomers()">
+                    <button class="btn btn-outline-secondary" id="clearCustomerBtn" style="display:none" onclick="clearSelectedCustomer()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="customerSearchResults" class="dropdown-menu w-100 shadow-sm border-0 mt-1" style="display:none; max-height: 200px; overflow-y: auto;">
+                    <!-- Results will be injected here -->
+                </div>
+            </div>
+            <div id="selectedCustomerDisplay" class="mt-2" style="display:none">
+                <div class="d-flex align-items-center gap-2 p-2 bg-white rounded border border-primary border-opacity-25 shadow-sm">
+                    <div class="flex-shrink-0 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                        <i class="fas fa-user small"></i>
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div class="fw-bold text-dark text-truncate small" id="scName"></div>
+                        <div class="text-muted x-small d-flex align-items-center gap-1">
+                            <i class="fas fa-coins text-warning"></i>
+                            <span id="scPoints">0 pts</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" id="selectedCustomerId" value="">
+        </div>
+
         <div class="cart-items" id="cartItems" style="display:none">
         </div>
         <div class="text-center text-muted py-5" id="emptyCartMsg">
@@ -123,17 +160,74 @@
                 </div>
             </button>
         </div>
-    <div class="cart-section">
-        ... (rest of cart footer)
+    </div>
+    </div>
+</div>
+
+<!-- Order Receipt Modal -->
+<div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 1.5rem;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-success">
+                    <i class="fas fa-check-circle me-2"></i>Transaction Successful
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="receiptModalContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading Receipt...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 flex-column gap-2">
+                <button type="button" class="btn btn-primary w-100 py-2 fw-bold" onclick="printReceipt()">
+                    <i class="fas fa-print me-2"></i>Print Receipt
+                </button>
+                <button type="button" class="btn btn-light w-100 py-2 border" data-bs-dismiss="modal">
+                    New Transaction
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Customer Modal -->
+<div class="modal fade" id="registerCustomerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Quick Enrollment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="registerCustomerForm">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Full Name</label>
+                        <input type="text" id="regName" class="form-control py-2 shadow-sm" placeholder="e.g. Juan Dela Cruz" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Phone Number</label>
+                        <input type="tel" id="regPhone" class="form-control py-2 shadow-sm" placeholder="09xxxxxxxxx">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 pt-0 pb-4 justify-content-center">
+                <button type="button" class="btn btn-primary px-5 py-2 fw-bold w-100 mx-3 rounded-pill" onclick="registerCustomer()">
+                    Join Loyalty Program
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Paymongo Simulation Modal -->
 <div class="modal fade" id="paymongoModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold">Paymongo E-Wallet</h5>
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
+            <div class="modal-header bg-primary text-white border-0" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                <h5 class="modal-title fw-bold">E-Wallet Payment</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center py-5">
@@ -422,38 +516,169 @@
             }
         }
 
-        function submitOrder() {
+        async function submitOrder() {
             const productIds = cart.flatMap(item => Array(item.qty).fill(item.id));
+            const promoCode = document.getElementById('promoCode').value;
+            const customerId = document.getElementById('selectedCustomerId').value || null;
             
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '@Url.Action("PlaceOrder", "Cashier")';
+            // Show Receipt Modal in Loading State
+            const receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
+            receiptModal.show();
+
+            try {
+                const response = await fetch('@Url.Action("PlaceOrder", "Cashier")', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    },
+                    body: JSON.stringify({ 
+                        productIds, 
+                        paymentMethod, 
+                        promoCode,
+                        customerId: customerId ? parseInt(customerId) : null
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        loadReceipt(data.orderId);
+                    } else {
+                        alert('Order failed: ' + (data.message || 'Unknown error'));
+                        receiptModal.hide();
+                    }
+                } else {
+                    const error = await response.text();
+                    alert('Error placing order: ' + error);
+                    receiptModal.hide();
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error while placing order.');
+                receiptModal.hide();
+            }
+        }
+
+        async function loadReceipt(orderId) {
+            const content = document.getElementById('receiptModalContent');
+            try {
+                const response = await fetch(`/Cashier/GetReceiptPartial/${orderId}`);
+                if (response.ok) {
+                    content.innerHTML = await response.text();
+                    // Auto-print after a short delay for rendering
+                    setTimeout(() => {
+                        printReceipt();
+                    }, 500);
+                } else {
+                    content.innerHTML = '<div class="text-danger text-center">Failed to load receipt details.</div>';
+                }
+            } catch (err) {
+                content.innerHTML = '<div class="text-danger text-center">Error loading receipt.</div>';
+            }
+        }
+
+        function printReceipt() {
+            const printContent = document.getElementById('receiptModalContent').innerHTML;
+            const originalContent = document.body.innerHTML;
             
-            productIds.forEach(id => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'productIds';
-                input.value = id;
-                form.appendChild(input);
+            // For simple web printing, window.print handles @@media print defined in the partial
+            window.print();
+        }
+
+        // Customer Loyalty Logic
+        let searchTimeout;
+        async function searchCustomers() {
+            const query = document.getElementById('customerSearch').value;
+            const resultsDiv = document.getElementById('customerSearchResults');
+            
+            if (query.length < 2) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                const response = await fetch(`@Url.Action("SearchCustomers", "Cashier")?query=${encodeURIComponent(query)}`);
+                const customers = await response.json();
+                
+                if (customers.length > 0) {
+                    resultsDiv.innerHTML = customers.map(c => `
+                        <a href="javascript:void(0)" class="dropdown-item py-2 border-bottom border-light" onclick='selectCustomer(${JSON.stringify(c)})'>
+                            <div class="fw-bold small text-dark">${c.fullName}</div>
+                            <div class="x-small text-muted">${c.phoneNumber || 'No phone'} • ${c.points} pts</div>
+                        </a>
+                    `).join('');
+                    resultsDiv.style.display = 'block';
+                } else {
+                    resultsDiv.innerHTML = '<div class="px-3 py-2 small text-muted text-center italic">No customers found</div>';
+                    resultsDiv.style.display = 'block';
+                }
+            }, 300);
+        }
+
+        function selectCustomer(customer) {
+            document.getElementById('selectedCustomerId').value = customer.customerID;
+            document.getElementById('scName').innerText = customer.fullName;
+            document.getElementById('scPoints').innerText = `${customer.points} pts`;
+            
+            document.getElementById('customerSearch').style.display = 'none';
+            document.getElementById('selectedCustomerDisplay').style.display = 'block';
+            document.getElementById('clearCustomerBtn').style.display = 'block';
+            document.getElementById('customerSearchResults').style.display = 'none';
+            document.getElementById('customerSearch').value = '';
+        }
+
+        function clearSelectedCustomer() {
+            document.getElementById('selectedCustomerId').value = '';
+            document.getElementById('customerSearch').style.display = 'block';
+            document.getElementById('selectedCustomerDisplay').style.display = 'none';
+            document.getElementById('clearCustomerBtn').style.display = 'none';
+        }
+
+        function showRegisterModal() {
+            const modal = new bootstrap.Modal(document.getElementById('registerCustomerModal'));
+            modal.show();
+        }
+
+        async function registerCustomer() {
+            const fullName = document.getElementById('regName').value;
+            const phoneNumber = document.getElementById('regPhone').value;
+
+            if (!fullName) {
+                alert('Please enter a name.');
+                return;
+            }
+
+            const response = await fetch('@Url.Action("RegisterCustomer", "Cashier")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                },
+                body: JSON.stringify({ fullName, phoneNumber })
             });
 
-            const payInput = document.createElement('input');
-            payInput.type = 'hidden';
-            payInput.name = 'paymentMethod';
-            payInput.value = paymentMethod;
-            form.appendChild(payInput);
-
-            const promoCode = document.getElementById('promoCode').value;
-            if (promoCode) {
-                const promoInput = document.createElement('input');
-                promoInput.type = 'hidden';
-                promoInput.name = 'promoCode';
-                promoInput.value = promoCode;
-                form.appendChild(promoInput);
+            const data = await response.json();
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('registerCustomerModal')).hide();
+                selectCustomer({ 
+                    customerID: data.customerId, 
+                    fullName: data.fullName, 
+                    phoneNumber: phoneNumber, 
+                    points: 0 
+                });
+                document.getElementById('registerCustomerForm').reset();
+            } else {
+                alert(data.message || 'Registration failed');
             }
-            
-            document.body.appendChild(form);
-            form.submit();
         }
+
+        // Handle modal close to reset POS
+        document.getElementById('receiptModal').addEventListener('hidden.bs.modal', function () {
+            location.reload();
+        });
     </script>
 }

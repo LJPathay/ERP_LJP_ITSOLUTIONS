@@ -4,31 +4,18 @@
 }
 
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold mb-1">📈 Sales Trends</h2>
-            <p class="text-muted">Analyze your revenue growth and seasonal trends</p>
-        </div>
-        <div class="d-flex gap-2">
-            <input type="month" class="form-control" value="@DateTime.Now.ToString("yyyy-MM")">
-            <button class="btn btn-primary"><i class="fas fa-sync-alt me-2"></i>Refresh</button>
-        </div>
-    </div>
-
     <div class="row g-4 mb-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body p-5 d-flex align-items-center justify-content-center bg-light-subtle rounded-4" style="min-height: 400px;">
-                    <div class="text-center">
-                        <div class="pulse-icon mb-4">
-                            <i class="fas fa-chart-area fa-5x text-primary opacity-25"></i>
-                        </div>
-                        <h4 class="fw-bold">Interactive Sales Visualization</h4>
-                        <p class="text-muted">Real-time data synchronization with your orders database.</p>
-                        <div class="d-flex justify-content-center gap-3 mt-4">
-                            <div class="px-4 py-2 bg-white shadow-sm rounded-pill small fw-bold"><i class="fas fa-circle text-primary me-2"></i>Daily Sales</div>
-                            <div class="px-4 py-2 bg-white shadow-sm rounded-pill small fw-bold"><i class="fas fa-circle text-success me-2"></i>Target</div>
-                        </div>
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Revenue Growth Trend</h5>
+                    <div class="d-flex gap-2">
+                        <input type="month" class="form-control form-control-sm border-0 bg-light" value="@DateTime.Now.ToString("yyyy-MM")">
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div style="height: 350px;">
+                        <canvas id="salesTrendChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -73,13 +60,35 @@
     </div>
 </div>
 
-<style>
-    .pulse-icon {
-        animation: pulse 2s infinite;
-    }
-    @@keyframes pulse {
-        0% { transform: scale(1); opacity: 0.8; }
-        50% { transform: scale(1.05); opacity: 1; }
-        100% { transform: scale(1); opacity: 0.8; }
-    }
-</style>
+@section Scripts {
+    <script>
+        const ctx = document.getElementById('salesTrendChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.Select(m => m.Date.ToString("MMM dd")))),
+                datasets: [{
+                    label: 'Daily Revenue',
+                    data: @Html.Raw(Json.Serialize(Model.Select(m => m.TotalSales))),
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#10b981'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { borderDash: [5, 5] }, ticks: { callback: v => '₱' + v } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    </script>
+}

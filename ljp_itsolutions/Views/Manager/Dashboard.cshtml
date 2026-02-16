@@ -4,217 +4,197 @@
 }
 
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 d-none">
-        <div>
-            <h2 class="fw-bold mb-1">Manager Overview</h2>
-            <p class="text-muted">Quick insights into your store operations.</p>
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary"><i class="fas fa-download me-2"></i>Export Report</button>
-            <button class="btn btn-primary"><i class="fas fa-plus me-2"></i>New Entry</button>
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="kpi-card h-100 transition-hover" style="background: linear-gradient(135deg, white 0%, #f1f5f9 100%);">
+            <div class="kpi-card-icon bg-primary bg-opacity-10 text-primary mb-3">
+                <i class="fas fa-coffee fa-lg"></i>
+            </div>
+            <p class="kpi-card-label">Stock Portfolio</p>
+            <h2 class="kpi-card-value">@Model.TotalProducts</h2>
         </div>
     </div>
-
-    <!-- KPI Cards (Improved with Depth) -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card-custom border-0 shadow-sm transition-hover" style="background: linear-gradient(135deg, white 0%, #f1f5f9 100%); border-radius: 1.25rem;">
-                <div class="card-body p-4 text-center">
-                    <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3" style="width: 54px; height: 54px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-coffee fa-lg"></i>
-                    </div>
-                    <p class="text-secondary small fw-bold text-uppercase mb-1">Stock Portfolio</p>
-                    <h2 class="fw-bold mb-0">@Model.TotalProducts</h2>
-                </div>
+    <div class="col-md-3">
+        <div class="kpi-card h-100 transition-hover" style="background: linear-gradient(135deg, white 0%, #f0fdf4 100%);">
+            <div class="kpi-card-icon bg-success bg-opacity-10 text-success mb-3">
+                <i class="fas fa-shopping-cart fa-lg"></i>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card-custom border-0 shadow-sm transition-hover" style="background: linear-gradient(135deg, white 0%, #f0fdf4 100%); border-radius: 1.25rem;">
-                <div class="card-body p-4 text-center">
-                    <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3" style="width: 54px; height: 54px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-shopping-cart fa-lg"></i>
-                    </div>
-                    <p class="text-secondary small fw-bold text-uppercase mb-1">Total Demand</p>
-                    <h2 class="fw-bold mb-0">@Model.TotalOrders</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card-custom border-0 shadow-sm transition-hover" style="background: linear-gradient(135deg, white 0%, #f0f9ff 100%); border-radius: 1.25rem;">
-                <div class="card-body p-4 text-center">
-                    <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3" style="width: 54px; height: 54px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-peso-sign fa-lg"></i>
-                    </div>
-                    <p class="text-secondary small fw-bold text-uppercase mb-1">Gross Earnings</p>
-                    <h2 class="fw-bold mb-0">₱@Model.TotalRevenue.ToString("N0")</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card-custom border-0 shadow-sm transition-hover" style="background: linear-gradient(135deg, white 0%, #fefce8 100%); border-radius: 1.25rem;">
-                <div class="card-body p-4 text-center">
-                    <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3" style="width: 54px; height: 54px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-user-shield fa-lg"></i>
-                    </div>
-                    <p class="text-secondary small fw-bold text-uppercase mb-1">Team Presence</p>
-                    <h2 class="fw-bold mb-0">@Model.TotalUsers</h2>
-                </div>
-            </div>
+            <p class="kpi-card-label">Total Demand</p>
+            <h2 class="kpi-card-value">@Model.TotalOrders</h2>
         </div>
     </div>
-
-    <div class="row g-4">
-        <!-- Recent Orders -->
-        <div class="col-lg-8">
-            <div class="modern-table mb-4">
-                <div class="d-flex justify-content-between align-items-center p-3 bg-light border-bottom">
-                    <h5 class="fw-bold mb-0">Recent Orders</h5>
-                    <a asp-controller="Cashier" asp-action="TransactionHistory" class="btn btn-sm btn-outline-primary">View All</a>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead>
-                            <tr>
-                                <th class="ps-4">Order ID</th>
-                                <th>Date</th>
-                                <th>Cashier</th>
-                                <th>Amount</th>
-                                <th class="text-end pe-4">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var order in Model.RecentOrders)
-                            {
-                                <tr>
-                                    <td class="ps-4 fw-bold">#@order.OrderID</td>
-                                    <td><span class="text-muted text-xs">@order.OrderDate.ToString("MMM dd, hh:mm tt")</span></td>
-                                    <td>@order.Cashier?.FullName</td>
-                                    <td class="fw-semibold">₱@order.FinalAmount.ToString("N2")</td>
-                                    <td class="text-end pe-4">
-                                        @if (order.PaymentStatus == "Paid")
-                                        {
-                                            <span class="status-badge success">Paid</span>
-                                        }
-                                        else if (order.PaymentStatus == "Voided")
-                                        {
-                                            <span class="status-badge danger">Voided</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="status-badge warning">@order.PaymentStatus</span>
-                                        }
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+    <div class="col-md-3">
+        <div class="kpi-card h-100 transition-hover" style="background: linear-gradient(135deg, white 0%, #f0f9ff 100%);">
+            <div class="kpi-card-icon bg-info bg-opacity-10 text-info mb-3">
+                <i class="fas fa-peso-sign fa-lg"></i>
             </div>
-
-            <!-- Top Products -->
-            <div class="modern-table">
-                <div class="p-3 bg-light border-bottom">
-                    <h5 class="fw-bold mb-0">Top Performing Products</h5>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead>
-                            <tr>
-                                <th class="ps-4">Product Name</th>
-                                <th>Total Sold</th>
-                                <th class="text-end pe-4">Revenue</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Model.TopProducts)
-                            {
-                                <tr>
-                                    <td class="ps-4 fw-bold">@item.ProductName</td>
-                                    <td><span class="badge bg-light text-dark rounded-pill">@item.TotalSold units</span></td>
-                                    <td class="text-end pe-4 fw-bold text-success">₱@item.Revenue.ToString("N2")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <p class="kpi-card-label">Gross Earnings</p>
+            <h2 class="kpi-card-value">₱@Model.TotalRevenue.ToString("N0")</h2>
         </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card h-100 transition-hover" style="background: linear-gradient(135deg, white 0%, #fefce8 100%);">
+            <div class="kpi-card-icon bg-warning bg-opacity-10 text-warning mb-3">
+                <i class="fas fa-user-shield fa-lg"></i>
+            </div>
+            <p class="kpi-card-label">Team Presence</p>
+            <h2 class="kpi-card-value">@Model.TotalUsers</h2>
+        </div>
+    </div>
+</div>
 
-        <!-- Sidebar Actions & Alerts -->
-        <div class="col-lg-4">
-            <!-- Low Ingredient Alerts -->
-            <div class="card border-0 shadow-soft mb-4 rounded-lg overflow-hidden">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h6 class="fw-bold mb-0 text-danger d-flex align-items-center">
-                        <i class="fas fa-exclamation-triangle me-2"></i>Low Stock Alerts
-                    </h6>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        @foreach (var alert in Model.LowStockIngredients)
+<div class="row g-4">
+    <!-- Recent Orders -->
+    <div class="col-lg-8">
+        <div class="modern-table mb-4">
+            <div class="d-flex justify-content-between align-items-center p-3 bg-light border-bottom">
+                <h6 class="fw-bold mb-0 text-dark">Recent Orders</h6>
+                <a asp-controller="Cashier" asp-action="TransactionHistory" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All</a>
+            </div>
+            <div class="table-responsive scrollable-table">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light sticky-top">
+                        <tr>
+                            <th class="ps-4">Order ID</th>
+                            <th>Date</th>
+                            <th>Cashier</th>
+                            <th>Amount</th>
+                            <th class="text-end pe-4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.RecentOrders)
                         {
-                            <div class="list-group-item border-0 p-3">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div class="d-flex align-items-center">
-                                        <div class="bg-danger bg-opacity-10 rounded-circle p-2 me-3" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-                                            <i class="fas fa-leaf text-danger text-xs"></i>
-                                        </div>
-                                        <div>
-                                            <p class="mb-0 text-sm fw-bold">@alert.Name</p>
-                                            <p class="text-muted text-xs mb-0">@alert.StockQuantity.ToString("F2") @alert.Unit left</p>
-                                        </div>
+                            <tr>
+                                <td class="ps-4 fw-bold">#@order.OrderID.ToString().Substring(0, 8)...</td>
+                                <td><span class="text-muted text-xs">@order.OrderDate.ToString("MMM dd, hh:mm tt")</span></td>
+                                <td>@order.Cashier?.FullName</td>
+                                <td class="fw-semibold">₱@order.FinalAmount.ToString("N2")</td>
+                                <td class="text-end pe-4">
+                                    @if (order.PaymentStatus == "Paid")
+                                    {
+                                        <span class="status-badge success">Paid</span>
+                                    }
+                                    else if (order.PaymentStatus == "Voided")
+                                    {
+                                        <span class="status-badge danger">Voided</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge warning">@order.PaymentStatus</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Top Products -->
+        <div class="modern-table mb-4">
+            <div class="p-3 bg-light border-bottom">
+                <h6 class="fw-bold mb-0 text-dark">Top Performing Products</h6>
+            </div>
+            <div class="table-responsive scrollable-table">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light sticky-top">
+                        <tr>
+                            <th class="ps-4">Product Name</th>
+                            <th>Total Sold</th>
+                            <th class="text-end pe-4">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.TopProducts)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-bold">@item.ProductName</td>
+                                <td><span class="badge bg-light text-dark rounded-pill">@item.TotalSold units</span></td>
+                                <td class="text-end pe-4 fw-bold text-success">₱@item.Revenue.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Actions & Alerts -->
+    <div class="col-lg-4">
+        <!-- Low Ingredient Alerts -->
+        <div class="card border-0 shadow-sm mb-4 rounded-lg overflow-hidden">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h6 class="fw-bold mb-0 text-danger d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Low Stock Alerts
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    @foreach (var alert in Model.LowStockIngredients)
+                    {
+                        <div class="list-group-item border-0 p-3 transition-hover">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-danger bg-opacity-10 rounded-circle p-2 me-3" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-leaf text-danger text-xs"></i>
                                     </div>
-                                    <span class="status-badge danger text-xs">Low</span>
+                                    <div>
+                                        <p class="mb-0 text-sm fw-bold">@alert.Name</p>
+                                        <p class="text-muted text-xs mb-0">@alert.StockQuantity.ToString("N2") @alert.Unit left</p>
+                                    </div>
                                 </div>
+                                <span class="status-badge danger text-xs">Low</span>
                             </div>
-                        }
-                        @if (!Model.LowStockIngredients.Any())
-                        {
-                            <div class="p-4 text-center">
-                                <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
-                                <p class="text-muted mb-0 small">Inventory levels are healthy.</p>
-                            </div>
-                        }
-                    </div>
+                        </div>
+                    }
+                    @if (!Model.LowStockIngredients.Any())
+                    {
+                        <div class="p-4 text-center">
+                            <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
+                            <p class="text-muted mb-0 small">Inventory levels are healthy.</p>
+                        </div>
+                    }
                 </div>
-                @if (Model.LowStockIngredients.Any())
-                {
-                    <div class="card-footer bg-light border-0 p-3">
-                        <a asp-action="Inventory" class="btn btn-outline-danger btn-sm w-100 rounded-pill">Manage Inventory</a>
-                    </div>
-                }
             </div>
-
-            <!-- Quick Access -->
-            <div class="card border-0 shadow-soft rounded-lg overflow-hidden">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h6 class="fw-bold mb-0">Quick Management</h6>
+            @if (Model.LowStockIngredients.Any())
+            {
+                <div class="card-footer bg-light border-0 p-3">
+                    <a asp-action="Inventory" class="btn btn-outline-danger btn-sm w-100 rounded-pill">Manage Inventory</a>
                 </div>
-                <div class="card-body p-2">
-                    <div class="d-grid gap-2">
-                        <a asp-action="Products" class="btn btn-light text-start p-3 border-0 rounded-lg transition-hover">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-plus-circle text-primary me-3 fa-lg"></i>
-                                <div>
-                                    <p class="fw-bold mb-0 text-sm">Add New Product</p>
-                                    <p class="text-muted text-xs mb-0">Update your coffee menu</p>
-                                </div>
+            }
+        </div>
+
+        <!-- Quick Access -->
+        <div class="card border-0 shadow-sm rounded-lg overflow-hidden">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h6 class="fw-bold mb-0 text-dark">Quick Management</h6>
+            </div>
+            <div class="card-body p-2">
+                <div class="d-grid gap-2">
+                    <a asp-action="Products" class="btn btn-light text-start p-3 border-0 rounded-lg transition-hover">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-plus-circle text-primary me-3 fa-lg"></i>
+                            <div>
+                                <p class="fw-bold mb-0 text-sm text-dark">Add New Product</p>
+                                <p class="text-muted text-xs mb-0">Update your coffee menu</p>
                             </div>
-                        </a>
-                        <a asp-action="Reports" class="btn btn-light text-start p-3 border-0 rounded-lg transition-hover">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-chart-line text-info me-3 fa-lg"></i>
-                                <div>
-                                    <p class="fw-bold mb-0 text-sm">Sales Analysis</p>
-                                    <p class="text-muted text-xs mb-0">View store performance</p>
-                                </div>
+                        </div>
+                    </a>
+                    <a asp-action="Reports" class="btn btn-light text-start p-3 border-0 rounded-lg transition-hover">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-chart-line text-info me-3 fa-lg"></i>
+                            <div>
+                                <p class="fw-bold mb-0 text-sm text-dark">Sales Analysis</p>
+                                <p class="text-muted text-xs mb-0">View store performance</p>
                             </div>
-                        </a>
-                    </div>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <style>

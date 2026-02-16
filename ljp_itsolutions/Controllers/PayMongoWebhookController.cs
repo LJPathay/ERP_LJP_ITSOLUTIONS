@@ -72,8 +72,7 @@ namespace ljp_itsolutions.Controllers
                         externalRef = metaRefProp.GetString();
                     }
 
-                    }
-                    
+
                     if (!string.IsNullOrEmpty(externalRef) && Guid.TryParse(externalRef, out var orderId))
                     {
                         var order = await _db.Orders
