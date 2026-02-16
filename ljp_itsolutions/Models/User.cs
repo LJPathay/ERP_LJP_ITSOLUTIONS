@@ -27,6 +27,13 @@ namespace ljp_itsolutions.Models
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        
+        // Accessibility Settings
+        public bool IsHighContrast { get; set; } = false;
+        public string FontSize { get; set; } = "default"; 
+        public bool ReduceMotion { get; set; } = false;
+
+        public string? ProfilePictureUrl { get; set; }
 
         // Legacy compatibility
         [NotMapped]

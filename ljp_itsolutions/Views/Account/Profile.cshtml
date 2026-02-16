@@ -1,0 +1,127 @@
+@model ljp_itsolutions.Models.User
+@{
+    ViewData["Title"] = "Account Profile & Settings";
+    // Get initials for the avatar if no picture is set
+    var initials = string.Join("", Model.FullName.Split(' ').Select(n => n[0])).ToUpper();
+}
+
+<div class="container-fluid py-4 ux-animate-fade-in">
+    <div class="row g-4">
+        <!-- Profile Header - Premium Espresso Theme -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-lg overflow-hidden mb-4 profile-header-premium">
+                <div class="card-body p-5 text-white position-relative">
+                    <div class="d-flex align-items-center gap-4 flex-wrap flex-md-nowrap">
+                        <div class="profile-picture-container shadow-lg">
+                            @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+                            {
+                                <img src="@Model.ProfilePictureUrl" alt="@Model.FullName" class="profile-pic" />
+                            }
+                            else
+                            {
+                                <div class="profile-initials">@initials</div>
+                            }
+                            <div class="edit-overlay" onclick="document.getElementById('profilePictureFile').click()">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        </div>
+                        <div class="profile-meta">
+                            <h1 class="ux-title text-white mb-1">@Model.FullName</h1>
+                            <div class="d-flex align-items-center gap-2 opacity-75">
+                                <span class="badge bg-amber text-white px-3">@Model.Role</span>
+                                <span class="text-white-50">•</span>
+                                <span class="text-white-50">@@@Model.Username</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal Information -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-lg overflow-hidden h-100 ux-card">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="fw-bold mb-0 text-dark">Personal Information</h6>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="UpdateProfile" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="modern-form-label">Full Name</label>
+                            <input type="text" name="fullName" class="modern-form-control w-100" value="@Model.FullName" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="modern-form-label">Email Address</label>
+                            <input type="email" name="email" class="modern-form-control w-100" value="@Model.Email" placeholder="user@coffee.local" />
+                        </div>
+                        <div class="mb-4">
+                            <label class="modern-form-label">Profile Image</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-2 border-end-0"><i class="fas fa-link text-muted"></i></span>
+                                <input type="text" name="profilePictureUrl" class="modern-form-control flex-grow-1 border-start-0" value="@Model.ProfilePictureUrl" placeholder="https://example.com/photo.jpg" />
+                                <button class="btn btn-outline-secondary border-2" type="button" onclick="document.getElementById('profilePictureFile').click()">
+                                    <i class="fas fa-upload"></i>
+                                </button>
+                            </div>
+                            <input type="file" name="profilePictureFile" id="profilePictureFile" hidden accept="image/*" />
+                            <div class="form-text text-xs mt-2 text-muted">Enter a URL or click the upload icon to choose a file for Cloudinary.</div>
+                        </div>
+                        <button type="submit" class="ux-btn-primary rounded-pill px-5">
+                            <i class="fas fa-save me-2"></i>Save Profile
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accessibility Settings -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-lg overflow-hidden h-100 ux-card">
+                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                    <h6 class="fw-bold mb-0 text-dark">Accessibility Preferences</h6>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="UpdateSettings" method="post">
+                        <div class="mb-4">
+                            <label class="modern-form-label">Font Size</label>
+                            <select name="fontSize" class="modern-form-control w-100">
+                                <option value="default" selected="@(Model.FontSize == "default")">Default (Regular)</option>
+                                <option value="large" selected="@(Model.FontSize == "large")">Large (120%)</option>
+                                <option value="extra-large" selected="@(Model.FontSize == "extra-large")">Extra Large (140%)</option>
+                            </select>
+                            <div class="form-text text-xs mt-2 text-muted">Adjust the text size for better readability across the application.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="modern-form-label d-block mb-3">Display Enhancements</label>
+                            
+                            <div class="form-check form-switch mb-3 p-0">
+                                <div class="d-flex justify-content-between align-items-center px-2 py-2 rounded transition-all hover-bg-light">
+                                    <label class="form-check-label fw-semibold text-dark cursor-pointer" for="highContrastSwitch">
+                                        High Contrast Mode
+                                    </label>
+                                    <input class="form-check-input ms-0" type="checkbox" name="isHighContrast" id="highContrastSwitch" value="true" @(Model.IsHighContrast ? "checked" : "")>
+                                </div>
+                                <div class="text-muted text-xs ms-2">Increases visibility for icons and text.</div>
+                            </div>
+
+                            <div class="form-check form-switch mb-0 p-0">
+                                <div class="d-flex justify-content-between align-items-center px-2 py-2 rounded transition-all hover-bg-light">
+                                    <label class="form-check-label fw-semibold text-dark cursor-pointer" for="reduceMotionSwitch">
+                                        Reduced Motion
+                                    </label>
+                                    <input class="form-check-input ms-0" type="checkbox" name="reduceMotion" id="reduceMotionSwitch" value="true" @(Model.ReduceMotion ? "checked" : "")>
+                                </div>
+                                <div class="text-muted text-xs ms-2">Silences animations and transitions.</div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="ux-btn-primary rounded-pill px-5">
+                            <i class="fas fa-magic me-2"></i>Apply Changes
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

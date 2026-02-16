@@ -24,6 +24,7 @@ namespace ljp_itsolutions.Data
         public DbSet<ProductRecipe> ProductRecipes { get; set; }
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<RewardRedemption> RewardRedemptions { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -34,6 +35,9 @@ namespace ljp_itsolutions.Data
                 b.Property(u => u.FullName).IsRequired().HasMaxLength(100);
                 b.Property(u => u.IsActive).HasDefaultValue(true);
                 b.Property(u => u.CreatedAt).HasDefaultValueSql("GETDATE()");
+                b.Property(u => u.IsHighContrast).HasDefaultValue(false);
+                b.Property(u => u.FontSize).HasDefaultValue("default");
+                b.Property(u => u.ReduceMotion).HasDefaultValue(false);
             });
 
             builder.Entity<Order>(b =>

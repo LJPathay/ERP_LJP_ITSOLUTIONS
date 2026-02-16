@@ -44,3 +44,170 @@ html {
 .form-floating>.form-control:focus::placeholder {
   text-align: start;
 }
+
+/* Accessibility Overrides */
+
+/* Font Size Scaling */
+.app.access-font-large {
+  font-size: 1.2rem !important;
+}
+
+.app.access-font-large h1,
+.app.access-font-large .h1 {
+  font-size: 2.5rem;
+}
+
+.app.access-font-large h2,
+.app.access-font-large .h2 {
+  font-size: 2rem;
+}
+
+.app.access-font-large h3,
+.app.access-font-large .h3 {
+  font-size: 1.75rem;
+}
+
+.app.access-font-large p,
+.app.access-font-large span,
+.app.access-font-large div {
+  font-size: 1.1rem;
+}
+
+.app.access-font-extra-large {
+  font-size: 1.4rem !important;
+}
+
+.app.access-font-extra-large h1,
+.app.access-font-extra-large .h1 {
+  font-size: 3rem;
+}
+
+.app.access-font-extra-large h2,
+.app.access-font-extra-large .h2 {
+  font-size: 2.5rem;
+}
+
+.app.access-font-extra-large h3,
+.app.access-font-extra-large .h3 {
+  font-size: 2rem;
+}
+
+.app.access-font-extra-large p,
+.app.access-font-extra-large span,
+.app.access-font-extra-large div {
+  font-size: 1.25rem;
+}
+
+/* High Contrast mode */
+.app.access-high-contrast {
+  --bs-primary: #002db3;
+  --bs-primary-rgb: 0, 45, 179;
+  background-color: #f0f0f0 !important;
+}
+
+.app.access-high-contrast .card {
+  border: 2px solid #000 !important;
+  box-shadow: none !important;
+}
+
+.app.access-high-contrast .text-muted {
+  color: #444 !important;
+}
+
+.app.access-high-contrast .btn-primary {
+  background-color: #000 !important;
+  border-color: #000 !important;
+  color: #fff !important;
+}
+
+.app.access-high-contrast .sidebar {
+  border-right: 3px solid #000 !important;
+}
+
+/* Reduced Motion */
+.app.access-reduce-motion * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* Premium Profile Styles - Rich Espresso Theme */
+.profile-header-premium {
+  background: linear-gradient(135deg, #2d1b0d 0%, #4e342e 100%) !important;
+  position: relative;
+  border: none !important;
+}
+
+.profile-picture-container {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: white;
+  padding: 4px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  border: 3px solid #d97706;
+  /* Amber Glow */
+}
+
+.profile-pic {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profile-initials {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fbfbf9;
+  color: #2d1b0d;
+  font-size: 2.5rem;
+  font-weight: 800;
+  border-radius: 50%;
+}
+
+.edit-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.profile-picture-container:hover .edit-overlay {
+  opacity: 1;
+}
+
+.bg-amber {
+  background-color: #d97706 !important;
+}
+
+.hover-bg-light:hover {
+  background-color: #f9fafb !important;
+}
+
+.transition-all {
+  transition: all 0.2s ease;
+}
+
+/* Reusing UX Premium Tokens locally in case file not loaded */
+.ux-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.ux-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+}

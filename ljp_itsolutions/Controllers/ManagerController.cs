@@ -326,6 +326,21 @@ namespace ljp_itsolutions.Controllers
                 existing.StockQuantity = ingredient.StockQuantity;
                 existing.Unit = ingredient.Unit;
                 existing.LowStockThreshold = ingredient.LowStockThreshold;
+                
+                // Trigger Persistent Notification if Low Stock
+                if (existing.StockQuantity <= existing.LowStockThreshold)
+                {
+                    var notification = new Notification
+                    {
+                        Title = "Low Ingredient Stock",
+                        Message = $"{existing.Name} needs restocking ({existing.StockQuantity:0.##} {existing.Unit}).",
+                        Type = "danger",
+                        IconClass = "fas fa-cube",
+                        CreatedAt = DateTime.Now
+                    };
+                    _db.Notifications.Add(notification);
+                }
+
                 await _db.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Ingredient updated successfully!";
             }

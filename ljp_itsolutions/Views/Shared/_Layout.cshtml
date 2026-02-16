@@ -16,10 +16,21 @@
 <body>
     @{
         var username = Context.Session.GetString("Username") ?? User.Identity?.Name ?? "guest";
+        var fullName = Context.Session.GetString("FullName") ?? username;
         var userRole = Context.Session.GetString("UserRole") ?? User.FindFirst(ClaimTypes.Role)?.Value ?? "-";
+        var profilePic = Context.Session.GetString("ProfilePictureUrl");
+        var initials = string.Join("", fullName.Split(' ').Select(n => n.Length > 0 ? n[0].ToString() : "")).ToUpper();
+        if (string.IsNullOrEmpty(initials)) initials = username.Substring(0, 1).ToUpper();
+        
+        // Accessibility Settings
+        var isHighContrast = Context.Session.GetString("IsHighContrast") == "true";
+        var fontSize = Context.Session.GetString("FontSize") ?? "default";
+        var reduceMotion = Context.Session.GetString("ReduceMotion") == "true";
+
+        var accessibilityClasses = $"{(isHighContrast ? "access-high-contrast" : "")} access-font-{fontSize} {(reduceMotion ? "access-reduce-motion" : "")}";
     }
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
-    <div class="app d-flex">
+    <div class="app d-flex @accessibilityClasses">
         <aside class="sidebar p-3 d-flex flex-column">
             <div class="brand mb-4">
                 <div class="d-flex align-items-center justify-content-center mb-3">
@@ -126,11 +137,18 @@
                     <!-- User Profile -->
                     <div class="dropdown">
                         <button class="btn btn-profile d-flex align-items-center gap-3 shadow-none border-0 bg-transparent p-0" data-bs-toggle="dropdown" aria-expanded="false">
-                            <div class="profile-avatar bg-light d-flex align-items-center justify-content-center">
-                                <i class="fas fa-user text-secondary"></i>
+                            <div class="profile-avatar bg-amber text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px; border-radius: 50%; font-weight: bold; overflow: hidden;">
+                                @if (!string.IsNullOrEmpty(profilePic))
+                                {
+                                    <img src="@profilePic" alt="@fullName" style="width:100%; height:100%; object-fit:cover;" />
+                                }
+                                else
+                                {
+                                    <span>@initials</span>
+                                }
                             </div>
                             <div class="text-start d-none d-md-block">
-                                <p class="mb-0 small fw-bold text-dark">@username</p>
+                                <p class="mb-0 small fw-bold text-dark">@fullName</p>
                                 <p class="mb-0 x-small text-muted fw-bold">Role: @userRole</p>
                             </div>
                             <i class="fas fa-chevron-down x-small text-muted ms-1"></i>
@@ -138,6 +156,13 @@
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2">
                             @if (User?.Identity?.IsAuthenticated == true)
                             {
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center gap-2 py-2" asp-controller="Account" asp-action="Profile">
+                                        <i class="fas fa-user-cog opacity-75"></i>
+                                        <span>Profile & Settings</span>
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider opacity-50"></li>
                                 <li>
                                     <form method="post" asp-controller="Account" asp-action="Logout">
                                         <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2 py-2">

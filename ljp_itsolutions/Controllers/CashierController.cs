@@ -117,6 +117,19 @@ namespace ljp_itsolutions.Controllers
                             foreach (var recipe in product.ProductRecipes)
                             {
                                 recipe.Ingredient.StockQuantity -= (recipe.QuantityRequired * qty);
+
+                                // Trigger Low Stock Notification
+                                if (recipe.Ingredient.StockQuantity <= recipe.Ingredient.LowStockThreshold)
+                                {
+                                    _db.Notifications.Add(new Notification
+                                    {
+                                        Title = "Low Ingredient Stock",
+                                        Message = $"{recipe.Ingredient.Name} needs restocking ({recipe.Ingredient.StockQuantity:0.##} {recipe.Ingredient.Unit}).",
+                                        Type = "danger",
+                                        IconClass = "fas fa-cube",
+                                        CreatedAt = DateTime.Now
+                                    });
+                                }
                                 
                                 // Log ingredient usage
                                 _db.InventoryLogs.Add(new InventoryLog
@@ -132,12 +145,28 @@ namespace ljp_itsolutions.Controllers
                         else
                         {
                             product.StockQuantity -= qty;
+                            
+                            // Check if low stock for standalone product (if it has a threshold)
+                            // (Product model currently lacks a threshold, ignoring for now)
                         }
                     }
                 }
 
                 order.TotalAmount = total;
                 order.FinalAmount = total;
+
+                // Trigger Notification for High Value Order
+                if (order.FinalAmount >= 500)
+                {
+                    _db.Notifications.Add(new Notification
+                    {
+                        Title = "High Value Order",
+                        Message = $"Order #{order.OrderID.ToString().Substring(0, 8)} for {order.FinalAmount:C} received!",
+                        Type = "success",
+                        IconClass = "fas fa-star",
+                        CreatedAt = DateTime.Now
+                    });
+                }
 
                 // Record Payment
                 order.Payments.Add(new Payment
@@ -162,7 +191,7 @@ namespace ljp_itsolutions.Controllers
                     });
                 }
 
-                // 6. Update Customer Loyalty Points (1 pt per 3 coffees)
+                // Customer Loyalty Points (1 pt per 3 coffees)
                 if (order.CustomerID.HasValue)
                 {
                     var customer = await _db.Customers.FindAsync(order.CustomerID.Value);
@@ -182,7 +211,6 @@ namespace ljp_itsolutions.Controllers
                 _db.Orders.Add(order);
                 await _db.SaveChangesAsync();
 
-                // Only set TempData if it's a full page redirect (not AJAX)
                 if (Request.Headers["X-Requested-With"] != "XMLHttpRequest")
                 {
                     TempData["SuccessMessage"] = "Order placed successfully!";
@@ -282,6 +310,19 @@ namespace ljp_itsolutions.Controllers
 
             order.TotalAmount = total;
             order.FinalAmount = total;
+
+            // Trigger Notification for Price Order (Digital)
+            if (order.FinalAmount >= 500)
+            {
+                _db.Notifications.Add(new Notification
+                {
+                    Title = "High Value Order (Digital)",
+                    Message = $"Online Order #{order.OrderID.ToString().Substring(0, 8)} for {order.FinalAmount:C} pending payment.",
+                    Type = "info",
+                    IconClass = "fas fa-star",
+                    CreatedAt = DateTime.Now
+                });
+            }
 
             // 4. Create real PayMongo QR Ph code
             var qrCodeUrl = await _payMongoService.CreateQrPhPaymentAsync(total, $"Order #{order.OrderID.ToString().Substring(0, 8)}", order.OrderID.ToString());

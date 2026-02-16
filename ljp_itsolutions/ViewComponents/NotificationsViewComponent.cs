@@ -22,47 +22,30 @@ namespace ljp_itsolutions.ViewComponents
 
             try
             {
-                // Check Low Stock Ingredients
-                var lowStockIngredients = await _context.Ingredients
-                    .Where(i => i.StockQuantity <= i.LowStockThreshold)
-                    .OrderBy(i => i.StockQuantity)
-                    .Take(3)
+                // Fetch latest notifications from database
+                var dbNotifications = await _context.Notifications
+                    .Where(n => !n.IsRead) // focus on unread
+                    .OrderByDescending(n => n.CreatedAt)
+                    .Take(10)
                     .ToListAsync();
 
-                foreach (var i in lowStockIngredients)
+                ViewBag.UnreadCount = await _context.Notifications.CountAsync(n => !n.IsRead);
+
+                foreach (var n in dbNotifications)
                 {
                     notifications.Add(new NotificationItem
                     {
-                        Title = "Low Ingredient Stock",
-                        Message = $"{i.Name} needs restocking ({i.StockQuantity:0.##} {i.Unit}).",
-                        Time = "Just now",
-                        Type = "danger",
-                        IconClass = "fas fa-cube"
-                    });
-                }
-
-                // Check Recent Large Orders (e.g., > 500)
-                var recentLargeOrder = await _context.Orders
-                    .Where(o => o.TotalAmount > 500)
-                    .OrderByDescending(o => o.OrderDate)
-                    .FirstOrDefaultAsync();
-
-                if (recentLargeOrder != null && (DateTime.Now - recentLargeOrder.OrderDate).TotalHours < 24)
-                {
-                    var timeAgo = GetTimeAgo(recentLargeOrder.OrderDate);
-                    notifications.Add(new NotificationItem
-                    {
-                        Title = "High Value Order",
-                        Message = $"Order #{recentLargeOrder.OrderID.ToString().Substring(0, 8)} for {recentLargeOrder.FinalAmount:C} received!",
-                        Time = timeAgo,
-                        Type = "success",
-                        IconClass = "fas fa-star"
+                        Title = n.Title,
+                        Message = n.Message,
+                        Time = n.CreatedAt == DateTime.MinValue ? "Just now" : GetTimeAgo(n.CreatedAt),
+                        Type = n.Type,
+                        IconClass = n.IconClass,
+                        IsRead = n.IsRead
                     });
                 }
             }
             catch (Exception ex)
             {
-                // Log error and return empty list to prevent UI crash
                 Console.WriteLine($"Notification Error: {ex.Message}");
             }
 
@@ -72,18 +55,20 @@ namespace ljp_itsolutions.ViewComponents
         private string GetTimeAgo(DateTime dateTime)
         {
             var span = DateTime.Now - dateTime;
-            if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes} mins ago";
-            if (span.TotalHours < 24) return $"{(int)span.TotalHours} hours ago";
-            return "Yesterday";
+            if (span.TotalMinutes < 1) return "Just now";
+            if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
+            if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
+            return dateTime.ToString("MMM dd");
         }
     }
 
     public class NotificationItem
     {
-        public string Title { get; set; } = "";
-        public string Message { get; set; } = "";
-        public string Time { get; set; } = "";
-        public string Type { get; set; } = "info"; // success, warning, danger, info
+        public string Title { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public string Time { get; set; } = string.Empty;
+        public string Type { get; set; } = "info";
         public string IconClass { get; set; } = "fas fa-bell";
+        public bool IsRead { get; set; }
     }
 }

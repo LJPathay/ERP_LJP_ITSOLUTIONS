@@ -15,12 +15,18 @@ namespace ljp_itsolutions.Controllers
     {
         private readonly ljp_itsolutions.Data.ApplicationDbContext _db;
         private readonly ljp_itsolutions.Services.IEmailSender _emailSender;
+        private readonly ljp_itsolutions.Services.IPhotoService _photoService;
         private readonly Microsoft.AspNetCore.Identity.IPasswordHasher<ljp_itsolutions.Models.User> _hasher;
 
-        public AccountController(ljp_itsolutions.Data.ApplicationDbContext db, ljp_itsolutions.Services.IEmailSender emailSender, Microsoft.AspNetCore.Identity.IPasswordHasher<ljp_itsolutions.Models.User> hasher)
+        public AccountController(
+            ljp_itsolutions.Data.ApplicationDbContext db, 
+            ljp_itsolutions.Services.IEmailSender emailSender, 
+            ljp_itsolutions.Services.IPhotoService photoService,
+            Microsoft.AspNetCore.Identity.IPasswordHasher<ljp_itsolutions.Models.User> hasher)
         {
             _db = db;
             _emailSender = emailSender;
+            _photoService = photoService;
             _hasher = hasher;
         }
 
@@ -89,6 +95,11 @@ namespace ljp_itsolutions.Controllers
             // Set session variables for layout consistency
             HttpContext.Session.SetString("UserRole", roleName);
             HttpContext.Session.SetString("Username", user.Username);
+            HttpContext.Session.SetString("FullName", user.FullName);
+            HttpContext.Session.SetString("IsHighContrast", user.IsHighContrast.ToString().ToLower());
+            HttpContext.Session.SetString("FontSize", user.FontSize);
+            HttpContext.Session.SetString("ReduceMotion", user.ReduceMotion.ToString().ToLower());
+            HttpContext.Session.SetString("ProfilePictureUrl", user.ProfilePictureUrl ?? "");
 
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
@@ -189,6 +200,98 @@ namespace ljp_itsolutions.Controllers
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login", "Account");
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdStr, out var userId))
+                return RedirectToAction("Login");
+
+            var user = await _db.Users.FindAsync(userId);
+            if (user == null)
+                return RedirectToAction("Login");
+
+            return View(user);
+        }
+
+        [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateProfile(string fullName, string email, string profilePictureUrl, IFormFile? profilePictureFile)
+    {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdStr, out var userId))
+            return Unauthorized();
+
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null)
+            return NotFound();
+
+        // Handle File Upload to Cloudinary
+        if (profilePictureFile != null)
+        {
+            var uploadResult = await _photoService.AddPhotoAsync(profilePictureFile);
+            if (uploadResult.Error == null)
+            {
+                profilePictureUrl = uploadResult.SecureUrl.AbsoluteUri;
+            }
+            else
+            {
+                TempData["Error"] = "Cloudinary Upload Failed: " + uploadResult.Error.Message;
+            }
+        }
+
+        user.FullName = fullName;
+        user.Email = email;
+        user.ProfilePictureUrl = profilePictureUrl;
+        await _db.SaveChangesAsync();
+
+        // Refresh session
+        HttpContext.Session.SetString("FullName", user.FullName);
+        HttpContext.Session.SetString("ProfilePictureUrl", user.ProfilePictureUrl ?? "");
+        
+        TempData["SuccessMessage"] = "Profile updated successfully.";
+        return RedirectToAction(nameof(Profile));
+    }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateSettings(bool isHighContrast, string fontSize, bool reduceMotion)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdStr, out var userId))
+                return Unauthorized();
+
+            var user = await _db.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            user.IsHighContrast = isHighContrast;
+            user.FontSize = fontSize;
+            user.ReduceMotion = reduceMotion;
+            await _db.SaveChangesAsync();
+
+            // Update Session
+            HttpContext.Session.SetString("IsHighContrast", user.IsHighContrast.ToString().ToLower());
+            HttpContext.Session.SetString("FontSize", user.FontSize);
+            HttpContext.Session.SetString("ReduceMotion", user.ReduceMotion.ToString().ToLower());
+
+            TempData["SuccessMessage"] = "Accessibility settings saved.";
+            return RedirectToAction(nameof(Profile));
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> MarkAllRead()
+        {
+            var unread = await _db.Notifications.Where(n => !n.IsRead).ToListAsync();
+            foreach (var n in unread) n.IsRead = true;
+            await _db.SaveChangesAsync();
+            return Ok();
         }
     }
 }
