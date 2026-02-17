@@ -52,10 +52,16 @@ namespace ljp_itsolutions.Controllers
             var userCount = _db.Users.Count();
             var activeUsers = _db.Users.Count(u => u.IsActive);
             
+            // Security metrics
+            var failedLoginsCount = _db.AuditLogs.Count(a => a.Action.Contains("Failed login"));
+            var lockedOutUsersCount = _db.Users.Count(u => u.LockoutEnd != null && u.LockoutEnd > DateTime.Now);
+
             var model = new {
                 AuditLogs = auditLogs,
                 UserCount = userCount,
                 ActiveUsers = activeUsers,
+                FailedLoginsCount = failedLoginsCount,
+                LockedOutUsersCount = lockedOutUsersCount,
                 SystemUptime = "99.9%",
                 GrowthIndex = "+12.5%"
             };
@@ -116,6 +122,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ArchiveUser(string id)
         {
             if (!Guid.TryParse(id, out var guid)) return RedirectToAction("Users");
@@ -131,6 +138,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RestoreUser(string id)
         {
             if (!Guid.TryParse(id, out var guid)) return RedirectToAction("Users");
@@ -149,6 +157,7 @@ namespace ljp_itsolutions.Controllers
         public IActionResult AuditLogs()
         {
             var logs = _db.AuditLogs.Include(a => a.User).OrderByDescending(a => a.Timestamp).ToList();
+            ViewBag.Users = _db.Users.OrderBy(u => u.FullName).Select(u => new { u.UserID, u.FullName }).ToList();
             return View(logs);
         }
 
@@ -199,6 +208,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateBackup()
         {
             try {

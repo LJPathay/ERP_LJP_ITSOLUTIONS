@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ljp_itsolutions.Data;
 
@@ -11,9 +12,11 @@ using ljp_itsolutions.Data;
 namespace ljp_itsolutions.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260217052319_AddLockoutFields")]
+    partial class AddLockoutFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -602,17 +605,6 @@ namespace ljp_itsolutions.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PromotionID"));
 
-                    b.Property<string>("ApprovalStatus")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int?>("ApprovedBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("ApprovedDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("DiscountType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -632,10 +624,6 @@ namespace ljp_itsolutions.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("RejectionReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
@@ -647,7 +635,6 @@ namespace ljp_itsolutions.Migrations
                         new
                         {
                             PromotionID = 1,
-                            ApprovalStatus = "Pending",
                             DiscountType = "Percentage",
                             DiscountValue = 10m,
                             EndDate = new DateTime(2026, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -658,7 +645,6 @@ namespace ljp_itsolutions.Migrations
                         new
                         {
                             PromotionID = 2,
-                            ApprovalStatus = "Pending",
                             DiscountType = "Fixed",
                             DiscountValue = 5m,
                             EndDate = new DateTime(2026, 2, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -781,7 +767,7 @@ namespace ljp_itsolutions.Migrations
                         {
                             UserID = new Guid("4f7b6d1a-5b6c-4d8e-a9f2-0a1b2c3d4e5f"),
                             AccessFailedCount = 0,
-                            CreatedAt = new DateTime(2026, 2, 17, 14, 32, 23, 927, DateTimeKind.Local).AddTicks(8565),
+                            CreatedAt = new DateTime(2026, 2, 17, 13, 23, 18, 268, DateTimeKind.Local).AddTicks(2578),
                             Email = "admin@coffee.local",
                             FontSize = "default",
                             FullName = "System Admin",

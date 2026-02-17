@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using ljp_itsolutions.Models;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,17 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<ljp_itsolutions.Services.InMemoryStore>();
 builder.Services.AddRazorPages();
 builder.Services.AddSession();
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter(policyName: "login", options =>
+    {
+        options.PermitLimit = 5;
+        options.Window = TimeSpan.FromSeconds(10);
+        options.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+        options.QueueLimit = 0;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 builder.Services.AddSingleton<ljp_itsolutions.Services.IEmailSender, ljp_itsolutions.Services.EmailSender>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ljp_itsolutions.Services.IPayMongoService, ljp_itsolutions.Services.PayMongoService>();
@@ -65,6 +77,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseSession();
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

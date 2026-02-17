@@ -1,56 +1,96 @@
 @model IEnumerable<ljp_itsolutions.Models.RewardRedemption>
 @{
-    ViewData["Title"] = "Reward Redemption Logs";
+    Layout = "_Layout";
+    ViewData["Title"] = "Loyalty Redemption History";
 }
 
-<div class="container-fluid py-4">
-    <div class="card border-0 shadow-sm rounded-4 mt-2">
+<div class="container-fluid py-2">
+    <!-- Filters Bar -->
+    <div class="row g-3 mb-4 align-items-center">
+        <div class="col-md-3">
+            <div class="input-group shadow-sm rounded-pill overflow-hidden border bg-white">
+                <span class="input-group-text bg-transparent border-0 ps-3">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" id="redemptionSearch" class="form-control border-0 shadow-none ps-2 py-2" placeholder="Search by reward or customer...">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex align-items-center gap-2">
+                <input type="date" id="dateFrom" class="form-control shadow-sm rounded-pill border py-2" title="From Date">
+                <span class="text-muted">to</span>
+                <input type="date" id="dateTo" class="form-control shadow-sm rounded-pill border py-2" title="To Date">
+            </div>
+        </div>
+        <div class="col text-end">
+            <button id="resetFilters" class="btn btn-light border rounded-pill px-4 shadow-none">
+                <i class="fas fa-redo-alt me-2 text-muted"></i>Reset Sync
+            </button>
+        </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+                <table class="table align-middle mb-0" id="redemptionTable">
+                    <thead class="bg-light bg-opacity-50">
                         <tr>
-                            <th class="ps-4">Customer</th>
-                            <th>Reward</th>
-                            <th>Points Redeemed</th>
-                            <th>Date</th>
+                            <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted">Customer Persona</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted">Incentive Redeemed</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted text-center">Equity Cost</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted text-center">Timestamp</th>
+                            <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold text-muted">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (Model != null && Model.Any())
                         {
-                            foreach (var log in Model)
+                            @foreach (var log in Model)
                             {
-                                <tr>
+                                <tr class="redemption-row" data-timestamp="@log.RedemptionDate.ToString("yyyy-MM-dd")">
                                     <td class="ps-4">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="avatar-sm bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                                                <i class="fas fa-user small"></i>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="avatar-sm rounded-circle bg-light border d-flex align-items-center justify-content-center text-primary fw-bold" style="width: 36px; height: 36px;">
+                                                @log.Customer.FullName.Substring(0, 1)
                                             </div>
                                             <div>
-                                                <div class="fw-bold">@log.Customer.FullName</div>
-                                                <div class="small text-muted">@log.Customer.PhoneNumber</div>
+                                                <p class="mb-0 fw-bold text-dark small search-customer">@log.Customer.FullName</p>
+                                                <p class="text-muted x-small mb-0">@log.Customer.PhoneNumber</p>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-success-subtle text-success border-0 px-3 py-2 rounded-pill">
-                                            <i class="fas fa-gift me-1"></i> @log.RewardName
-                                        </span>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10 px-3 search-reward">
+                                                <i class="fas fa-gift me-1 x-small opacity-50"></i> @log.RewardName
+                                            </span>
+                                        </div>
                                     </td>
-                                    <td class="fw-bold text-primary">@log.PointsRedeemed pts</td>
-                                    <td class="text-muted">@log.RedemptionDate.ToString("MMM dd, yyyy HH:mm")</td>
+                                    <td class="text-center">
+                                        <span class="fw-bold text-danger">-@log.PointsRedeemed</span>
+                                        <span class="text-muted x-small ms-1">pts</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="small">
+                                            <div class="fw-medium text-dark">@log.RedemptionDate.ToString("MMM dd, yyyy")</div>
+                                            <div class="text-muted x-small">at @log.RedemptionDate.ToString("HH:mm")</div>
+                                        </div>
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <div class="badge rounded-pill bg-success px-3 x-small">VERIFIED</div>
+                                    </td>
                                 </tr>
                             }
                         }
                         else
                         {
                             <tr>
-                                <td colspan="4" class="text-center py-5">
+                                <td colspan="5" class="text-center py-5">
                                     <div class="py-4">
-                                        <i class="fas fa-history fa-4x text-muted opacity-25 mb-3"></i>
-                                        <h4 class="fw-bold">No Redemptions Yet</h4>
-                                        <p class="text-muted mx-auto" style="max-width: 400px;">When customers start redeeming their points, those transactions will appear here.</p>
+                                        <i class="fas fa-history fa-3x text-muted opacity-25 mb-3"></i>
+                                        <h6 class="fw-bold text-dark">No Redemption Activity</h6>
+                                        <p class="text-muted x-small">Transactions will appear here once loyalty points are utilized.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -61,3 +101,55 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            function filterRedemptions() {
+                var searchTerm = $('#redemptionSearch').val().toLowerCase();
+                var dateFrom = $('#dateFrom').val();
+                var dateTo = $('#dateTo').val();
+
+                $('.redemption-row').each(function() {
+                    var row = $(this);
+                    var customer = row.find('.search-customer').text().toLowerCase();
+                    var reward = row.find('.search-reward').text().toLowerCase();
+                    var logDate = row.data('timestamp');
+
+                    var matchesSearch = customer.includes(searchTerm) || reward.includes(searchTerm);
+                    
+                    var matchesDate = true;
+                    if (dateFrom && logDate < dateFrom) matchesDate = false;
+                    if (dateTo && logDate > dateTo) matchesDate = false;
+
+                    if (matchesSearch && matchesDate) {
+                        row.show();
+                    } else {
+                        row.hide();
+                    }
+                });
+
+                if ($('.redemption-row:visible').length === 0 && $('.redemption-row').length > 0) {
+                    if ($('#noResults').length === 0) {
+                        $('#redemptionTable tbody').append('<tr id="noResults"><td colspan="5" class="text-center py-5 text-muted"><i class="fas fa-search-minus fa-2x mb-2 opacity-25"></i><p class="x-small">No activity matches your filters.</p></td></tr>');
+                    }
+                } else {
+                    $('#noResults').remove();
+                }
+            }
+
+            $('#redemptionSearch').on('keyup', filterRedemptions);
+            $('#dateFrom, #dateTo').on('change', filterRedemptions);
+            $('#resetFilters').click(function() {
+                $('#redemptionSearch, #dateFrom, #dateTo').val('');
+                filterRedemptions();
+            });
+        });
+    </script>
+}
+
+<style>
+    .x-small { font-size: 0.75rem; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.1em; }
+</style>

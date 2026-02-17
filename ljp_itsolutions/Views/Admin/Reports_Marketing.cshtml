@@ -4,73 +4,58 @@
     ViewBag.ModuleCount = 4;
 }
 
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <h2 class="fw-bold mb-1">Marketing Dashboard</h2>
-                    <p class="text-muted mb-0">Track campaigns, promotions, and customer engagement</p>
-                </div>
-                <button class="btn btn-success btn-sm disabled">
-                    <i class="fas fa-plus me-1"></i>New Promotion
-                </button>
-            </div>
-        </div>
-    </div>
-
+<div class="container-fluid py-3">
     <!-- KPIs -->
-    <div class="row g-4 mb-4">
+    <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="card-custom h-100">
+            <div class="card border shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <p class="text-muted small fw-semibold mb-1">Active Promotions</p>
+                            <p class="text-muted small fw-bold mb-1">Active Promotions</p>
                             <h3 class="fw-bold mb-0">@Model.ActivePromotionsCount</h3>
                             <small class="text-success">
-                                <i class="fas fa-check-circle me-1"></i>Running now
+                                Running now
                             </small>
                         </div>
-                        <div class="stat-icon bg-success bg-opacity-10">
-                            <i class="fas fa-tags text-success"></i>
+                        <div class="text-success opacity-50">
+                            <i class="fas fa-tags fa-2x"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card-custom h-100">
+            <div class="card border shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <p class="text-muted small fw-semibold mb-1">Total Customers</p>
+                            <p class="text-muted small fw-bold mb-1">Total Customers</p>
                             <h3 class="fw-bold mb-0">@Model.TotalCustomers</h3>
                             <small class="text-primary">
-                                <i class="fas fa-users me-1"></i>Database records
+                                Database records
                             </small>
                         </div>
-                        <div class="stat-icon bg-primary bg-opacity-10">
-                            <i class="fas fa-address-book text-primary"></i>
+                        <div class="text-primary opacity-50">
+                            <i class="fas fa-address-book fa-2x"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card-custom h-100">
+            <div class="card border shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <p class="text-muted small fw-semibold mb-1">New This Month</p>
+                            <p class="text-muted small fw-bold mb-1">New This Month</p>
                             <h3 class="fw-bold mb-0">@Model.NewCustomersThisMonth</h3>
                             <small class="text-info">
-                                <i class="fas fa-user-plus me-1"></i>First time orders
+                                First time orders
                             </small>
                         </div>
-                        <div class="stat-icon bg-info bg-opacity-10">
-                            <i class="fas fa-chart-line text-info"></i>
+                        <div class="text-info opacity-50">
+                            <i class="fas fa-chart-line fa-2x"></i>
                         </div>
                     </div>
                 </div>
@@ -81,26 +66,19 @@
     <!-- Active Promotions List -->
     <div class="row">
         <div class="col-12">
-            <div class="card-custom">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-bullhorn text-warning me-2"></i>Active Campaigns
-                    </h5>
-                    <div class="input-group input-group-sm w-25">
-                        <input type="text" class="form-control" placeholder="Search campaigns...">
-                        <button class="btn btn-outline-secondary"><i class="fas fa-search"></i></button>
-                    </div>
+            <div class="card border shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0">Active Campaigns</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-custom mb-0">
-                            <thead>
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
                                 <tr>
-                                    <th>Promotion Name</th>
+                                    <th class="ps-4">Promotion Name</th>
                                     <th>Duration</th>
                                     <th>Discount</th>
                                     <th>Status</th>
-                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -109,13 +87,12 @@
                                     foreach (var promo in Model.ActivePromotions)
                                     {
                                         <tr>
-                                            <td>
+                                            <td class="ps-4">
                                                 <div class="fw-bold">@promo.PromotionName</div>
                                                 <small class="text-muted">Marketing Campaign</small>
                                             </td>
                                             <td>
-                                                <div class="small">
-                                                    <i class="far fa-calendar-alt me-1 text-primary"></i>
+                                                <div class="small text-muted">
                                                     @promo.StartDate.ToString("MMM dd") - @promo.EndDate.ToString("MMM dd, yyyy")
                                                 </div>
                                             </td>
@@ -133,16 +110,8 @@
                                             </td>
                                             <td>
                                                 <span class="badge bg-success bg-opacity-10 text-success">
-                                                    <i class="fas fa-dot-circle me-1 small"></i>Active
+                                                    Active
                                                 </span>
-                                            </td>
-                                            <td>
-                                                <button class="btn btn-sm btn-light text-primary" title="View Report">
-                                                    <i class="fas fa-chart-bar"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-light text-danger" title="End Campaign">
-                                                    <i class="fas fa-stop-circle"></i>
-                                                </button>
                                             </td>
                                         </tr>
                                     }
@@ -150,14 +119,10 @@
                                 else
                                 {
                                     <tr>
-                                        <td colspan="5" class="text-center py-5">
+                                        <td colspan="4" class="text-center py-5">
                                             <div class="d-flex flex-column align-items-center">
-                                                <i class="fas fa-bullhorn fa-3x text-muted mb-3 opacity-50"></i>
                                                 <h6 class="text-muted mb-2">No Active Promotions</h6>
-                                                <p class="text-muted small mb-3">Create a new campaign to boost sales</p>
-                                                <button class="btn btn-primary btn-sm disabled">
-                                                    <i class="fas fa-plus me-1"></i>Create Promotion
-                                                </button>
+                                                <p class="text-muted small mb-0">Create a new campaign to boost sales</p>
                                             </div>
                                         </td>
                                     </tr>

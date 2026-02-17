@@ -23,12 +23,6 @@
                 </a>
             </li>
             <li>
-                <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "CreateCampaign" ? "active" : "") d-flex align-items-center gap-3" asp-controller="Marketing" asp-action="CreateCampaign">
-                    <i class="fas fa-plus-circle opacity-75"></i>
-                    <span>Create Campaign</span>
-                </a>
-            </li>
-            <li>
                 <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "PromotionPerformance" ? "active" : "") d-flex align-items-center gap-3" asp-controller="Marketing" asp-action="PromotionPerformance">
                     <i class="fas fa-chart-line opacity-75"></i>
                     <span>Performance</span>

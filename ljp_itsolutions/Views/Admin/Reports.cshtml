@@ -1,224 +1,145 @@
 @model dynamic
 @{
-    ViewData["Title"] = "Reports";
-    ViewBag.ModuleCount = 4;
+    ViewData["Title"] = "Business Reports";
 }
 
-<div class="container-fluid">
-    <!-- Welcome Section -->
-    <div class="row mb-4 d-none">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="fw-bold mb-1">System Reports</h2>
-                    <p class="text-muted mb-0">Comprehensive reports and analytics for your business</p>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-download me-1"></i>Export All
-                    </button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="location.reload()">
-                        <i class="fas fa-sync-alt me-1"></i>Refresh
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Key Metrics -->
-    <div class="row g-4 mb-4">
+<div class="container-fluid py-2">
+    <!-- Top Metrics Row -->
+    <div class="row g-3 mb-4">
         <div class="col-lg-4 col-md-6">
-            <div class="card-custom">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="flex-grow-1">
-                            <p class="text-muted small mb-2">Total Revenue</p>
-                            <h3 class="fw-bold mb-2">₱@Model.TotalRevenue.ToString("N2")</h3>
-                            <small class="text-success">
-                                <i class="fas fa-chart-line me-1"></i>All completed orders
-                            </small>
+            <div class="card border shadow-sm rounded-3 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <p class="text-muted small fw-bold mb-1">Total Revenue</p>
+                            <h3 class="fw-bold mb-0 text-dark">₱@Model.TotalRevenue.ToString("N2")</h3>
                         </div>
-                        <div class="stat-icon bg-success bg-opacity-10">
-                            <i class="fas fa-peso-sign text-success"></i>
+                        <div class="bg-light rounded-circle p-3 d-flex align-items-center justify-content-center">
+                            <i class="fas fa-peso-sign text-primary fa-lg"></i>
                         </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light text-dark border">All Time</span>
+                        <span class="text-muted small">Completed orders</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-4 col-md-6">
-            <div class="card-custom">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="flex-grow-1">
-                            <p class="text-muted small mb-2">Total Orders</p>
-                            <h3 class="fw-bold mb-2">@Model.TotalOrders</h3>
-                            <small class="text-primary">
-                                <i class="fas fa-shopping-cart me-1"></i>All time orders
-                            </small>
+            <div class="card border shadow-sm rounded-3 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <p class="text-muted small fw-bold mb-1">Total Orders</p>
+                            <h3 class="fw-bold mb-0 text-dark">@Model.TotalOrders</h3>
                         </div>
-                        <div class="stat-icon bg-primary bg-opacity-10">
-                            <i class="fas fa-shopping-bag text-primary"></i>
+                        <div class="bg-light rounded-circle p-3 d-flex align-items-center justify-content-center">
+                            <i class="fas fa-shopping-bag text-primary fa-lg"></i>
                         </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light text-dark border">System Wide</span>
+                        <span class="text-muted small">Processed transactions</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-4 col-md-6">
-            <div class="card-custom">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="flex-grow-1">
-                            <p class="text-muted small mb-2">Active Promotions</p>
-                            <h3 class="fw-bold mb-2">@Model.ActivePromotions</h3>
-                            <small class="text-warning">
-                                <i class="fas fa-tags me-1"></i>Currently running
-                            </small>
+            <div class="card border shadow-sm rounded-3 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <p class="text-muted small fw-bold mb-1">Active Promotions</p>
+                            <h3 class="fw-bold text-dark mb-0">@Model.ActivePromotions</h3>
                         </div>
-                        <div class="stat-icon bg-warning bg-opacity-10">
-                            <i class="fas fa-percentage text-warning"></i>
+                        <div class="bg-light rounded-circle p-3 d-flex align-items-center justify-content-center">
+                            <i class="fas fa-tags text-warning fa-lg"></i>
                         </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-warning bg-opacity-10 text-warning">Running Now</span>
+                        <span class="text-muted small">Marketing campaigns</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Report Categories -->
-    <div class="row g-4 mb-4">
+    <!-- Report Modules -->
+    <h6 class="fw-bold text-dark mb-3 ps-1">Report Modules</h6>
+    <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="card-custom h-100">
-                <div class="card-header bg-white">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-chart-bar text-primary me-2"></i>Sales Reports
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted small mb-3">View detailed sales analytics and performance metrics</p>
-                    <div class="d-grid gap-2">
-                        <a href="@Url.Action("Reports_Manager", "Admin")" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-file-alt me-1"></i>Manager Reports
-                        </a>
-                        <a href="@Url.Action("Reports_Cashier", "Admin")" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-cash-register me-1"></i>Cashier Reports
-                        </a>
+            <div class="card border shadow-sm rounded-3 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="fas fa-chart-bar text-primary"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-0">Sales & Performance</h6>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card-custom h-100">
-                <div class="card-header bg-white">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-bullhorn text-success me-2"></i>Marketing Reports
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted small mb-3">Track campaign performance and customer engagement</p>
+                    <p class="text-muted small mb-4">Detailed sales analytics, cashier performance measures, and daily transaction summaries.</p>
                     <div class="d-grid gap-2">
-                        <a href="@Url.Action("Reports_Marketing", "Admin")" class="btn btn-outline-success btn-sm">
-                            <i class="fas fa-chart-line me-1"></i>View Marketing Reports
+                        <a href="@Url.Action("Reports_Manager", "Admin")" class="btn btn-outline-primary btn-sm text-start ps-3">
+                            <i class="fas fa-user-tie me-2"></i>Manager Reports
                         </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card-custom h-100">
-                <div class="card-header bg-white">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-file-export text-info me-2"></i>Custom Reports
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted small mb-3">Generate custom reports based on your criteria</p>
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-outline-info btn-sm" disabled>
-                            <i class="fas fa-cog me-1"></i>Coming Soon
-                        </button>
+                        <a href="@Url.Action("Reports_Cashier", "Admin")" class="btn btn-outline-primary btn-sm text-start ps-3">
+                            <i class="fas fa-cash-register me-2"></i>Cashier Reports
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Recent Transactions -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card-custom">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-receipt text-success me-2"></i>Recent Transactions
-                    </h5>
-                    <a href="@Url.Action("Transactions", "Admin")" class="btn btn-sm btn-primary">
-                        View All <i class="fas fa-arrow-right ms-1"></i>
-                    </a>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-custom mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Order ID</th>
-                                    <th>Date</th>
-                                    <th>Customer</th>
-                                    <th>Cashier</th>
-                                    <th>Amount</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (Model.RecentTransactions != null && Model.RecentTransactions.Count > 0)
-                                {
-                                    foreach (var order in Model.RecentTransactions)
+    <!-- Recent Activity -->
+    <div class="d-flex justify-content-between align-items-center mb-3 px-1">
+        <h6 class="fw-bold text-dark mb-0">Recent Activity</h6>
+        <a href="@Url.Action("Transactions", "Admin")" class="btn btn-sm btn-link text-decoration-none fw-bold">View All <i class="fas fa-arrow-right ms-1"></i></a>
+    </div>
+    
+    <div class="card border shadow-sm rounded-3 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 py-3 fw-bold text-muted small">Order ID</th>
+                        <th class="py-3 fw-bold text-muted small">Date</th>
+                        <th class="py-3 fw-bold text-muted small">Amount</th>
+                        <th class="pe-4 py-3 text-end fw-bold text-muted small">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.RecentTransactions != null && Model.RecentTransactions.Count > 0)
+                    {
+                        foreach (var order in Model.RecentTransactions)
+                        {
+                            <tr>
+                                <td class="ps-4"><span class="text-dark family-monospace">#@order.OrderID.ToString().Substring(0, 8)...</span></td>
+                                <td class="text-muted small">@order.OrderDate.ToString("MMM dd, HH:mm")</td>
+                                <td class="fw-bold text-dark">₱@order.FinalAmount.ToString("N2")</td>
+                                <td class="pe-4 text-end">
+                                    @if (order.PaymentStatus == "Completed" || order.PaymentStatus == "Paid")
                                     {
-                                        <tr>
-                                            <td><span class="badge bg-secondary">#@order.OrderID</span></td>
-                                            <td>
-                                                <small class="text-muted">
-                                                    <i class="far fa-calendar me-1"></i>@order.OrderDate.ToString("MMM dd, yyyy HH:mm")
-                                                </small>
-                                            </td>
-                                            <td>@(order.Customer?.FullName ?? "Walk-in")</td>
-                                            <td>@(order.Cashier?.FullName ?? "N/A")</td>
-                                            <td class="fw-semibold">₱@order.FinalAmount.ToString("N2")</td>
-                                            <td>
-                                                @if (order.PaymentStatus == "Completed" || order.PaymentStatus == "Paid")
-                                                {
-                                                    <span class="badge bg-success">@order.PaymentStatus</span>
-                                                }
-                                                else if (order.PaymentStatus == "Pending")
-                                                {
-                                                    <span class="badge bg-warning">@order.PaymentStatus</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-danger">@order.PaymentStatus</span>
-                                                }
-                                            </td>
-                                        </tr>
+                                        <span class="badge bg-success bg-opacity-10 text-success">Paid</span>
                                     }
-                                }
-                                else
-                                {
-                                    <tr>
-                                        <td colspan="6" class="text-center py-5">
-                                            <div class="d-flex flex-column align-items-center">
-                                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                                <h6 class="text-muted mb-2">No Transactions Found</h6>
-                                                <p class="text-muted small mb-0">Transactions will appear here once orders are placed</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+                                    else
+                                    {
+                                        <span class="badge bg-warning bg-opacity-10 text-warning">@order.PaymentStatus</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted small">No recent transactions found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

@@ -5,111 +5,148 @@
     var roles = ViewBag.Roles as IEnumerable<string> ?? Enumerable.Empty<string>();
 }
 
-<div class="container-fluid">
-    <div class="row mb-4 d-none">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="fw-bold mb-1">Role & User Management</h2>
-                    <p class="text-muted mb-0">Manage system access and assign roles to personnel.</p>
-                </div>
-                <div>
-                    @if (ViewBag.ShowArchived == true)
-                    {
-                        <a href="@Url.Action("Users", new { showArchived = false })" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Active Users
-                        </a>
-                    }
-                    else
-                    {
-                        <a href="@Url.Action("Users", new { showArchived = true })" class="btn btn-outline-secondary me-2">
-                             Archived Users
-                        </a>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                            <i class="fas fa-plus me-2"></i>Add New User
-                        </button>
-                    }
-                </div>
+<div class="container-fluid py-2">
+    <!-- Action Bar -->
+    <div class="row g-3 mb-4 align-items-center">
+        <div class="col-md-4">
+            <div class="input-group shadow-sm rounded-pill overflow-hidden border">
+                <span class="input-group-text bg-white border-0 ps-3">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" id="userSearch" class="form-control border-0 shadow-none ps-2 py-2" placeholder="Search by name or username...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select id="roleFilter" class="form-select shadow-sm rounded-pill border py-2">
+                <option value="">All Access Roles</option>
+                @foreach (var role in roles)
+                {
+                    <option value="@role">@role</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-5 text-end">
+            <div class="d-flex gap-2 justify-content-end">
+                @if (ViewBag.ShowArchived == true)
+                {
+                    <a href="@Url.Action("Users", new { showArchived = false })" class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="fas fa-users-cog me-2"></i>Active Personnel
+                    </a>
+                }
+                else
+                {
+                    <a href="@Url.Action("Users", new { showArchived = true })" class="btn btn-light border rounded-pill px-4">
+                        <i class="fas fa-archive me-2 text-muted"></i>Archived
+                    </a>
+                    <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="fas fa-plus-circle me-2"></i>Create User
+                    </button>
+                }
             </div>
         </div>
     </div>
 
-    <!-- Replacement ActionBar for SuperAdmin -->
-    <div class="d-flex justify-content-end align-items-center mb-4 gap-2">
-        @if (ViewBag.ShowArchived == true)
-        {
-            <a href="@Url.Action("Users", new { showArchived = false })" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Active
-            </a>
-        }
-        else
-        {
-            <a href="@Url.Action("Users", new { showArchived = true })" class="btn btn-outline-secondary">
-                <i class="fas fa-archive me-2"></i>Archived Users
-            </a>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                <i class="fas fa-plus me-2"></i>Create New User
-            </button>
-        }
-    </div>
-
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show">
-            @TempData["Success"]
+        <div class="alert alert-success border-0 shadow-sm rounded-4 alert-dismissible fade show mb-4 py-3">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-check-circle me-3 fa-lg"></i>
+                <div>@TempData["Success"]</div>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    <div class="card-custom">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-custom mb-0">
-                    <thead>
+                <table class="table align-middle mb-0" id="usersTable">
+                    <thead class="bg-light bg-opacity-50">
                         <tr>
-                            <th>Full Name</th>
-                            <th>Username</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted">Full Name</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted">Account Identifiers</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted">System Role</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted text-center">Security Status</th>
+                            <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold text-muted">Manage</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var user in Model)
                         {
-                            <tr>
-                                <td>@user.FullName</td>
-                                <td>@user.Username</td>
-                                <td><span class="badge bg-info">@user.Role</span></td>
-                                <td>
-                                    <span class="badge @(user.IsActive ? "bg-success" : "bg-danger")">
-                                        @(user.IsActive ? "Active" : "Archived")
-                                    </span>
+                            <tr class="user-row" data-role="@user.Role">
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar-sm rounded-circle d-flex align-items-center justify-content-center fw-bold text-white shadow-sm" 
+                                             style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); width: 38px; height: 38px;">
+                                            @(user.FullName?.Substring(0, 1) ?? "U")
+                                        </div>
+                                        <div class="user-info">
+                                            <p class="mb-0 fw-bold text-dark">@user.FullName</p>
+                                            <p class="text-muted x-small mb-0">Member since @user.CreatedAt.ToString("MMM yyyy")</p>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
+                                    <div class="small">
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <i class="fas fa-user-circle text-muted x-small"></i>
+                                            <span class="user-search-content fw-medium">@user.Username</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="fas fa-envelope text-muted x-small"></i>
+                                            <span class="text-muted">@(user.Email ?? "No email linked")</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3">
+                                        @user.Role.ToUpper()
+                                    </span>
+                                </td>
+                                <td class="text-center">
                                     @if (user.IsActive)
                                     {
-                                        <button class="btn btn-sm btn-outline-primary edit-user-btn" 
-                                                data-id="@user.UserID" 
-                                                data-fullname="@user.FullName"
-                                                data-username="@user.Username"
-                                                data-email="@user.Email"
-                                                data-role="@user.Role"
-                                                data-active="@user.IsActive.ToString().ToLower()"
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#editUserModal">Edit</button>
-                                        <form asp-action="ArchiveUser" method="post" class="d-inline">
-                                            <input type="hidden" name="id" value="@user.UserID" />
-                                            <button type="submit" class="btn btn-sm btn-outline-warning">Archive</button>
-                                        </form>
+                                        <span class="badge rounded-pill bg-success px-3">ACTIVE</span>
                                     }
                                     else
                                     {
-                                        <form asp-action="RestoreUser" method="post" class="d-inline">
-                                            <input type="hidden" name="id" value="@user.UserID" />
-                                            <button type="submit" class="btn btn-sm btn-success">Restore</button>
-                                        </form>
+                                        <span class="badge rounded-pill bg-danger px-3">ARCHIVED</span>
                                     }
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        @if (user.IsActive)
+                                        {
+                                            <button class="btn btn-sm btn-light border-0 edit-user-btn rounded-pill px-3 shadow-none" 
+                                                    data-id="@user.UserID" 
+                                                    data-fullname="@user.FullName"
+                                                    data-username="@user.Username"
+                                                    data-email="@user.Email"
+                                                    data-role="@user.Role"
+                                                    data-active="@user.IsActive.ToString().ToLower()"
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#editUserModal">
+                                                <i class="fas fa-pen-nib me-1 x-small text-muted"></i> Edit
+                                            </button>
+                                            <form asp-action="ArchiveUser" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@user.UserID" />
+                                                <button type="submit" class="btn btn-sm btn-white border rounded-pill px-3 shadow-sm text-danger hvr-danger">
+                                                    Archive
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="RestoreUser" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@user.UserID" />
+                                                <button type="submit" class="btn btn-sm btn-success rounded-pill px-4 shadow-sm">
+                                                    Restore Account
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -120,90 +157,100 @@
     </div>
 </div>
 
-<!-- Modal logic similar to Admin/Users, but simplified for SuperAdmin -->
-<!-- Add User Modal -->
+<!-- Modals (Refined) -->
 <div class="modal fade" id="addUserModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Create New System User</h5>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="fw-bold"><i class="fas fa-user-plus text-primary me-2"></i>Provision New User</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form asp-action="CreateUser" method="post">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" name="FullName" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input type="text" name="Username" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" name="Email" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Initial Password</label>
-                        <input type="password" name="Password" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Role</label>
-                        <select name="Role" class="form-select" required>
-                            @foreach (var role in roles)
-                            {
-                                <option value="@role">@role</option>
-                            }
-                        </select>
+                @Html.AntiForgeryToken()
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label x-small fw-bold text-muted">Legal Full Name</label>
+                            <input type="text" name="FullName" class="form-control rounded-3" placeholder="e.g. John Doe" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label x-small fw-bold text-muted">Account Username</label>
+                            <input type="text" name="Username" class="form-control rounded-3" placeholder="unique_handler" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label x-small fw-bold text-muted">Email Address</label>
+                            <input type="email" name="Email" class="form-control rounded-3" placeholder="name@company.com">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label x-small fw-bold text-muted">Security Role Assignment</label>
+                            <select name="Role" class="form-select rounded-3" required>
+                                @foreach (var role in roles)
+                                {
+                                    <option value="@role">@role</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label x-small fw-bold text-muted">Initial Access Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="fas fa-lock x-small"></i></span>
+                                <input type="password" name="Password" class="form-control border-start-0 rounded-end-3" required>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Create</button>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Initialize Account</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Edit User Modal -->
 <div class="modal fade" id="editUserModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit User Details</h5>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="fw-bold"><i class="fas fa-user-edit text-amber me-2"></i>Update Personnel Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form asp-action="EditUser" method="post">
+                @Html.AntiForgeryToken()
                 <input type="hidden" name="UserID" id="edit-userid" />
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" name="FullName" id="edit-fullname" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input type="text" name="Username" id="edit-username" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" name="Email" id="edit-email" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Role</label>
-                        <select name="Role" id="edit-role" class="form-select" required>
-                            @foreach (var role in roles)
-                            {
-                                <option value="@role">@role</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="form-check">
-                        <input type="checkbox" name="IsActive" id="edit-isactive" value="true" class="form-check-input">
-                        <label class="form-check-label">Is Active</label>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label x-small fw-bold text-muted">Full Name</label>
+                            <input type="text" name="FullName" id="edit-fullname" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label x-small fw-bold text-muted">Username</label>
+                            <input type="text" name="Username" id="edit-username" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label x-small fw-bold text-muted">Email</label>
+                            <input type="email" name="Email" id="edit-email" class="form-control rounded-3">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label x-small fw-bold text-muted">Role Assignment</label>
+                            <select name="Role" id="edit-role" class="form-select rounded-3" required>
+                                @foreach (var role in roles)
+                                {
+                                    <option value="@role">@role</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch p-2 bg-light rounded-3 ms-2">
+                                <input type="checkbox" name="IsActive" id="edit-isactive" value="true" class="form-check-input ms-0 me-2" checked>
+                                <label class="form-check-label fw-bold small">Enable Account Access</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Save</button>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Commit Changes</button>
                 </div>
             </form>
         </div>
@@ -213,6 +260,7 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
+            // Edit User Modal Data Binding
             $('.edit-user-btn').click(function() {
                 $('#edit-userid').val($(this).data('id'));
                 $('#edit-fullname').val($(this).data('fullname'));
@@ -221,6 +269,54 @@
                 $('#edit-role').val($(this).data('role'));
                 $('#edit-isactive').prop('checked', $(this).data('active') === true);
             });
+
+            // Search and Filter Logic
+            function filterUsers() {
+                var searchTerm = $('#userSearch').val().toLowerCase();
+                var roleFilter = $('#roleFilter').val();
+
+                $('.user-row').each(function() {
+                    var row = $(this);
+                    var fullName = row.find('.user-info p.fw-bold').text().toLowerCase();
+                    var username = row.find('.user-search-content').text().toLowerCase();
+                    var userRole = row.data('role');
+
+                    var matchesSearch = fullName.includes(searchTerm) || username.includes(searchTerm);
+                    var matchesRole = roleFilter === "" || userRole === roleFilter;
+
+                    if (matchesSearch && matchesRole) {
+                        row.show();
+                    } else {
+                        row.hide();
+                    }
+                });
+
+                updateEmptyState();
+            }
+
+            function updateEmptyState() {
+                var visibleRows = $('.user-row:visible').length;
+                if (visibleRows === 0) {
+                    if ($('#noResultsRow').length === 0) {
+                        $('#usersTable tbody').append('<tr id="noResultsRow"><td colspan="5" class="text-center py-5 text-muted"><i class="fas fa-user-slash fa-3x mb-3 opacity-25"></i><p>No personnel matching your criteria were found.</p></td></tr>');
+                    }
+                } else {
+                    $('#noResultsRow').remove();
+                }
+            }
+
+            $('#userSearch').on('keyup', filterUsers);
+            $('#roleFilter').on('change', filterUsers);
         });
     </script>
 }
+
+<style>
+    .hvr-danger:hover {
+        background-color: var(--danger-color) !important;
+        color: white !important;
+        border-color: var(--danger-color) !important;
+    }
+    .x-small { font-size: 0.75rem; }
+    .uppercase { text-transform: uppercase; }
+</style>

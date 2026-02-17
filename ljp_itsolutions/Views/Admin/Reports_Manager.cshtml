@@ -4,36 +4,16 @@
     ViewBag.ModuleCount = 4;
 }
 
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <h2 class="fw-bold mb-1">Manager Overview</h2>
-                    <p class="text-muted mb-0">Insights for store management</p>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-secondary btn-sm" onclick="location.reload()">
-                        <i class="fas fa-sync-alt me-1"></i>Refresh Data
-                    </button>
-                    <a href="@Url.Action("Products", "Manager")" class="btn btn-primary btn-sm">
-                        <i class="fas fa-boxes me-1"></i>Manage Inventory
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
+<div class="container-fluid py-3">
     <!-- Financial & Inventory KPIs -->
-    <div class="row g-4 mb-4">
+    <div class="row g-3 mb-4">
         <!-- Monthly Revenue -->
         <div class="col-md-6 col-lg-3">
-            <div class="card-custom h-100">
+            <div class="card border shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div>
-                            <p class="text-muted small fw-semibold mb-1">Monthly Revenue</p>
+                            <p class="text-muted small fw-bold mb-1">Monthly Revenue</p>
                             <h3 class="fw-bold mb-2">₱@Model.MonthlyRevenue.ToString("N2")</h3>
                             @if(Model.LastMonthRevenue > 0) {
                                 var growth = ((Model.MonthlyRevenue - Model.LastMonthRevenue) / Model.LastMonthRevenue) * 100;
@@ -44,8 +24,8 @@
                                 <small class="text-muted">No data from last month</small>
                             }
                         </div>
-                        <div class="stat-icon bg-success bg-opacity-10">
-                            <i class="fas fa-chart-line text-success"></i>
+                        <div class="text-success opacity-50">
+                            <i class="fas fa-chart-line fa-2x"></i>
                         </div>
                     </div>
                 </div>
@@ -54,18 +34,18 @@
 
         <!-- Inventory Value -->
         <div class="col-md-6 col-lg-3">
-            <div class="card-custom h-100">
+            <div class="card border shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div>
-                            <p class="text-muted small fw-semibold mb-1">Inventory Value</p>
+                            <p class="text-muted small fw-bold mb-1">Inventory Value</p>
                             <h3 class="fw-bold mb-2">₱@Model.InventoryValue.ToString("N2")</h3>
                             <small class="text-primary">
-                                <i class="fas fa-warehouse me-1"></i>Total asset value
+                                Total asset value
                             </small>
                         </div>
-                        <div class="stat-icon bg-primary bg-opacity-10">
-                            <i class="fas fa-box text-primary"></i>
+                        <div class="text-primary opacity-50">
+                            <i class="fas fa-box fa-2x"></i>
                         </div>
                     </div>
                 </div>
@@ -74,18 +54,18 @@
 
         <!-- Low Stock Items -->
         <div class="col-md-6 col-lg-3">
-            <div class="card-custom h-100">
+            <div class="card border shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div>
-                            <p class="text-muted small fw-semibold mb-1">Low Stock Alerts</p>
+                            <p class="text-muted small fw-bold mb-1">Low Stock Alerts</p>
                             <h3 class="fw-bold mb-2">@Model.LowStockCount</h3>
                             <small class="@(Model.LowStockCount > 0 ? "text-danger" : "text-success")">
-                                <i class="fas @(Model.LowStockCount > 0 ? "fa-exclamation-circle" : "fa-check-circle") me-1"></i>Items need restock
+                                Items need restock
                             </small>
                         </div>
-                        <div class="stat-icon bg-warning bg-opacity-10">
-                            <i class="fas fa-exclamation-triangle text-warning"></i>
+                        <div class="text-warning opacity-50">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
                         </div>
                     </div>
                 </div>
@@ -94,18 +74,18 @@
 
         <!-- Staff on Duty (Approx) -->
         <div class="col-md-6 col-lg-3">
-            <div class="card-custom h-100">
+            <div class="card border shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div>
-                            <p class="text-muted small fw-semibold mb-1">Active Staff</p>
+                            <p class="text-muted small fw-bold mb-1">Active Staff</p>
                             <h3 class="fw-bold mb-2">@Model.Staff.Count</h3>
                             <small class="text-info">
-                                <i class="fas fa-users me-1"></i>Registered employees
+                                Registered employees
                             </small>
                         </div>
-                        <div class="stat-icon bg-info bg-opacity-10">
-                            <i class="fas fa-user-friends text-info"></i>
+                        <div class="text-info opacity-50">
+                            <i class="fas fa-user-friends fa-2x"></i>
                         </div>
                     </div>
                 </div>
@@ -116,33 +96,31 @@
     <!-- Staff List -->
     <div class="row">
         <div class="col-12">
-            <div class="card-custom">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-users-cog text-primary me-2"></i>Staff Directory
-                    </h5>
-                    <a href="@Url.Action("Users", "Admin")" class="btn btn-sm btn-outline-primary">Manage Staff</a>
+            <div class="card border shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0">Staff Directory</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-custom mb-0">
-                            <thead>
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
                                 <tr>
-                                    <th>Name</th>
+                                    <th class="ps-4">Name</th>
                                     <th>Role</th>
                                     <th>Status</th>
                                     <th>Email</th>
-                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var staff in Model.Staff)
                                 {
                                     <tr>
-                                        <td>
+                                        <td class="ps-4">
                                             <div class="d-flex align-items-center">
-                                                <div class="avatar-initial rounded-circle bg-light text-primary me-3 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
-                                                    @staff.FullName.Substring(0, 1)
+                                                <div class="me-3">
+                                                    <div class="bg-light rounded-circle text-primary d-flex align-items-center justify-content-center fw-bold" style="width: 35px; height: 35px;">
+                                                        @staff.FullName.Substring(0, 1)
+                                                    </div>
                                                 </div>
                                                 <div>
                                                     <h6 class="mb-0 fw-semibold">@staff.FullName</h6>
@@ -168,7 +146,7 @@
                                             @if (staff.IsActive)
                                             {
                                                 <span class="badge bg-success bg-opacity-10 text-success">
-                                                    <i class="fas fa-circle me-1 small"></i>Active
+                                                    Active
                                                 </span>
                                             }
                                             else
@@ -177,10 +155,6 @@
                                             }
                                         </td>
                                         <td>@staff.Email</td>
-                                        <td>
-                                            <a href="#" class="btn btn-sm btn-light" title="View Schedule"><i class="far fa-calendar-alt"></i></a>
-                                            <a href="#" class="btn btn-sm btn-light" title="Performance"><i class="fas fa-chart-bar"></i></a>
-                                        </td>
                                     </tr>
                                 }
                             </tbody>

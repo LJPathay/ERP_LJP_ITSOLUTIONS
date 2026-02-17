@@ -1,64 +1,105 @@
 @model IEnumerable<ljp_itsolutions.Models.Customer>
 @{
-    ViewData["Title"] = "Customer Management";
+    Layout = "_Layout";
+    ViewData["Title"] = "Customer Experience & Loyalty";
 }
 
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold mb-1">Customer Engagement</h2>
-            <p class="text-muted">Manage your customer loyalty and contact list</p>
+<div class="container-fluid py-2">
+    <!-- Action Bar & Filters -->
+    <div class="row g-3 mb-4 align-items-center">
+        <div class="col-md-4">
+            <div class="input-group shadow-sm rounded-pill overflow-hidden border bg-white">
+                <span class="input-group-text bg-transparent border-0 ps-3">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" id="customerSearch" class="form-control border-0 shadow-none ps-2 py-2" placeholder="Search by name or contact number...">
+            </div>
         </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary bg-white"><i class="fas fa-filter me-2"></i>Filter</button>
-            <button class="btn btn-primary shadow-sm"><i class="fas fa-user-plus me-2"></i>Add Customer</button>
+        <div class="col-md-3">
+            <select id="tierFilter" class="form-select shadow-sm rounded-pill border py-2">
+                <option value="">All Loyalty Tiers</option>
+                <option value="Gold">Gold Tier (1000+)</option>
+                <option value="Silver">Silver Tier (500+)</option>
+                <option value="Bronze">Bronze Tier (0-500)</option>
+            </select>
+        </div>
+        <div class="col text-end">
+            <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-light border rounded-pill px-4 shadow-none">
+                    <i class="fas fa-file-export me-2 text-muted"></i>Export List
+                </button>
+                <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                    <i class="fas fa-plus-circle me-2"></i>New Customer
+                </button>
+            </div>
         </div>
     </div>
 
+    <!-- Table Section -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light-subtle">
+                <table class="table align-middle mb-0" id="customersTable">
+                    <thead class="bg-light bg-opacity-50">
                         <tr>
-                            <th class="ps-4 py-3">Customer</th>
-                            <th class="py-3">Contact</th>
-                            <th class="py-3">Points</th>
-                            <th class="py-3">Level</th>
-                            <th class="py-3">Last Active</th>
-                            <th class="pe-4 py-3 text-end">Action</th>
+                            <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted">Customer Identity</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted">Contact Info</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted">Loyalty Engagement</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted">Account Tier</th>
+                            <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold text-muted">Management</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var customer in Model)
                         {
-                            <tr>
+                            var tier = customer.Points > 1000 ? "Gold" : (customer.Points > 500 ? "Silver" : "Bronze");
+                            var tierClass = customer.Points > 1000 ? "bg-warning text-dark" : (customer.Points > 500 ? "bg-secondary" : "bg-light text-dark border");
+                            
+                            <tr class="customer-row" data-tier="@tier">
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center gap-3">
-                                        <div class="avatar bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
-                                            @customer.FullName.Substring(0, 1)
+                                        <div class="avatar-sm rounded-circle d-flex align-items-center justify-content-center fw-bold text-white shadow-sm" 
+                                             style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); width: 38px; height: 38px;">
+                                            @(customer.FullName?.Substring(0, 1) ?? "C")
                                         </div>
-                                        <div>
-                                            <div class="fw-bold">@customer.FullName</div>
-                                            <small class="text-muted">ID: #CST-@customer.CustomerID</small>
+                                        <div class="customer-info">
+                                            <p class="mb-0 fw-bold text-dark search-name">@customer.FullName</p>
+                                            <p class="text-muted x-small mb-0">ID: #CST-@customer.CustomerID.ToString().PadLeft(4, '0')</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td>@customer.PhoneNumber</td>
                                 <td>
-                                    <div class="fw-bold text-dark">@customer.Points</div>
-                                    <div class="progress mt-1" style="height: 4px; width: 80px;">
-                                        <div class="progress-bar bg-warning" style="width: @(Math.Min(customer.Points / 20.0, 100))%"></div>
+                                    <div class="small">
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <i class="fas fa-phone text-muted x-small"></i>
+                                            <span class="search-phone fw-medium">@customer.PhoneNumber</span>
+                                        </div>
                                     </div>
                                 </td>
                                 <td>
-                                    @if (customer.Points > 1000) { <span class="badge bg-warning text-dark">Gold</span> }
-                                    else if (customer.Points > 500) { <span class="badge bg-secondary">Silver</span> }
-                                    else { <span class="badge bg-light text-dark">Bronze</span> }
+                                    <div class="d-flex flex-column" style="max-width: 140px;">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="fw-bold text-dark small">@customer.Points</span>
+                                            <span class="text-muted x-small">pts</span>
+                                        </div>
+                                        <div class="progress rounded-pill shadow-none" style="height: 4px;">
+                                            <div class="progress-bar bg-warning rounded-pill shadow-none" role="progressbar" 
+                                                 style="width: @(Math.Min(customer.Points / 20.0, 100))%"></div>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td>3 days ago</td>
+                                <td>
+                                    <span class="badge rounded-pill @tierClass px-3">@tier</span>
+                                </td>
                                 <td class="pe-4 text-end">
-                                    <button class="btn btn-sm btn-light rounded-pill px-3">View Profile</button>
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        <button class="btn btn-sm btn-light border-0 rounded-pill px-3 shadow-none">
+                                            <i class="fas fa-user-circle me-1 x-small text-muted"></i> Profile
+                                        </button>
+                                        <button class="btn btn-sm btn-white border rounded-pill px-3 shadow-sm text-primary">
+                                            Edit
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -68,3 +109,46 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            function filterCustomers() {
+                var searchTerm = $('#customerSearch').val().toLowerCase();
+                var tierFilter = $('#tierFilter').val();
+
+                $('.customer-row').each(function() {
+                    var row = $(this);
+                    var customerName = row.find('.search-name').text().toLowerCase();
+                    var customerPhone = row.find('.search-phone').text().toLowerCase();
+                    var customerTier = row.data('tier');
+
+                    var matchesSearch = customerName.includes(searchTerm) || customerPhone.includes(searchTerm);
+                    var matchesTier = tierFilter === "" || customerTier === tierFilter;
+
+                    if (matchesSearch && matchesTier) {
+                        row.show();
+                    } else {
+                        row.hide();
+                    }
+                });
+
+                if ($('.customer-row:visible').length === 0) {
+                    if ($('#noResultsRow').length === 0) {
+                        $('#customersTable tbody').append('<tr id="noResultsRow"><td colspan="5" class="text-center py-5 text-muted"><i class="fas fa-users-slash fa-3x mb-3 opacity-25"></i><p>No customers found matching your criteria.</p></td></tr>');
+                    }
+                } else {
+                    $('#noResultsRow').remove();
+                }
+            }
+
+            $('#customerSearch').on('keyup', filterCustomers);
+            $('#tierFilter').on('change', filterCustomers);
+        });
+    </script>
+}
+
+<style>
+    .x-small { font-size: 0.75rem; }
+    .bg-light-subtle { background-color: #f8fafc; }
+</style>

@@ -1,29 +1,33 @@
 @model IEnumerable<ljp_itsolutions.Models.Customer>
 @{
-    ViewData["Title"] = "Loyalty Overview";
+    Layout = "_Layout";
+    ViewData["Title"] = "Loyalty & Retained Tiers";
 }
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-2">
+    <!-- Analytics Row -->
     <div class="row g-4 mb-4">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-white border-0 pt-4 px-4 text-center">
-                    <h5 class="fw-bold mb-0">Customer Tier Distribution</h5>
+        <div class="col-xl-5">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h6 class="fw-bold mb-0">Tier Distribution Matrix</h6>
+                    <p class="text-muted x-small mb-0">Market share by loyalty participation</p>
                 </div>
                 <div class="card-body p-4">
-                    <div style="height: 250px;">
+                    <div style="height: 280px;">
                         <canvas id="tierChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-white border-0 pt-4 px-4 text-center">
-                    <h5 class="fw-bold mb-0">Top Points Distribution</h5>
+        <div class="col-xl-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h6 class="fw-bold mb-0">Top Performing Personas</h6>
+                    <p class="text-muted x-small mb-0">Equity distribution of top patrons</p>
                 </div>
                 <div class="card-body p-4">
-                    <div style="height: 250px;">
+                    <div style="height: 280px;">
                         <canvas id="pointsDistributionChart"></canvas>
                     </div>
                 </div>
@@ -31,38 +35,59 @@
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-header bg-white border-0 pt-4 px-4">
-            <h5 class="fw-bold">Global Rankings (Top 10)</h5>
+    <!-- Leaderboard Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0">Strategic Loyalty Leaderboard</h6>
+            <span class="badge rounded-pill bg-light text-dark border px-3">Top 10 Contributors</span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+                <table class="table align-middle mb-0">
+                    <thead class="bg-light bg-opacity-50">
                         <tr>
-                            <th class="ps-4">Rank</th>
-                            <th>Customer</th>
-                            <th>Total Points</th>
-                            <th class="pe-4 text-end">Tier Status</th>
+                            <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted" style="width: 80px;">Index</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted">Customer Identity</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted text-center">Equity Value</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted text-center">Account Tier</th>
+                            <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold text-muted">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         @{ int rank = 1; }
                         @foreach (var customer in Model)
                         {
+                            var rankClass = rank == 1 ? "bg-warning text-dark" : (rank == 2 ? "bg-secondary" : (rank == 3 ? "bg-bronze text-white" : "bg-light text-dark"));
+                            var tierClass = customer.Points > 1000 ? "bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10" : (customer.Points > 500 ? "bg-dark bg-opacity-10 text-dark border" : "bg-light text-muted border");
+
                             <tr>
                                 <td class="ps-4">
-                                    <span class="badge @(rank <= 3 ? "bg-warning text-dark shadow-sm" : "bg-light text-dark") rounded-circle p-2" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem;">@rank</span>
+                                    <div class="avatar-sm rounded-circle @rankClass d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                        @rank
+                                    </div>
                                 </td>
                                 <td>
-                                    <div class="fw-bold">@customer.FullName</div>
-                                    <small class="text-muted">Member ID: #CST-@customer.CustomerID</small>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar-xs rounded-circle bg-white shadow-sm border d-flex align-items-center justify-content-center fw-bold text-primary" style="width: 34px; height: 34px;">
+                                            @customer.FullName.Substring(0, 1)
+                                        </div>
+                                        <div>
+                                            <p class="mb-0 fw-bold text-dark small">@customer.FullName</p>
+                                            <p class="text-muted x-small mb-0">Member #@customer.CustomerID.ToString().PadLeft(5, '0')</p>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="fw-bold text-primary">@customer.Points.ToString("N0")</td>
+                                <td class="text-center">
+                                    <span class="fw-bold text-dark">@customer.Points.ToString("N0")</span>
+                                    <span class="text-muted x-small ms-1">pts</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge rounded-pill @tierClass px-3">
+                                        @(customer.Points > 1000 ? "GOLD ELITE" : (customer.Points > 500 ? "SILVER PRO" : "MEMBER"))
+                                    </span>
+                                </td>
                                 <td class="pe-4 text-end">
-                                    @if (customer.Points > 1000) { <span class="badge bg-warning text-dark">Gold Elite</span> }
-                                    else if (customer.Points > 500) { <span class="badge bg-secondary">Silver Pro</span> }
-                                    else { <span class="badge bg-light text-dark">Bronze Member</span> }
+                                    <span class="badge bg-success bg-opacity-10 text-success x-small border border-success border-opacity-10">ACTIVE POS</span>
                                 </td>
                             </tr>
                             rank++;
@@ -75,7 +100,11 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#4f46e5';
+        const secondaryColor = getComputedStyle(document.documentElement).getPropertyValue('--secondary-color').trim() || '#fbbf24';
+
         // Tier Distribution Chart
         const tierCtx = document.getElementById('tierChart').getContext('2d');
         new Chart(tierCtx, {
@@ -84,8 +113,9 @@
                 labels: @Html.Raw(Json.Serialize(ViewBag.TierLabels)),
                 datasets: [{
                     data: @Html.Raw(Json.Serialize(ViewBag.TierData)),
-                    backgroundColor: ['#fbbf24', '#94a3b8', '#d1d5db'],
-                    borderWidth: 0,
+                    backgroundColor: [secondaryColor, '#94a3b8', '#e2e8f0'],
+                    borderWidth: 6,
+                    borderColor: '#fff',
                     hoverOffset: 15
                 }]
             },
@@ -93,9 +123,18 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
+                    legend: { 
+                        position: 'bottom', 
+                        labels: { 
+                            usePointStyle: true, 
+                            pointStyle: 'circle',
+                            padding: 25,
+                            font: { size: 11, weight: 'bold' },
+                            color: '#64748b'
+                        } 
+                    }
                 },
-                cutout: '70%'
+                cutout: '75%'
             }
         });
 
@@ -106,22 +145,46 @@
             data: {
                 labels: @Html.Raw(Json.Serialize(Model.Select(c => c.FullName.Split(' ')[0]))),
                 datasets: [{
-                    label: 'Points',
+                    label: 'Engagement Points',
                     data: @Html.Raw(Json.Serialize(Model.Select(c => c.Points))),
-                    backgroundColor: '#4f46e5',
-                    borderRadius: 8,
-                    barThickness: 20
+                    backgroundColor: primaryColor,
+                    borderRadius: 12,
+                    barThickness: 32,
+                    hoverBackgroundColor: secondaryColor
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#fff',
+                        titleColor: '#1e293b',
+                        bodyColor: '#1e293b',
+                        borderColor: '#e2e8f0',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: false
+                    }
+                },
                 scales: {
-                    y: { beginAtZero: true, grid: { display: false } },
-                    x: { grid: { display: false } }
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: '#f1f5f9', drawBorder: false },
+                        ticks: { color: '#64748b', font: { size: 10 } }
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { size: 10 } }
+                    }
                 }
             }
         });
     </script>
 }
+
+<style>
+    .x-small { font-size: 0.75rem; }
+    .bg-bronze { background-color: #cd7f32; }
+</style>

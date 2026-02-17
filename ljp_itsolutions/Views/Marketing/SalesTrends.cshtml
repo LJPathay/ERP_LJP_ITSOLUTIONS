@@ -1,20 +1,44 @@
 @model IEnumerable<dynamic>
 @{
-    ViewData["Title"] = "Sales Trends Reports";
+    Layout = "_Layout";
+    ViewData["Title"] = "Strategic Revenue Intelligence";
 }
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-2">
+    <!-- Header/Action Row -->
+    <div class="row g-3 mb-4 align-items-center">
+        <div class="col-md-6">
+            <h6 class="fw-bold mb-0 text-dark">Revenue Velocity Index</h6>
+            <p class="text-muted x-small mb-0">Temporal analysis of gross transaction value and growth acceleration</p>
+        </div>
+        <div class="col-md-6 d-flex justify-content-md-end gap-2">
+            <div class="input-group input-group-sm shadow-sm rounded-pill overflow-hidden border bg-white" style="max-width: 240px;">
+                <span class="input-group-text bg-transparent border-0 ps-3">
+                    <i class="far fa-calendar-alt text-muted"></i>
+                </span>
+                <input type="month" class="form-control border-0 shadow-none ps-2 py-2 x-small fw-bold" value="@DateTime.Now.ToString("yyyy-MM")">
+            </div>
+            <button class="btn btn-primary rounded-pill px-4 shadow-sm btn-sm fw-bold x-small">GENERATE INTEL</button>
+        </div>
+    </div>
+
+    <!-- Main Chart Row -->
     <div class="row g-4 mb-4">
         <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">Revenue Growth Trend</h5>
-                    <div class="d-flex gap-2">
-                        <input type="month" class="form-control form-control-sm border-0 bg-light" value="@DateTime.Now.ToString("yyyy-MM")">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-10 px-3 x-small fw-bold uppercase tracking-wider">Gross Revenue Trend</span>
+                        <div class="d-flex gap-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="rounded-circle bg-success" style="width: 8px; height: 8px;"></span>
+                                <span class="x-small text-muted fw-bold">Actual Value</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body p-4">
-                    <div style="height: 350px;">
+                    <div style="height: 380px;">
                         <canvas id="salesTrendChart"></canvas>
                     </div>
                 </div>
@@ -22,35 +46,49 @@
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4">
+    <!-- Breakdown Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-header bg-white border-0 pt-4 px-4">
-            <h5 class="fw-bold">Daily Revenue Breakdown</h5>
+            <h6 class="fw-bold mb-0">Daily Operational Breakdown</h6>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+                <table class="table align-middle mb-0">
+                    <thead class="bg-light bg-opacity-50">
                         <tr>
-                            <th class="ps-4">Date</th>
-                            <th class="text-end">Orders Count</th>
-                            <th class="text-end">Average Ticket</th>
-                            <th class="text-end pe-4">Total Revenue</th>
+                            <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted">Business Date</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted text-center">Transaction Volume</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted text-center">Avg Acquisition Value</th>
+                            <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold text-muted">Total Gross Value</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var item in Model)
                         {
                             <tr>
-                                <td class="ps-4 fw-bold">@item.Date.ToLongDateString()</td>
-                                <td class="text-end">12</td>
-                                <td class="text-end">₱14.50</td>
-                                <td class="text-end pe-4 fw-bold text-success">₱@item.TotalSales.ToString("N2")</td>
+                                <td class="ps-4 fw-bold text-dark small">@item.Date.ToLongDateString()</td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark border px-3">12</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="text-muted small">₱</span>
+                                    <span class="fw-bold text-dark small">1,214.50</span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <span class="fw-bold text-success">₱@item.TotalSales.ToString("N2")</span>
+                                </td>
                             </tr>
                         }
                         @if (!Model.Any())
                         {
                             <tr>
-                                <td colspan="4" class="text-center py-5 text-muted">No sales data found for the selected period.</td>
+                                <td colspan="4" class="text-center py-5">
+                                    <div class="py-5">
+                                        <i class="fas fa-layer-group fa-3x text-muted opacity-25 mb-4"></i>
+                                        <h6 class="fw-bold text-dark">No Temporal Data</h6>
+                                        <p class="text-muted x-small">Selected period yields no transaction records.</p>
+                                    </div>
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -61,34 +99,72 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        const successColor = getComputedStyle(document.documentElement).getPropertyValue('--success-color').trim() || '#10b981';
+        
         const ctx = document.getElementById('salesTrendChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
             data: {
                 labels: @Html.Raw(Json.Serialize(Model.Select(m => m.Date.ToString("MMM dd")))),
                 datasets: [{
-                    label: 'Daily Revenue',
+                    label: 'Gross Performance',
                     data: @Html.Raw(Json.Serialize(Model.Select(m => m.TotalSales))),
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    borderWidth: 3,
+                    borderColor: successColor,
+                    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                    borderWidth: 3.5,
                     fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
+                    tension: 0.45,
                     pointBackgroundColor: '#fff',
-                    pointBorderColor: '#10b981'
+                    pointBorderColor: successColor,
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#fff',
+                        titleColor: '#1e293b',
+                        bodyColor: '#1e293b',
+                        borderColor: '#e2e8f0',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return 'Gross: ₱' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
                 scales: {
-                    y: { beginAtZero: true, grid: { borderDash: [5, 5] }, ticks: { callback: v => '₱' + v } },
-                    x: { grid: { display: false } }
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: '#f1f5f9', drawBorder: false },
+                        ticks: { 
+                            color: '#64748b', 
+                            font: { size: 10 },
+                            callback: v => '₱' + v.toLocaleString()
+                        } 
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { size: 10 } }
+                    }
                 }
             }
         });
     </script>
 }
+
+<style>
+    .x-small { font-size: 0.75rem; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.1em; }
+</style>

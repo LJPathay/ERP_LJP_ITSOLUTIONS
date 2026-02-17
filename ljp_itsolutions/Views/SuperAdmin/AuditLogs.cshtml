@@ -1,35 +1,84 @@
 @model IEnumerable<ljp_itsolutions.Models.AuditLog>
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "System Audit Logs";
+    ViewData["Title"] = "System Audit Trail";
+    var users = ViewBag.Users as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
 }
 
-<div class="container-fluid">
-    <div class="mb-4">
-        <h2 class="fw-bold">System Audit Logs</h2>
-        <p class="text-muted">Security and activity history for all roles.</p>
+<div class="container-fluid py-2">
+    <!-- Filters Bar -->
+    <div class="row g-3 mb-4 align-items-center">
+        <div class="col-md-3">
+            <div class="input-group shadow-sm rounded-pill overflow-hidden border">
+                <span class="input-group-text bg-white border-0 ps-3">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" id="logSearch" class="form-control border-0 shadow-none ps-2 py-2" placeholder="Search activities...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select id="userFilter" class="form-select shadow-sm rounded-pill border py-2">
+                <option value="">All Operators</option>
+                <option value="System">System Process</option>
+                @foreach (var user in users)
+                {
+                    <option value="@user.FullName">@user.FullName</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex align-items-center gap-2">
+                <input type="date" id="dateFrom" class="form-control shadow-sm rounded-pill border py-2" title="From Date">
+                <span class="text-muted">to</span>
+                <input type="date" id="dateTo" class="form-control shadow-sm rounded-pill border py-2" title="To Date">
+            </div>
+        </div>
+        <div class="col-md-2 text-end">
+            <button id="resetFilters" class="btn btn-light border rounded-pill px-4 ms-auto">
+                Reset
+            </button>
+        </div>
     </div>
 
-    <div class="card-custom">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-custom mb-0">
-                    <thead>
+                <table class="table align-middle mb-0" id="auditTable">
+                    <thead class="bg-light bg-opacity-50">
                         <tr>
-                            <th>DateTime</th>
-                            <th>User</th>
-                            <th>Role</th>
-                            <th>Action</th>
+                            <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted" style="width: 200px;">Timestamp</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted">Operator Info</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted">Action Performed</th>
+                            <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold text-muted" style="width: 150px;">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var log in Model)
                         {
-                            <tr>
-                                <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
-                                <td>@((log.User?.FullName) ?? "System")</td>
-                                <td>@(log.User?.Role ?? "N/A")</td>
-                                <td>@log.Action</td>
+                            <tr class="log-row" data-user="@((log.User?.FullName) ?? "System")" data-timestamp="@log.Timestamp.ToString("yyyy-MM-dd")">
+                                <td class="ps-4">
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold text-dark small">@log.Timestamp.ToString("MMM dd, yyyy")</span>
+                                        <span class="text-muted x-small">@log.Timestamp.ToString("HH:mm:ss")</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar-xs rounded-circle bg-light d-flex align-items-center justify-content-center border" style="width: 28px; height: 28px; font-size: 0.7rem;">
+                                            <i class="fas @(log.UserID == null ? "fa-robot" : "fa-user") opacity-50"></i>
+                                        </div>
+                                        <div>
+                                            <p class="mb-0 small fw-bold text-dark">@((log.User?.FullName) ?? "System Process")</p>
+                                            <p class="text-muted x-small mb-0">@(log.User?.Role ?? "Internal")</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="small fw-medium text-dark activity-text">@log.Action</span>
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-10 px-3 x-small">SECURE</span>
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -38,3 +87,64 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            function filterLogs() {
+                var searchTerm = $('#logSearch').val().toLowerCase();
+                var userFilter = $('#userFilter').val();
+                var dateFrom = $('#dateFrom').val();
+                var dateTo = $('#dateTo').val();
+
+                $('.log-row').each(function() {
+                    var row = $(this);
+                    var actionText = row.find('.activity-text').text().toLowerCase();
+                    var userName = row.data('user');
+                    var logDate = row.data('timestamp');
+
+                    var matchesSearch = actionText.includes(searchTerm);
+                    var matchesUser = userFilter === "" || userName === userFilter;
+                    
+                    var matchesDate = true;
+                    if (dateFrom && logDate < dateFrom) matchesDate = false;
+                    if (dateTo && logDate > dateTo) matchesDate = false;
+
+                    if (matchesSearch && matchesUser && matchesDate) {
+                        row.show();
+                    } else {
+                        row.hide();
+                    }
+                });
+
+                updateEmptyState();
+            }
+
+            function updateEmptyState() {
+                var visibleRows = $('.log-row:visible').length;
+                if (visibleRows === 0) {
+                    if ($('#noResultsRow').length === 0) {
+                        $('#auditTable tbody').append('<tr id="noResultsRow"><td colspan="4" class="text-center py-5 text-muted"><i class="fas fa-search-minus fa-3x mb-3 opacity-25"></i><p>No audit records found matching the selected filters.</p></td></tr>');
+                    }
+                } else {
+                    $('#noResultsRow').remove();
+                }
+            }
+
+            $('#logSearch').on('keyup', filterLogs);
+            $('#userFilter, #dateFrom, #dateTo').on('change', filterLogs);
+            
+            $('#resetFilters').click(function() {
+                $('#logSearch').val('');
+                $('#userFilter').val('');
+                $('#dateFrom').val('');
+                $('#dateTo').val('');
+                filterLogs();
+            });
+        });
+    </script>
+}
+
+<style>
+    .x-small { font-size: 0.75rem; }
+</style>

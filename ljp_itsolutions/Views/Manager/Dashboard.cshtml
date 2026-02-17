@@ -4,203 +4,393 @@
 }
 
 <div class="container-fluid py-4">
-<div class="row g-4 mb-4">
-    <div class="col-md-3">
-        <div class="kpi-card h-100 transition-hover" style="background: linear-gradient(135deg, white 0%, #f1f5f9 100%);">
-            <div class="kpi-card-icon bg-primary bg-opacity-10 text-primary mb-3">
-                <i class="fas fa-coffee fa-lg"></i>
-            </div>
-            <p class="kpi-card-label">Stock Portfolio</p>
-            <h2 class="kpi-card-value">@Model.TotalProducts</h2>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="kpi-card h-100 transition-hover" style="background: linear-gradient(135deg, white 0%, #f0fdf4 100%);">
-            <div class="kpi-card-icon bg-success bg-opacity-10 text-success mb-3">
-                <i class="fas fa-shopping-cart fa-lg"></i>
-            </div>
-            <p class="kpi-card-label">Total Demand</p>
-            <h2 class="kpi-card-value">@Model.TotalOrders</h2>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="kpi-card h-100 transition-hover" style="background: linear-gradient(135deg, white 0%, #f0f9ff 100%);">
-            <div class="kpi-card-icon bg-info bg-opacity-10 text-info mb-3">
-                <i class="fas fa-peso-sign fa-lg"></i>
-            </div>
-            <p class="kpi-card-label">Gross Earnings</p>
-            <h2 class="kpi-card-value">₱@Model.TotalRevenue.ToString("N0")</h2>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="kpi-card h-100 transition-hover" style="background: linear-gradient(135deg, white 0%, #fefce8 100%);">
-            <div class="kpi-card-icon bg-warning bg-opacity-10 text-warning mb-3">
-                <i class="fas fa-user-shield fa-lg"></i>
-            </div>
-            <p class="kpi-card-label">Team Presence</p>
-            <h2 class="kpi-card-value">@Model.TotalUsers</h2>
-        </div>
-    </div>
-</div>
-
-<div class="row g-4">
-    <!-- Recent Orders -->
-    <div class="col-lg-8">
-        <div class="modern-table mb-4">
-            <div class="d-flex justify-content-between align-items-center p-3 bg-light border-bottom">
-                <h6 class="fw-bold mb-0 text-dark">Recent Orders</h6>
-                <a asp-controller="Cashier" asp-action="TransactionHistory" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All</a>
-            </div>
-            <div class="table-responsive scrollable-table">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light sticky-top">
-                        <tr>
-                            <th class="ps-4">Order ID</th>
-                            <th>Date</th>
-                            <th>Cashier</th>
-                            <th>Amount</th>
-                            <th class="text-end pe-4">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var order in Model.RecentOrders)
-                        {
-                            <tr>
-                                <td class="ps-4 fw-bold">#@order.OrderID.ToString().Substring(0, 8)...</td>
-                                <td><span class="text-muted text-xs">@order.OrderDate.ToString("MMM dd, hh:mm tt")</span></td>
-                                <td>@order.Cashier?.FullName</td>
-                                <td class="fw-semibold">₱@order.FinalAmount.ToString("N2")</td>
-                                <td class="text-end pe-4">
-                                    @if (order.PaymentStatus == "Paid")
-                                    {
-                                        <span class="status-badge success">Paid</span>
-                                    }
-                                    else if (order.PaymentStatus == "Voided")
-                                    {
-                                        <span class="status-badge danger">Voided</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="status-badge warning">@order.PaymentStatus</span>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+    <!-- Quick Stats -->
+    <div class="row g-4 mb-4">
+        <!-- Stock KPI -->
+        <div class="col-md-3">
+            <div class="kpi-card h-100 transition-hover" style="background: linear-gradient(135deg, white 0%, #f1f5f9 100%);">
+                <div class="kpi-card-icon bg-primary bg-opacity-10 text-primary mb-3">
+                    <i class="fas fa-coffee fa-lg"></i>
+                </div>
+                <p class="kpi-card-label">Stock Portfolio</p>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="kpi-card-value mb-0">@Model.TotalProducts</h2>
+                    <span class="badge bg-light text-dark x-small">Active Items</span>
+                </div>
             </div>
         </div>
-
-        <!-- Top Products -->
-        <div class="modern-table mb-4">
-            <div class="p-3 bg-light border-bottom">
-                <h6 class="fw-bold mb-0 text-dark">Top Performing Products</h6>
-            </div>
-            <div class="table-responsive scrollable-table">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light sticky-top">
-                        <tr>
-                            <th class="ps-4">Product Name</th>
-                            <th>Total Sold</th>
-                            <th class="text-end pe-4">Revenue</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model.TopProducts)
-                        {
-                            <tr>
-                                <td class="ps-4 fw-bold">@item.ProductName</td>
-                                <td><span class="badge bg-light text-dark rounded-pill">@item.TotalSold units</span></td>
-                                <td class="text-end pe-4 fw-bold text-success">₱@item.Revenue.ToString("N2")</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Sidebar Actions & Alerts -->
-    <div class="col-lg-4">
-        <!-- Low Ingredient Alerts -->
-        <div class="card border-0 shadow-sm mb-4 rounded-lg overflow-hidden">
-            <div class="card-header bg-white py-3 border-bottom">
-                <h6 class="fw-bold mb-0 text-danger d-flex align-items-center">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Low Stock Alerts
-                </h6>
-            </div>
-            <div class="card-body p-0">
-                <div class="list-group list-group-flush">
-                    @foreach (var alert in Model.LowStockIngredients)
+        <!-- Revenue KPI -->
+        <div class="col-md-3">
+            <div class="kpi-card h-100 transition-hover" style="background: linear-gradient(135deg, white 0%, #f0f9ff 100%);">
+                <div class="kpi-card-icon bg-info bg-opacity-10 text-info mb-3">
+                    <i class="fas fa-peso-sign fa-lg"></i>
+                </div>
+                <p class="kpi-card-label">Gross Earnings</p>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="kpi-card-value mb-0">₱@Model.TotalRevenue.ToString("N0")</h2>
+                    @if (Model.RevenueGrowth != 0)
                     {
-                        <div class="list-group-item border-0 p-3 transition-hover">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-danger bg-opacity-10 rounded-circle p-2 me-3" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-leaf text-danger text-xs"></i>
+                        <span class="x-small fw-bold @(Model.RevenueGrowth > 0 ? "text-success" : "text-danger")">
+                            <i class="fas fa-caret-@(Model.RevenueGrowth > 0 ? "up" : "down") me-1"></i>@Math.Abs(Model.RevenueGrowth).ToString("N1")%
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+        <!-- Orders KPI -->
+        <div class="col-md-3">
+            <div class="kpi-card h-100 transition-hover" style="background: linear-gradient(135deg, white 0%, #f0fdf4 100%);">
+                <div class="kpi-card-icon bg-success bg-opacity-10 text-success mb-3">
+                    <i class="fas fa-shopping-cart fa-lg"></i>
+                </div>
+                <p class="kpi-card-label">Total Demand</p>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="kpi-card-value mb-0">@Model.TotalOrders</h2>
+                    @if (Model.OrderGrowth != 0)
+                    {
+                        <span class="x-small fw-bold @(Model.OrderGrowth > 0 ? "text-success" : "text-danger")">
+                            <i class="fas fa-caret-@(Model.OrderGrowth > 0 ? "up" : "down") me-1"></i>@Math.Abs(Model.OrderGrowth).ToString("N1")%
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+        <!-- Team KPI -->
+        <div class="col-md-3">
+            <div class="kpi-card h-100 transition-hover" style="background: linear-gradient(135deg, white 0%, #fefce8 100%);">
+                <div class="kpi-card-icon bg-warning bg-opacity-10 text-warning mb-3">
+                    <i class="fas fa-user-shield fa-lg"></i>
+                </div>
+                <p class="kpi-card-label">Team Presence</p>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="kpi-card-value mb-0">@Model.TotalUsers</h2>
+                    <span class="badge bg-light text-dark x-small">Registered</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-0">Sales Performance</h5>
+                        <p class="text-muted x-small mb-0">Daily revenue for the last 7 days</p>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <canvas id="revenueChart" style="min-height: 280px; width: 100%;"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+             <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">Peak Traffic Hours</h5>
+                    <p class="text-muted x-small mb-0">Total order volume by time of day</p>
+                </div>
+                <div class="card-body p-4">
+                    <canvas id="peakHoursChart" style="min-height: 280px; width: 100%;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-12">
+             <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">Popular Categories</h5>
+                    <p class="text-muted x-small mb-0">Order distribution by category</p>
+                </div>
+                <div class="card-body p-4 d-flex align-items-center justify-content-center">
+                    <canvas id="categoryChart" style="max-height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tables and Alerts -->
+    <div class="row g-4">
+        <!-- Left Column: Orders and Products -->
+        <div class="col-lg-8">
+            <!-- Recent Orders -->
+            <div class="modern-table mb-4">
+                <div class="d-flex justify-content-between align-items-center p-3 bg-light border-bottom">
+                    <h6 class="fw-bold mb-0 text-dark">Recent Orders</h6>
+                    <a asp-controller="Manager" asp-action="Transactions" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All</a>
+                </div>
+                <div class="table-responsive scrollable-table">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light sticky-top">
+                            <tr>
+                                <th class="ps-4">Order ID</th>
+                                <th>Date</th>
+                                <th>Cashier</th>
+                                <th>Amount</th>
+                                <th class="text-end pe-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model.RecentOrders)
+                            {
+                                <tr>
+                                    <td class="ps-4 fw-bold">#@order.OrderID.ToString().Substring(0, 8)...</td>
+                                    <td><span class="text-muted text-xs">@order.OrderDate.ToString("MMM dd, hh:mm tt")</span></td>
+                                    <td>@order.Cashier?.FullName</td>
+                                    <td class="fw-semibold">₱@order.FinalAmount.ToString("N2")</td>
+                                    <td class="text-end pe-4">
+                                        @if (order.PaymentStatus == "Paid")
+                                        {
+                                            <span class="status-badge success">Paid</span>
+                                        }
+                                        else if (order.PaymentStatus == "Voided")
+                                        {
+                                            <span class="status-badge danger">Voided</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge warning">@order.PaymentStatus</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Top Products -->
+            <div class="modern-table mb-4">
+                <div class="p-3 bg-light border-bottom">
+                    <h6 class="fw-bold mb-0 text-dark">Top Performing Products</h6>
+                </div>
+                <div class="table-responsive scrollable-table">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light sticky-top">
+                            <tr>
+                                <th class="ps-4">Product Name</th>
+                                <th>Total Sold</th>
+                                <th class="text-end pe-4">Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.TopProducts)
+                            {
+                                <tr>
+                                    <td class="ps-4 fw-bold">@item.ProductName</td>
+                                    <td><span class="badge bg-light text-dark rounded-pill">@item.TotalSold units</span></td>
+                                    <td class="text-end pe-4 fw-bold text-success">₱@item.Revenue.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Sidebar -->
+        <div class="col-lg-4">
+            <!-- Low Ingredient Alerts -->
+            <div class="card border-0 shadow-sm mb-4 rounded-lg overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="fw-bold mb-0 text-danger d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Low Stock Alerts
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @foreach (var alert in Model.LowStockIngredients)
+                        {
+                            <div class="list-group-item border-0 p-3 transition-hover">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-danger bg-opacity-10 rounded-circle p-2 me-3" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-leaf text-danger text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <p class="mb-0 text-sm fw-bold">@alert.Name</p>
+                                            <p class="text-muted text-xs mb-0">@alert.StockQuantity.ToString("N2") @alert.Unit left</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p class="mb-0 text-sm fw-bold">@alert.Name</p>
-                                        <p class="text-muted text-xs mb-0">@alert.StockQuantity.ToString("N2") @alert.Unit left</p>
-                                    </div>
+                                    <span class="status-badge danger text-xs">Low</span>
                                 </div>
-                                <span class="status-badge danger text-xs">Low</span>
                             </div>
-                        </div>
-                    }
-                    @if (!Model.LowStockIngredients.Any())
-                    {
-                        <div class="p-4 text-center">
-                            <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
-                            <p class="text-muted mb-0 small">Inventory levels are healthy.</p>
-                        </div>
-                    }
+                        }
+                        @if (!Model.LowStockIngredients.Any())
+                        {
+                            <div class="p-4 text-center">
+                                <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
+                                <p class="text-muted mb-0 small">Inventory levels are healthy.</p>
+                            </div>
+                        }
+                    </div>
                 </div>
+                @if (Model.LowStockIngredients.Any())
+                {
+                    <div class="card-footer bg-light border-0 p-3">
+                        <a asp-action="Inventory" class="btn btn-outline-danger btn-sm w-100 rounded-pill">Manage Inventory</a>
+                    </div>
+                }
             </div>
-            @if (Model.LowStockIngredients.Any())
-            {
-                <div class="card-footer bg-light border-0 p-3">
-                    <a asp-action="Inventory" class="btn btn-outline-danger btn-sm w-100 rounded-pill">Manage Inventory</a>
-                </div>
-            }
-        </div>
 
-        <!-- Quick Access -->
-        <div class="card border-0 shadow-sm rounded-lg overflow-hidden">
-            <div class="card-header bg-white py-3 border-bottom">
-                <h6 class="fw-bold mb-0 text-dark">Quick Management</h6>
-            </div>
-            <div class="card-body p-2">
-                <div class="d-grid gap-2">
-                    <a asp-action="Products" class="btn btn-light text-start p-3 border-0 rounded-lg transition-hover">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-plus-circle text-primary me-3 fa-lg"></i>
-                            <div>
-                                <p class="fw-bold mb-0 text-sm text-dark">Add New Product</p>
-                                <p class="text-muted text-xs mb-0">Update your coffee menu</p>
+            <!-- Quick Access -->
+            <div class="card border-0 shadow-sm rounded-lg overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="fw-bold mb-0 text-dark">Quick Management</h6>
+                </div>
+                <div class="card-body p-2">
+                    <div class="d-grid gap-2">
+                        <a asp-action="Products" class="btn btn-light text-start p-3 border-0 rounded-lg transition-hover">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-plus-circle text-primary me-3 fa-lg"></i>
+                                <div>
+                                    <p class="fw-bold mb-0 text-sm text-dark">Add New Product</p>
+                                    <p class="text-muted text-xs mb-0">Update your coffee menu</p>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                    <a asp-action="Reports" class="btn btn-light text-start p-3 border-0 rounded-lg transition-hover">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-chart-line text-info me-3 fa-lg"></i>
-                            <div>
-                                <p class="fw-bold mb-0 text-sm text-dark">Sales Analysis</p>
-                                <p class="text-muted text-xs mb-0">View store performance</p>
+                        </a>
+                        <a asp-action="Reports" class="btn btn-light text-start p-3 border-0 rounded-lg transition-hover">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-chart-line text-info me-3 fa-lg"></i>
+                                <div>
+                                    <p class="fw-bold mb-0 text-sm text-dark">Sales Analysis</p>
+                                    <p class="text-muted text-xs mb-0">View store performance</p>
+                                </div>
                             </div>
-                        </div>
-                    </a>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-</div>
+
+@section Scripts {
+    <script>
+        // Revenue Chart (Line)
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.DailyRevenueLabels)),
+                datasets: [{
+                    label: 'Revenue',
+                    data: @Html.Raw(Json.Serialize(Model.DailyRevenueData)),
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#2563eb',
+                    pointBorderColor: '#fff',
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return 'Revenue: ₱' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { borderDash: [5, 5], drawBorder: false },
+                        ticks: {
+                            callback: function(value) { return '₱' + value.toLocaleString(); }
+                        }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // Category Chart (Doughnut)
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.CategoryLabels)),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(Model.CategoryData)),
+                    backgroundColor: [
+                        '#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: { size: 11 }
+                        }
+                    }
+                }
+            }
+        });
+        });
+
+        // Peak Hours Chart (Bar)
+        const peakCtx = document.getElementById('peakHoursChart').getContext('2d');
+        new Chart(peakCtx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(Json.Serialize(ViewBag.PeakHoursLabels)),
+                datasets: [{
+                    label: 'Orders',
+                    data: @Html.Raw(Json.Serialize(ViewBag.PeakHoursData)),
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 4,
+                    hoverBackgroundColor: '#2563eb'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        grid: { borderDash: [5, 5], drawBorder: false }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    </script>
+}
 
 <style>
     .transition-hover { transition: all 0.2s; }
     .transition-hover:hover { 
-        transform: translateX(4px);
-        background-color: #f0f7ff !important;
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
     }
+    .x-small { font-size: 0.75rem; }
 </style>

@@ -1,216 +1,285 @@
 @model IEnumerable<ljp_itsolutions.Models.Promotion>
 @{
-    ViewData["Title"] = "Promotional Campaigns";
+    Layout = "_Layout";
+    ViewData["Title"] = "Campaign Approvals";
 }
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-2">
+    <!-- Stats Badge -->
     <div class="d-flex justify-content-end mb-4">
-        <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addPromotionModal">
-            <i class="fas fa-plus me-2"></i>New Campaign
-        </button>
+        <div class="badge rounded-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-10 px-4 py-2">
+            <i class="fas fa-clock me-2"></i>
+            <span class="fw-bold">@Model.Count() Pending</span>
+        </div>
     </div>
 
-    <div class="modern-table">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th class="ps-4">Campaign Name</th>
-                        <th>Type</th>
-                        <th>Value</th>
-                        <th>Status</th>
-                        <th>Valid Period</th>
-                        <th class="text-end pe-4">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var promo in Model)
-                    {
+    @if (Model.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
                         <tr>
-                            <td class="ps-4">
-                                <div class="fw-bold text-dark">@promo.PromotionName</div>
-                                <div class="text-muted text-xs">Code: PROMO-@promo.PromotionID</div>
-                            </td>
-                            <td><span class="status-badge info text-xs">@promo.DiscountType</span></td>
-                            <td class="fw-bold text-success">
-                                @(promo.DiscountType == "Percentage" ? $"{promo.DiscountValue}%" : $"₱{promo.DiscountValue:F2}")
-                            </td>
-                            <td>
-                                @if (promo.IsActive && promo.EndDate >= DateTime.Now)
-                                {
-                                    <span class="status-badge success">Active</span>
-                                }
-                                else
-                                {
-                                    <span class="status-badge secondary">Inactive</span>
-                                }
-                            </td>
-                            <td>
-                                <div class="text-muted text-xs">
-                                    <i class="far fa-calendar-alt me-1"></i>
-                                    @promo.StartDate.ToString("MMM dd") - @promo.EndDate.ToString("MMM dd, yyyy")
-                                </div>
-                            </td>
-                            <td class="text-end pe-4">
-                                <div class="d-flex justify-content-end gap-2">
-                                    <button class="action-btn btn-edit-promo"
-                                            data-id="@promo.PromotionID"
-                                            data-name="@promo.PromotionName"
-                                            data-type="@promo.DiscountType"
-                                            data-value="@promo.DiscountValue"
-                                            data-start="@promo.StartDate.ToString("yyyy-MM-dd")"
-                                            data-end="@promo.EndDate.ToString("yyyy-MM-dd")"
-                                            data-active="@promo.IsActive.ToString().ToLower()">
-                                        <i class="fas fa-edit"></i>
+                            <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted">Campaign Name</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted">Type</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted">Value</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted">Duration</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted">Status</th>
+                            <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold text-muted">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var campaign in Model)
+                        {
+                            <tr style="cursor: pointer;" onclick="openApprovalModal(@campaign.PromotionID)">
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">@campaign.PromotionName</div>
+                                    <div class="text-muted x-small">ID: #@campaign.PromotionID.ToString().PadLeft(4, '0')</div>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill bg-light text-dark border">@campaign.DiscountType</span>
+                                </td>
+                                <td class="fw-bold text-primary">
+                                    @(campaign.DiscountType == "Percentage" ? $"{campaign.DiscountValue}%" : $"₱{campaign.DiscountValue}")
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column small">
+                                        <span class="fw-medium">@campaign.StartDate.ToString("MMM dd, yyyy")</span>
+                                        <span class="text-muted x-small">to @campaign.EndDate.ToString("MMM dd, yyyy")</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill bg-warning px-3">
+                                        <i class="fas fa-clock me-1"></i>PENDING
+                                    </span>
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <button class="btn btn-sm btn-light rounded-pill px-3 fw-bold text-primary shadow-sm"
+                                            onclick="event.stopPropagation(); openApprovalModal(@campaign.PromotionID)">
+                                        Review
                                     </button>
-                                    <form asp-action="DeletePromotion" method="post" class="d-inline" onsubmit="return confirm('Delete this campaign?');">
-                                        <input type="hidden" name="id" value="@promo.PromotionID" />
-                                        <button type="submit" class="action-btn danger"><i class="fas fa-trash"></i></button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                    @if (!Model.Any())
-                    {
-                        <tr>
-                            <td colspan="6">
-                                <div class="empty-state p-5">
-                                    <i class="fas fa-bullhorn empty-state-icon fa-2x"></i>
-                                    <p class="text-muted">No promotional campaigns found.</p>
-                                    <button class="btn btn-sm btn-outline-primary rounded-pill px-4 mt-2" data-bs-toggle="modal" data-bs-target="#addPromotionModal">Create New</button>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                                </td>
+                            </tr>
+
+                            <!-- Hidden Data for Modal -->
+                            <div id="data-@campaign.PromotionID" class="d-none"
+                                 data-name="@campaign.PromotionName"
+                                 data-type="@campaign.DiscountType"
+                                 data-value="@(campaign.DiscountType == "Percentage" ? $"{campaign.DiscountValue}%" : $"₱{campaign.DiscountValue}")"
+                                 data-start="@campaign.StartDate.ToString("MMM dd, yyyy")"
+                                 data-end="@campaign.EndDate.ToString("MMM dd, yyyy")"
+                                 data-days="@((campaign.EndDate - campaign.StartDate).Days)"
+                                 data-auto="@(campaign.IsActive ? "true" : "false")">
+                            </div>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-body text-center py-5">
+                <div class="py-5">
+                    <i class="fas fa-check-double fa-4x text-success opacity-25 mb-4"></i>
+                    <h5 class="fw-bold text-dark">All Caught Up!</h5>
+                    <p class="text-muted">No campaigns are currently awaiting your approval.</p>
+                    <p class="text-muted x-small">Marketing staff can create new campaigns from their Promotions page.</p>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
-<!-- Add Promotion Modal -->
-<div class="modal fade modern-modal" id="addPromotionModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Create Campaign</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<!-- Approval/Rejection Modal -->
+<div class="modal fade" id="approvalModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-primary text-white border-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar-sm bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div>
+                        <h6 class="modal-title fw-bold mb-0">Review Campaign</h6>
+                        <p class="mb-0 x-small text-white text-opacity-75 uppercase tracking-wider">Manager Approval Required</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form asp-action="CreatePromotion" method="post">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="modern-form-label">Campaign Name</label>
-                        <input type="text" name="PromotionName" class="modern-form-control w-100" required placeholder="e.g. Summer Special" />
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label class="modern-form-label">Type</label>
-                            <select name="DiscountType" class="modern-form-control w-100" required>
-                                <option value="Percentage">Percentage (%)</option>
-                                <option value="Fixed">Fixed Amount (₱)</option>
-                            </select>
-                        </div>
-                        <div class="col">
-                            <label class="modern-form-label">Value</label>
-                            <input type="number" step="0.01" name="DiscountValue" class="modern-form-control w-100" required />
+            <div class="modal-body p-4">
+                <input type="hidden" id="modalCampaignId" />
+                
+                <h5 class="fw-bold text-dark mb-4" id="modalCampaignName">Campaign Name</h5>
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-4 border border-white shadow-sm border-2 h-100">
+                            <p class="x-small text-muted uppercase tracking-wider mb-1">Discount</p>
+                            <h5 class="fw-bold text-primary mb-0" id="modalDiscountValue">0%</h5>
+                            <small class="text-muted" id="modalDiscountType">Percentage</small>
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label class="modern-form-label">Start Date</label>
-                            <input type="date" name="StartDate" class="modern-form-control w-100" required value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-4 border border-white shadow-sm border-2 h-100">
+                            <p class="x-small text-muted uppercase tracking-wider mb-1">Duration</p>
+                            <div class="fw-bold text-dark" id="modalDuration">Jan 01 - Dec 31</div>
+                            <small class="text-muted" id="modalDays">0 days</small>
                         </div>
-                        <div class="col">
-                            <label class="modern-form-label">End Date</label>
-                            <input type="date" name="EndDate" class="modern-form-control w-100" required value="@DateTime.Now.AddDays(7).ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-12">
+                        <div class="p-3 bg-info bg-opacity-10 rounded-4 border border-info border-opacity-10">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-toggle-on text-info" id="modalAutoIcon"></i>
+                                <span class="small text-info fw-bold" id="modalAutoText">
+                                    Auto-activate upon approval
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-4">Create Promotion</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
-<!-- Edit Promotion Modal -->
-<div class="modal fade modern-modal" id="editPromotionModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Campaign</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <!-- Rejection Reason Input (Hidden by default) -->
+                <div id="rejectionSection" class="d-none mb-3">
+                    <label class="form-label fw-bold text-danger small">Reason for Rejection</label>
+                    <textarea id="rejectionReason" class="form-control rounded-3" rows="3" placeholder="Explain why this campaign is being rejected..."></textarea>
+                </div>
+
+                <div class="d-flex gap-2" id="actionButtons">
+                    <button class="btn btn-success flex-fill rounded-pill py-2 fw-bold shadow-sm" onclick="confirmApprove()">
+                        <i class="fas fa-check-circle me-2"></i>Approve
+                    </button>
+                    <button class="btn btn-danger flex-fill rounded-pill py-2 fw-bold shadow-sm" onclick="showRejectionInput()">
+                        <i class="fas fa-times-circle me-2"></i>Reject
+                    </button>
+                </div>
+
+                <div class="d-flex gap-2 d-none" id="confirmRejectButtons">
+                    <button class="btn btn-light flex-fill rounded-pill py-2 fw-bold" onclick="cancelRejection()">
+                        Cancel
+                    </button>
+                    <button class="btn btn-danger flex-fill rounded-pill py-2 fw-bold shadow-sm" onclick="confirmReject()">
+                        Confirm Rejection
+                    </button>
+                </div>
             </div>
-            <form asp-action="EditPromotion" method="post">
-                <input type="hidden" name="PromotionID" id="edit-promo-id" />
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="modern-form-label">Campaign Name</label>
-                        <input type="text" name="PromotionName" id="edit-promo-name" class="modern-form-control w-100" required />
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label class="modern-form-label">Type</label>
-                            <select name="DiscountType" id="edit-promo-type" class="modern-form-control w-100" required>
-                                <option value="Percentage">Percentage (%)</option>
-                                <option value="Fixed">Fixed Amount (₱)</option>
-                            </select>
-                        </div>
-                        <div class="col">
-                            <label class="modern-form-label">Value</label>
-                            <input type="number" step="0.01" name="DiscountValue" id="edit-promo-value" class="modern-form-control w-100" required />
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label class="modern-form-label">Start Date</label>
-                            <input type="date" name="StartDate" id="edit-promo-start" class="modern-form-control w-100" required />
-                        </div>
-                        <div class="col">
-                            <label class="modern-form-label">End Date</label>
-                            <input type="date" name="EndDate" id="edit-promo-end" class="modern-form-control w-100" required />
-                        </div>
-                    </div>
-                    <div class="form-check form-switch mt-2">
-                        <input type="checkbox" name="IsActive" id="edit-promo-active" class="form-check-input" value="true" />
-                        <label class="form-check-label fw-bold text-sm ms-2">Is Active</label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-4">Save Changes</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        $(document).ready(function() {
-            $('.btn-edit-promo').on('click', function() {
-                var id = $(this).data('id');
-                var name = $(this).data('name');
-                var type = $(this).data('type');
-                var value = $(this).data('value');
-                var start = $(this).data('start');
-                var end = $(this).data('end');
-                var active = $(this).data('active');
+        let approvalModal;
 
-                $('#edit-promo-id').val(id);
-                $('#edit-promo-name').val(name);
-                $('#edit-promo-type').val(type);
-                $('#edit-promo-value').val(value);
-                $('#edit-promo-start').val(start);
-                $('#edit-promo-end').val(end);
-                $('#edit-promo-active').prop('checked', active);
-
-                var myModal = new bootstrap.Modal(document.getElementById('editPromotionModal'));
-                myModal.show();
-            });
+        document.addEventListener('DOMContentLoaded', function() {
+            approvalModal = new bootstrap.Modal(document.getElementById('approvalModal'));
         });
+
+        function openApprovalModal(id) {
+            const dataContainer = document.getElementById(`data-${id}`);
+            if (!dataContainer) return;
+
+            document.getElementById('modalCampaignId').value = id;
+            document.getElementById('modalCampaignName').textContent = dataContainer.dataset.name;
+            document.getElementById('modalDiscountValue').textContent = dataContainer.dataset.value;
+            // Handle potentially missing dataset values with safe defaults
+            document.getElementById('modalDiscountType').textContent = dataContainer.dataset.type || 'Percentage';
+            
+            const start = dataContainer.dataset.start || '';
+            const end = dataContainer.dataset.end || '';
+            document.getElementById('modalDuration').textContent = `${start} — ${end}`;
+            document.getElementById('modalDays').textContent = `${dataContainer.dataset.days || 0} days`;
+            
+            const isAuto = dataContainer.dataset.auto === 'true';
+            document.getElementById('modalAutoIcon').className = `fas fa-toggle-${isAuto ? 'on' : 'off'} text-${isAuto ? 'info' : 'secondary'}`;
+            const autoText = document.getElementById('modalAutoText');
+            autoText.textContent = isAuto ? 'Auto-activate upon approval' : 'Manual activation required';
+            autoText.className = `small text-${isAuto ? 'info' : 'secondary'} fw-bold`;
+
+            // Reset modal state
+            document.getElementById('rejectionSection').classList.add('d-none');
+            document.getElementById('actionButtons').classList.remove('d-none');
+            document.getElementById('confirmRejectButtons').classList.add('d-none');
+            document.getElementById('rejectionReason').value = '';
+
+            approvalModal.show();
+        }
+
+        function showRejectionInput() {
+            document.getElementById('rejectionSection').classList.remove('d-none');
+            document.getElementById('actionButtons').classList.add('d-none');
+            document.getElementById('confirmRejectButtons').classList.remove('d-none');
+            document.getElementById('rejectionReason').focus();
+        }
+
+        function cancelRejection() {
+            document.getElementById('rejectionSection').classList.add('d-none');
+            document.getElementById('actionButtons').classList.remove('d-none');
+            document.getElementById('confirmRejectButtons').classList.add('d-none');
+            document.getElementById('rejectionReason').value = '';
+        }
+
+        async function confirmApprove() {
+            const id = document.getElementById('modalCampaignId').value;
+            if (!confirm('Confirm approval for POS activation?')) return;
+
+            try {
+                const response = await fetch('@Url.Action("ApproveCampaign", "Manager")?id=' + id, {
+                    method: 'POST',
+                    headers: { 
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || '' 
+                    }
+                });
+
+                if (response.ok) {
+                    approvalModal.hide();
+                    location.reload();
+                } else {
+                    alert('Failed to approve campaign.');
+                }
+            } catch (err) { 
+                console.error(err);
+                alert('Network error occurred.'); 
+            }
+        }
+
+        async function confirmReject() {
+            const id = document.getElementById('modalCampaignId').value;
+            const reason = document.getElementById('rejectionReason').value.trim();
+
+            if (!reason) {
+                alert('Please provide a rejection reason.');
+                return;
+            }
+
+            try {
+                const response = await fetch('@Url.Action("RejectCampaign", "Manager")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    },
+                    body: JSON.stringify({ id: parseInt(id), reason: reason })
+                });
+
+                if (response.ok) {
+                    approvalModal.hide();
+                    location.reload();
+                } else {
+                    alert('Failed to reject campaign.');
+                }
+            } catch (err) { 
+                console.error(err);
+                alert('Network error occurred.'); 
+            }
+        }
     </script>
 }
+
+<style>
+    .x-small { font-size: 0.75rem; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    tbody tr:hover { background-color: rgba(var(--bs-primary-rgb), 0.03) !important; }
+</style>

@@ -34,6 +34,23 @@ namespace ljp_itsolutions.Controllers
         [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var roleName = User.FindFirstValue(ClaimTypes.Role);
+                if (string.Equals(roleName, UserRoles.SuperAdmin, StringComparison.OrdinalIgnoreCase))
+                    return RedirectToAction("Dashboard", "SuperAdmin");
+                if (string.Equals(roleName, UserRoles.Admin, StringComparison.OrdinalIgnoreCase))
+                    return RedirectToAction("Dashboard", "Admin");
+                if (string.Equals(roleName, UserRoles.Manager, StringComparison.OrdinalIgnoreCase))
+                    return RedirectToAction("Dashboard", "Manager");
+                if (string.Equals(roleName, UserRoles.Cashier, StringComparison.OrdinalIgnoreCase))
+                    return RedirectToAction("Index", "POS");
+                if (string.Equals(roleName, UserRoles.MarketingStaff, StringComparison.OrdinalIgnoreCase))
+                    return RedirectToAction("Dashboard", "Marketing");
+
+                return RedirectToAction("Index", "Home");
+            }
+
             ViewData["ReturnUrl"] = returnUrl;
             return View(new LoginViewModel());
         }
@@ -41,46 +58,71 @@ namespace ljp_itsolutions.Controllers
         [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("login")]
         public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
-
+ 
             if (!ModelState.IsValid)
                 return View(model);
-
+ 
             ljp_itsolutions.Models.User? user = null;
             if (!string.IsNullOrWhiteSpace(model.UsernameOrEmail))
             {
                 user = await _db.Users.FirstOrDefaultAsync(u => u.Username == model.UsernameOrEmail || u.Email == model.UsernameOrEmail);
             }
-
+ 
             if (user == null)
             {
                 ModelState.AddModelError(string.Empty, "Invalid credentials");
                 return View(model);
             }
-
+ 
+            // Check for lockout
+            if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow)
+            {
+                var remainingMinutes = (int)Math.Ceiling((user.LockoutEnd.Value - DateTimeOffset.UtcNow).TotalMinutes);
+                ModelState.AddModelError(string.Empty, $"Account is temporarily locked. Please try again in {remainingMinutes} minutes.");
+                return View(model);
+            }
+ 
             if (string.IsNullOrEmpty(user.Password))
             {
                 ModelState.AddModelError(string.Empty, "Invalid credentials");
                 return View(model);
             }
-
+ 
             var verify = _hasher.VerifyHashedPassword(user, user.Password, model.Password);
             if (verify == Microsoft.AspNetCore.Identity.PasswordVerificationResult.Failed)
             {
-                ModelState.AddModelError(string.Empty, "Invalid credentials");
+                user.AccessFailedCount++;
+                if (user.AccessFailedCount >= 5)
+                {
+                    user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(5);
+                    ModelState.AddModelError(string.Empty, "Account is temporarily locked due to too many failed attempts. Please try again in 5 minutes.");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Invalid credentials");
+                }
+                
+                await _db.SaveChangesAsync();
                 return View(model);
             }
-
+ 
             if (!user.IsActive)
             {
                 ModelState.AddModelError(string.Empty, "Account is deactivated. Please contact administrator.");
                 return View(model);
             }
-
+ 
+            // Reset lockout on success
+            user.AccessFailedCount = 0;
+            user.LockoutEnd = null;
+            await _db.SaveChangesAsync();
+ 
             var roleName = user.Role;
-
+ 
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username),
@@ -88,10 +130,10 @@ namespace ljp_itsolutions.Controllers
                 new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
                 new Claim(ClaimTypes.Role, roleName)
             };
-
+ 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
-
+ 
             // Set session variables for layout consistency
             HttpContext.Session.SetString("UserRole", roleName);
             HttpContext.Session.SetString("Username", user.Username);
@@ -100,10 +142,10 @@ namespace ljp_itsolutions.Controllers
             HttpContext.Session.SetString("FontSize", user.FontSize);
             HttpContext.Session.SetString("ReduceMotion", user.ReduceMotion.ToString().ToLower());
             HttpContext.Session.SetString("ProfilePictureUrl", user.ProfilePictureUrl ?? "");
-
+ 
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
-
+ 
             if (string.Equals(roleName, UserRoles.SuperAdmin, StringComparison.OrdinalIgnoreCase))
                 return RedirectToAction("Dashboard", "SuperAdmin");
             if (string.Equals(roleName, UserRoles.Admin, StringComparison.OrdinalIgnoreCase))
@@ -114,7 +156,7 @@ namespace ljp_itsolutions.Controllers
                 return RedirectToAction("Index", "POS");
             if (string.Equals(roleName, UserRoles.MarketingStaff, StringComparison.OrdinalIgnoreCase))
                 return RedirectToAction("Dashboard", "Marketing");
-
+ 
             return RedirectToAction("Index", "Home");
         }
 
@@ -281,6 +323,39 @@ namespace ljp_itsolutions.Controllers
             HttpContext.Session.SetString("ReduceMotion", user.ReduceMotion.ToString().ToLower());
 
             TempData["SuccessMessage"] = "Accessibility settings saved.";
+            return RedirectToAction(nameof(Profile));
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["Error"] = "Please provide all required fields.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdStr, out var userId))
+                return Unauthorized();
+
+            var user = await _db.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            var verify = _hasher.VerifyHashedPassword(user, user.Password ?? "", model.CurrentPassword);
+            if (verify == Microsoft.AspNetCore.Identity.PasswordVerificationResult.Failed)
+            {
+                TempData["Error"] = "Incorrect current password.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            user.Password = _hasher.HashPassword(user, model.NewPassword);
+            await _db.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Password updated successfully.";
             return RedirectToAction(nameof(Profile));
         }
 

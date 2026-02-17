@@ -1,49 +1,111 @@
 @model IEnumerable<ljp_itsolutions.Models.Promotion>
 @{
-    ViewData["Title"] = "Promotions Management";
+    Layout = "_Layout";
+    ViewData["Title"] = "Campaigns & Active Offers";
 }
 
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-end mb-4">
-        <a asp-action="CreateCampaign" class="btn btn-primary shadow-sm rounded-pill px-4">
-            <i class="fas fa-bullhorn me-2"></i>New Campaign
-        </a>
+<div class="container-fluid py-2">
+    <!-- Action & Filter Bar -->
+    <div class="row g-3 mb-4 align-items-center">
+        <div class="col-md-4">
+            <div class="input-group shadow-sm rounded-pill overflow-hidden border bg-white text-dark">
+                <span class="input-group-text bg-transparent border-0 ps-3">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" id="promoSearch" class="form-control border-0 shadow-none ps-2 py-2" placeholder="Search campaigns...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select id="statusFilter" class="form-select shadow-sm rounded-pill border py-2">
+                <option value="">All Statuses</option>
+                <option value="Active">Active Now</option>
+                <option value="Scheduled">Scheduled</option>
+                <option value="Ended">Ended/Paused</option>
+            </select>
+        </div>
+        <div class="col text-end">
+            <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#createCampaignModal">
+                <i class="fas fa-bullhorn me-2"></i>Provision Campaign
+            </button>
+        </div>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-4" id="promoContainer">
         @foreach (var promo in Model)
         {
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm rounded-4 h-100 promo-card @(promo.IsActive ? "active-promo" : "inactive-promo")">
+            var isEnded = promo.EndDate < DateTime.Now;
+            var isUpcoming = promo.StartDate > DateTime.Now;
+            var status = promo.IsActive ? (isEnded ? "Ended" : (isUpcoming ? "Scheduled" : "Active")) : "Ended";
+            var statusClass = status == "Active" ? "bg-success" : (status == "Scheduled" ? "bg-info" : "bg-secondary");
+
+            <div class="col-xl-4 col-md-6 promo-item" data-status="@status">
+                <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover overflow-hidden border-top-glow" 
+                     style="--glow-color: @(status == "Active" ? "var(--success-color)" : (status == "Scheduled" ? "var(--info-color)" : "#94a3b8"));">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start mb-3">
-                            <h5 class="fw-bold text-dark mb-0">@promo.PromotionName</h5>
-                            <span class="badge @(promo.IsActive ? "bg-success" : "bg-secondary") rounded-pill">
-                                @(promo.IsActive ? "Active" : "Paused")
-                            </span>
+                            <div class="flex-fill pe-3">
+                                <h6 class="fw-bold text-dark mb-1 search-title">@promo.PromotionName</h6>
+                                <p class="text-muted x-small mb-0">Code: <span class="fw-bold text-primary">@promo.PromotionName.Replace(" ", "").ToUpper()</span></p>
+                            </div>
+                            <div class="d-flex flex-column gap-2 align-items-end">
+                                @{
+                                    var approvalBadge = promo.ApprovalStatus == "Approved" ? "bg-success" : 
+                                                       (promo.ApprovalStatus == "Rejected" ? "bg-danger" : "bg-warning");
+                                    var approvalIcon = promo.ApprovalStatus == "Approved" ? "fa-check-circle" : 
+                                                      (promo.ApprovalStatus == "Rejected" ? "fa-times-circle" : "fa-clock");
+                                }
+                                <span class="badge rounded-pill @approvalBadge px-3 x-small">
+                                    <i class="fas @approvalIcon me-1"></i>@promo.ApprovalStatus.ToUpper()
+                                </span>
+                                @if (promo.ApprovalStatus == "Approved")
+                                {
+                                    <span class="badge rounded-pill @statusClass px-3 x-small">@status.ToUpper()</span>
+                                }
+                            </div>
                         </div>
                         
-                        <div class="promo-discount mb-3">
-                            <span class="fs-2 fw-bold text-primary">
+                        @if (promo.ApprovalStatus == "Rejected" && !string.IsNullOrEmpty(promo.RejectionReason))
+                        {
+                            <div class="alert alert-danger border-0 bg-danger bg-opacity-10 p-2 mb-3">
+                                <small class="text-danger d-flex align-items-start gap-2">
+                                    <i class="fas fa-exclamation-triangle mt-1"></i>
+                                    <span><strong>Rejected:</strong> @promo.RejectionReason</span>
+                                </small>
+                            </div>
+                        }
+                        else if (promo.ApprovalStatus == "Pending")
+                        {
+                            <div class="alert alert-warning border-0 bg-warning bg-opacity-10 p-2 mb-3">
+                                <small class="text-warning d-flex align-items-center gap-2">
+                                    <i class="fas fa-hourglass-half"></i>
+                                    <span>Awaiting manager approval to activate in POS</span>
+                                </small>
+                            </div>
+                        }
+                        
+                        <div class="promo-discount-display p-3 bg-light rounded-4 mb-4 text-center border border-white shadow-sm border-2">
+                            <span class="h1 fw-bold text-primary mb-0">
                                 @(promo.DiscountType == "Percentage" ? $"{promo.DiscountValue}%" : $"₱{promo.DiscountValue}")
                             </span>
-                            <span class="text-muted ms-1">OFF</span>
+                            <span class="fw-bold text-muted small ms-1 uppercase tracking-wider">Discount</span>
                         </div>
 
-                        <div class="promo-meta small text-muted mb-4">
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <i class="far fa-calendar-alt"></i>
-                                <span>@promo.StartDate.ToShortDateString() - @promo.EndDate.ToShortDateString()</span>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="fas fa-ticket-alt"></i>
-                                <span>Code: @promo.PromotionName.Replace(" ", "").ToUpper()</span>
+                        <div class="promo-meta mb-4">
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center gap-2 p-2 bg-white rounded-3 small">
+                                        <i class="far fa-calendar-alt text-primary opacity-50"></i>
+                                        <span class="text-dark fw-medium">@promo.StartDate.ToString("MMM dd") — @promo.EndDate.ToString("MMM dd, yyyy")</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <div class="d-flex gap-2">
-                            <button class="btn btn-light flex-fill btn-sm rounded-pill py-2 fw-bold">Edit</button>
-                            <a asp-action="PromotionPerformance" class="btn btn-outline-primary flex-fill btn-sm rounded-pill py-2 fw-bold">Stats</a>
+                            <button class="btn btn-light border-0 flex-fill btn-sm rounded-pill py-2 fw-bold shadow-none">Modify</button>
+                            <a asp-action="PromotionPerformance" class="btn btn-white border flex-fill btn-sm rounded-pill py-2 fw-bold text-primary hvr-light">
+                                <i class="fas fa-chart-pie me-1 x-small opacity-50"></i> Analytics
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -52,9 +114,145 @@
     </div>
 </div>
 
+<!-- Create Campaign Modal -->
+<div class="modal fade" id="createCampaignModal" tabindex="-1" aria-labelledby="createCampaignModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-primary text-white border-0 py-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar-sm bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                        <i class="fas fa-bullhorn"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="createCampaignModalLabel">Provision New Campaign</h5>
+                        <p class="mb-0 x-small text-white text-opacity-75 uppercase tracking-wider">Strategic Marketing Initiative</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form asp-action="CreateCampaign" method="post" id="campaignForm">
+                    @Html.AntiForgeryToken()
+                    
+                    <!-- Section: Identity -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="fas fa-fingerprint text-primary me-2"></i>Campaign Identity</h6>
+                        <div class="mb-3">
+                            <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Display Name</label>
+                            <input name="PromotionName" class="form-control rounded-3 border-2" placeholder="e.g. Q1 Seasonal Rewards Blast" required />
+                        </div>
+                    </div>
+
+                    <!-- Section: Financial Logic -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="fas fa-tag text-success me-2"></i>Incentive Logic</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Calculation Type</label>
+                                <select name="DiscountType" class="form-select rounded-3">
+                                    <option value="Percentage">Relational Percentage (%)</option>
+                                    <option value="Fixed">Static Fixed Amount (₱)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Face Value</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0 rounded-start-3"><i class="fas fa-coins x-small"></i></span>
+                                    <input name="DiscountValue" type="number" step="0.01" class="form-control rounded-end-3" placeholder="20" required />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Scheduling -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="fas fa-calendar-check text-warning me-2"></i>Temporal Bounds</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Activation Date</label>
+                                <input name="StartDate" type="date" class="form-control rounded-3" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Termination Date</label>
+                                <input name="EndDate" type="date" class="form-control rounded-3" value="@DateTime.Now.AddDays(30).ToString("yyyy-MM-dd")" required />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Toggle -->
+                    <div class="p-3 bg-light rounded-4 border border-white shadow-sm border-2">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1 small">Request Immediate Activation</h6>
+                                <p class="text-muted x-small mb-0">If enabled, campaign activates upon manager approval (subject to date range)</p>
+                            </div>
+                            <div class="form-check form-switch p-0">
+                                <input class="form-check-input ms-0 mt-0" name="IsActive" type="checkbox" checked style="width: 50px; height: 26px; cursor: pointer;">
+                            </div>
+                        </div>
+                        <div class="alert alert-info border-0 bg-info bg-opacity-10 mt-3 mb-0 p-2">
+                            <small class="text-info d-flex align-items-center gap-2">
+                                <i class="fas fa-info-circle"></i>
+                                <span>All campaigns require manager approval before appearing in POS</span>
+                            </small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 bg-light bg-opacity-50 py-3">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="submit" form="campaignForm" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="fas fa-rocket me-2"></i>Commit Initiative
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            function filterPromos() {
+                var searchTerm = $('#promoSearch').val().toLowerCase();
+                var statusFilter = $('#statusFilter').val();
+
+                $('.promo-item').each(function() {
+                    var item = $(this);
+                    var title = item.find('.search-title').text().toLowerCase();
+                    var code = item.find('p.text-muted span').text().toLowerCase();
+                    var status = item.data('status');
+
+                    var matchesSearch = title.includes(searchTerm) || code.includes(searchTerm);
+                    var matchesStatus = statusFilter === "" || status === statusFilter;
+
+                    if (matchesSearch && matchesStatus) {
+                        item.show();
+                    } else {
+                        item.hide();
+                    }
+                });
+
+                if ($('.promo-item:visible').length === 0) {
+                    if ($('#noResults').length === 0) {
+                        $('#promoContainer').append('<div id="noResults" class="col-12 text-center py-5 text-muted"><i class="fas fa-bullhorn fa-3x mb-3 opacity-25"></i><p>No campaigns match your specific criteria.</p></div>');
+                    }
+                } else {
+                    $('#noResults').remove();
+                }
+            }
+
+            $('#promoSearch').on('keyup', filterPromos);
+            $('#statusFilter').on('change', filterPromos);
+        });
+    </script>
+}
+
 <style>
-    .promo-card { border-left: 5px solid transparent !important; transition: all 0.3s; }
-    .active-promo { border-left-color: #0d6efd !important; }
-    .inactive-promo { border-left-color: #6c757d !important; opacity: 0.8; }
-    .promo-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important; }
+    .border-top-glow { border-top: 4px solid var(--glow-color) !important; }
+    .x-small { font-size: 0.75rem; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.1em; }
+    .hvr-light:hover { background-color: #f8fafc !important; border-color: #e2e8f0 !important; }
 </style>

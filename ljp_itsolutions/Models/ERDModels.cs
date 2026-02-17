@@ -55,6 +55,18 @@ namespace ljp_itsolutions.Models
 
         public bool IsActive { get; set; } = true;
 
+        // Approval Workflow Fields
+        [Required]
+        [StringLength(20)]
+        public string ApprovalStatus { get; set; } = "Pending"; // Pending, Approved, Rejected
+
+        public int? ApprovedBy { get; set; } // UserID of approving manager
+
+        public DateTime? ApprovedDate { get; set; }
+
+        [StringLength(500)]
+        public string? RejectionReason { get; set; }
+
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
     }
 

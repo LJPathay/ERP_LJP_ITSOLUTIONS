@@ -1,39 +1,70 @@
 @model IEnumerable<dynamic>
 @{
-    ViewData["Title"] = "Campaign Performance";
+    Layout = "_Layout";
+    ViewData["Title"] = "Campaign ROI Analysis";
 }
 
-<div class="container-fluid py-4">
-    <div class="card border-0 shadow-sm rounded-4 mt-2">
+<div class="container-fluid py-2">
+    <!-- Action Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h6 class="fw-bold mb-0 text-dark">Tactical ROI Analysis</h6>
+            <p class="text-muted x-small mb-0">Return on investment and conversion metrics for active promotions</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-light border rounded-pill px-4 shadow-none btn-sm fw-bold x-small">DOWNLOAD AUDIT</button>
+        </div>
+    </div>
+
+    <!-- Main Performance Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light-subtle">
+                <table class="table align-middle mb-0">
+                    <thead class="bg-light bg-opacity-50">
                         <tr>
-                            <th class="ps-4 py-3">Campaign</th>
-                            <th class="py-3 text-center">Total Uses</th>
-                            <th class="py-3 text-end">Discount Applied</th>
-                            <th class="py-3 text-center">ROI Status</th>
-                            <th class="pe-4 py-3 text-end">Action</th>
+                            <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted">Strategic Campaign</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted text-center">Engagement count</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted text-end">Equity Utilization</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted text-center">ROI Efficiency</th>
+                            <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold text-muted">Management</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var item in Model)
                         {
+                            var roiClass = item.UsageCount > 50 ? "bg-success text-success" : (item.UsageCount > 10 ? "bg-warning text-warning" : "bg-danger text-danger");
+                            var roiLabel = item.UsageCount > 50 ? "HIGH EFFICIENCY" : (item.UsageCount > 10 ? "OPTIMAL ROI" : "LOW CONVERSION");
+
                             <tr>
                                 <td class="ps-4">
-                                    <div class="fw-bold">@item.PromotionName</div>
-                                    <small class="text-muted">Type: Active Campaign</small>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar-xs rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="fas fa-bullseye x-small"></i>
+                                        </div>
+                                        <div>
+                                            <p class="mb-0 fw-bold text-dark small">@item.PromotionName</p>
+                                            <p class="text-muted x-small mb-0 uppercase tracking-wider">Tactical Initiative</p>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="text-center fw-bold">@item.UsageCount</td>
-                                <td class="text-end text-danger fw-bold">-₱@item.TotalDiscountedAmount.ToString("N2")</td>
                                 <td class="text-center">
-                                    @if (item.UsageCount > 50) { <span class="badge bg-success-subtle text-success">High ROI</span> }
-                                    else if (item.UsageCount > 10) { <span class="badge bg-warning-subtle text-warning">Medium ROI</span> }
-                                    else { <span class="badge bg-danger-subtle text-danger">Low ROI</span> }
+                                    <div class="fw-bold text-dark">@item.UsageCount</div>
+                                    <div class="text-muted x-small">Unique redemptions</div>
+                                </td>
+                                <td class="text-end">
+                                    <span class="fw-bold text-danger">-₱@item.TotalDiscountedAmount.ToString("N2")</span>
+                                    <p class="text-muted x-small mb-0">Capital incentive</p>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge rounded-pill @roiClass border px-3 x-small bg-opacity-10 border-opacity-10 fw-bold">
+                                        @roiLabel
+                                    </span>
                                 </td>
                                 <td class="pe-4 text-end">
-                                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3">Full Report</button>
+                                    <button class="btn btn-sm btn-light border-0 rounded-pill px-3 shadow-none text-primary fw-bold x-small">
+                                        FULL DRILLDOWN
+                                    </button>
                                 </td>
                             </tr>
                         }
@@ -43,3 +74,9 @@
         </div>
     </div>
 </div>
+
+<style>
+    .x-small { font-size: 0.75rem; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.05em; }
+</style>

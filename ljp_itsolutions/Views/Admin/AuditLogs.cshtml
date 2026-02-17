@@ -1,75 +1,157 @@
 @model IEnumerable<ljp_itsolutions.Models.AuditLog>
 @{
-    ViewData["Title"] = "Audit Logs";
-    ViewData["PageTitle"] = "View Audit Logs";
+    ViewData["Title"] = "Security Logs";
 }
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="row mb-4 d-none">
-        <div class="col-12">
-            <p class="text-muted mb-0">Monitor system activities and user actions</p>
+<div class="container-fluid py-2">
+    <!-- Controls -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white">
+        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
+            <div class="input-group" style="max-width: 300px;">
+                <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                <input type="text" id="logSearch" class="form-control bg-light border-start-0" placeholder="Search logs...">
+            </div>
+            <button class="btn btn-light shadow-sm" onclick="location.reload()">
+                <i class="fas fa-sync-alt text-primary"></i>
+            </button>
         </div>
     </div>
 
-    <!-- Audit Logs Table -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card-custom">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">System Audit Logs</h5>
-                    <div class="input-group input-group-sm w-auto">
-                        <input type="text" id="logSearch" class="form-control" placeholder="Search logs...">
-                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+    <!-- Logs Table / Timeline -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="logsTable">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted" style="width: 20%;">Time</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted" style="width: 25%;">User</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted" style="width: 45%;">Action</th>
+                        <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold text-muted">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="border-start border-3 border-light">
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var log in Model)
+                        {
+                            var actionType = log.Action.ToLower();
+                            var badgeClass = "secondary";
+                            var icon = "info-circle";
+
+                            if (actionType.Contains("login")) { badgeClass = "success"; icon = "sign-in-alt"; }
+                            else if (actionType.Contains("logout")) { badgeClass = "secondary"; icon = "sign-out-alt"; }
+                            else if (actionType.Contains("create") || actionType.Contains("add") || actionType.Contains("restore")) { badgeClass = "primary"; icon = "plus-circle"; }
+                            else if (actionType.Contains("update") || actionType.Contains("edit")) { badgeClass = "info"; icon = "edit"; }
+                            else if (actionType.Contains("delete") || actionType.Contains("remove") || actionType.Contains("archive")) { badgeClass = "danger"; icon = "trash"; }
+                            else if (actionType.Contains("error") || actionType.Contains("fail")) { badgeClass = "danger"; icon = "exclamation-triangle"; }
+
+                            <tr style="cursor: pointer;" onclick="openLogModal(@log.AuditID)">
+                                <td class="ps-4 position-relative">
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold text-dark">@log.Timestamp.ToString("HH:mm:ss")</span>
+                                        <span class="text-muted x-small">@log.Timestamp.ToString("MMM dd, yyyy")</span>
+                                    </div>
+                                    <!-- Timeline Dot -->
+                                    <div class="position-absolute start-0 top-50 translate-middle-y ms-n1 rounded-circle bg-@badgeClass" 
+                                         style="width: 6px; height: 6px;"></div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar-xs bg-light rounded-circle d-flex align-items-center justify-content-center">
+                                            @if (log.User != null && !string.IsNullOrEmpty(log.User.ProfilePictureUrl)) {
+                                                <img src="@log.User.ProfilePictureUrl" class="w-100 h-100 rounded-circle object-fit-cover">
+                                            } else {
+                                                <i class="fas fa-user text-muted x-small"></i>
+                                            }
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark text-truncate" style="max-width: 150px;">
+                                                @(log.User?.FullName ?? "System")
+                                            </div>
+                                            @if (log.User != null)
+                                            {
+                                                <div class="text-muted x-small">@@@log.User.Username</div>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="badge rounded-circle bg-@badgeClass bg-opacity-10 text-@badgeClass p-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="fas fa-@icon"></i>
+                                        </div>
+                                        <span class="text-dark fw-medium">@log.Action</span>
+                                    </div>
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <button class="btn btn-sm btn-light rounded-pill px-3 fw-bold text-primary shadow-sm"
+                                            onclick="event.stopPropagation(); openLogModal(@log.AuditID)">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                            
+                            <!-- Hidden Data -->
+                            <div id="data-@log.AuditID" class="d-none"
+                                 data-time="@log.Timestamp.ToString("MMM dd, yyyy HH:mm:ss")"
+                                 data-user="@(log.User?.FullName ?? "System")"
+                                 data-username="@(log.User?.Username ?? "N/A")"
+                                 data-action="@log.Action"
+                                 data-icon="@icon"
+                                 data-color="@badgeClass">
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <div class="py-5">
+                                    <i class="fas fa-shield-alt fa-4x text-muted opacity-25 mb-4"></i>
+                                    <h6 class="fw-bold text-dark">No Logs Found</h6>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Log Details Modal -->
+<div class="modal fade" id="logModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-white border-bottom-0">
+                <h6 class="modal-title fw-bold text-dark ps-2">Log Details</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 pt-0">
+                <div class="text-center mb-4 mt-2">
+                    <div id="modalIconContainer" class="avatar-lg bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-info-circle fa-2x text-primary" id="modalIcon"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1" id="modalAction">Action Name</h5>
+                    <p class="text-muted small mb-0" id="modalTime">Jan 01, 2026 12:00:00</p>
+                    <p class="text-muted x-small uppercase tracking-wider mt-1" id="modalLogId">ID: #000</p>
+                </div>
+
+                <div class="p-3 bg-light rounded-3 border">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="avatar-sm bg-white border rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="fas fa-user text-muted small"></i>
+                        </div>
+                        <div>
+                            <small class="d-block text-muted x-small uppercase fw-bold">User Initiator</small>
+                            <div class="fw-bold text-dark" id="modalUser">User Name</div>
+                            <div class="text-muted x-small" id="modalUsername">@@username</div>
+                        </div>
                     </div>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-custom mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Log ID</th>
-                                    <th>Timestamp</th>
-                                    <th>User</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (Model != null && Model.Any())
-                                {
-                                    foreach (var log in Model)
-                                    {
-                                        <tr>
-                                            <td>#@log.AuditID</td>
-                                            <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
-                                            <td>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <div class="user-avatar-sm bg-amber">
-                                                        <i class="fas fa-user text-white small"></i>
-                                                    </div>
-                                                    <span class="fw-semibold">@(log.User?.FullName ?? "System")</span>
-                                                    @if (log.User != null)
-                                                    {
-                                                        <small class="text-muted">(@log.User.Username)</small>
-                                                    }
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-primary">@log.Action</span>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                                else
-                                {
-                                    <tr>
-                                        <td colspan="4" class="text-center py-4 text-muted">No audit logs found.</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            </div>
+            <div class="modal-footer border-0 p-3 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold flex-fill" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -77,13 +159,43 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function() {
-            $('#logSearch').on('keyup', function() {
-                var value = $(this).val().toLowerCase();
-                $("table tbody tr").filter(function() {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-                });
+        const logModal = new bootstrap.Modal(document.getElementById('logModal'));
+
+        // Search functionality
+        document.getElementById('logSearch').addEventListener('keyup', function() {
+            const value = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#logsTable tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(value) ? '' : 'none';
             });
         });
+
+        function openLogModal(id) {
+            const data = document.getElementById(`data-${id}`);
+            if (!data) return;
+
+            document.getElementById('modalLogId').textContent = `ID: #${id}`;
+            document.getElementById('modalAction').textContent = data.dataset.action;
+            document.getElementById('modalTime').textContent = data.dataset.time;
+            document.getElementById('modalUser').textContent = data.dataset.user;
+            document.getElementById('modalUsername').textContent = data.dataset.username !== 'N/A' ? '@@' + data.dataset.username : 'System';
+
+            const iconClass = `fas fa-${data.dataset.icon} fa-2x text-${data.dataset.color}`;
+            document.getElementById('modalIcon').className = iconClass;
+            document.getElementById('modalIconContainer').className = `avatar-lg bg-${data.dataset.color} bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3`;
+            
+            logModal.show();
+        }
     </script>
 }
+
+<style>
+    .x-small { font-size: 0.75rem; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    .avatar-xs { width: 32px; height: 32px; }
+    .object-fit-cover { object-fit: cover; }
+    tbody tr:hover { background-color: rgba(var(--bs-primary-rgb), 0.03) !important; }
+</style>

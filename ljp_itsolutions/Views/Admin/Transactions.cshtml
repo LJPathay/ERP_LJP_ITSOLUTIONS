@@ -1,71 +1,182 @@
 @model IEnumerable<ljp_itsolutions.Models.Order>
 @{
-    ViewData["Title"] = "Monitor Transactions";
+    ViewData["Title"] = "Sales History";
 }
 
-<div class="container-fluid">
-    <div class="mb-4 d-none">
-        <p class="text-muted">Track and analyze all system transactions in real-time.</p>
+<div class="container-fluid py-2">
+    <!-- Filters & Controls -->
+    <div class="card border-0 shadow-sm rounded-4 mb-3 p-3 bg-white">
+        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
+            <div class="d-flex gap-3 flex-grow-1">
+                <div class="input-group" style="max-width: 300px;">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                    <input type="text" id="transactionSearch" class="form-control bg-light border-start-0" placeholder="Search order ID or customer...">
+                </div>
+                <select id="statusFilter" class="form-select bg-light border-0" style="max-width: 150px;">
+                    <option value="">All Status</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+                <input type="date" id="dateFilter" class="form-control bg-light border-0" style="max-width: 150px;">
+            </div>
+            <button class="btn btn-light shadow-sm" onclick="location.reload()">
+                <i class="fas fa-sync-alt text-primary"></i>
+            </button>
+        </div>
     </div>
 
-    <div class="card-custom">
-        <div class="card-header d-flex justify-content-between align-items-center bg-white py-3">
-            <h5 class="fw-bold mb-0">Transaction History</h5>
-            <div class="d-flex gap-2">
-                <div class="input-group input-group-sm">
-                    <input type="text" id="transactionSearch" class="form-control" placeholder="Search transactions...">
-                    <span class="input-group-text bg-amber text-white border-amber"><i class="fas fa-search"></i></span>
-                </div>
-                <button class="btn btn-sm btn-outline-secondary" onclick="window.location.reload()">
-                    <i class="fas fa-sync-alt me-1"></i>Refresh
-                </button>
-            </div>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-custom mb-0">
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Date</th>
-                            <th>Customer</th>
-                            <th>Cashier</th>
-                            <th>Total Amount</th>
-                            <th>Status</th>
-                            <th>Method</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model != null && Model.Any())
+    <!-- Transactions Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+            <table class="table table-hover align-middle mb-0" id="transactionsTable">
+                <thead class="bg-light sticky-top" style="z-index: 1;">
+                    <tr>
+                        <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted">Order ID</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted">Date & Time</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted">Customer</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted">Cashier</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted">Amount</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted">Status</th>
+                        <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold text-muted">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var order in Model)
                         {
-                            foreach (var order in Model)
-                            {
-                                <tr>
-                                    <td><span class="fw-bold text-amber">#@order.OrderID.ToString().Substring(0, 8)</span></td>
-                                    <td>@order.OrderDate.ToString("yyyy-MM-dd HH:mm")</td>
-                                    <td>@(order.Customer?.FullName ?? "Walk-in")</td>
-                                    <td>@(order.Cashier?.FullName ?? "Unknown")</td>
-                                    <td class="fw-bold">₱@order.FinalAmount.ToString("N2")</td>
-                                    <td>
-                                        <span class="badge @(order.PaymentStatus == "Completed" || order.PaymentStatus == "Paid" ? "bg-success" : "bg-warning")">
-                                            @order.PaymentStatus
+                            <tr class="transaction-row" style="cursor: pointer;" 
+                                onclick="openOrderModal('@order.OrderID')"
+                                data-status="@order.PaymentStatus"
+                                data-date="@order.OrderDate.ToString("yyyy-MM-dd")">
+                                <td class="ps-4">
+                                    <span class="fw-bold text-dark" title="@order.OrderID">#@order.OrderID.ToString().Substring(0, 8)...</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-medium text-dark">@order.OrderDate.ToString("MMM dd, yyyy")</span>
+                                        <span class="text-muted x-small">@order.OrderDate.ToString("hh:mm tt")</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar-xs bg-light rounded-circle d-flex align-items-center justify-content-center">
+                                            <i class="fas fa-user text-muted x-small"></i>
+                                        </div>
+                                        <span class="text-dark">@(order.Customer?.FullName ?? "Walk-in Customer")</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="text-muted small">@(order.Cashier?.FullName ?? "N/A")</span>
+                                </td>
+                                <td class="fw-bold text-primary">₱@order.FinalAmount.ToString("N2")</td>
+                                <td>
+                                    @if (order.PaymentStatus == "Completed" || order.PaymentStatus == "Paid")
+                                    {
+                                        <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-10 px-3">
+                                            <i class="fas fa-check-circle me-1"></i>PAID
                                         </span>
-                                    </td>
-                                    <td>@order.PaymentMethod</td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">
-                                    <i class="fas fa-receipt fa-3x mb-3 d-block"></i>
-                                    No transactions found.
+                                    }
+                                    else if (order.PaymentStatus == "Pending")
+                                    {
+                                        <span class="badge rounded-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-10 px-3">
+                                            <i class="fas fa-clock me-1"></i>PENDING
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-10 px-3">
+                                            <i class="fas fa-times-circle me-1"></i>@order.PaymentStatus
+                                        </span>
+                                    }
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <button class="btn btn-sm btn-light rounded-pill px-3 fw-bold text-primary shadow-sm"
+                                            onclick="event.stopPropagation(); openOrderModal('@order.OrderID')">
+                                        View
+                                    </button>
                                 </td>
                             </tr>
                         }
-                    </tbody>
-                </table>
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="py-5">
+                                    <i class="fas fa-receipt fa-4x text-muted opacity-25 mb-4"></i>
+                                    <h6 class="fw-bold text-dark">No Transactions Found</h6>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-primary text-white border-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar-sm bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <div>
+                        <h6 class="modal-title fw-bold mb-0">Order Receipt</h6>
+                        <p class="mb-0 x-small text-white text-opacity-75 uppercase tracking-wider" id="modalOrderId">#00000</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <!-- Receipt Details -->
+                <div class="p-4 bg-light border-bottom">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <p class="x-small text-muted uppercase tracking-wider mb-1">Customer</p>
+                            <div class="fw-bold text-dark" id="modalCustomer">Customer Name</div>
+                        </div>
+                        <div class="col-6 text-end">
+                            <p class="x-small text-muted uppercase tracking-wider mb-1">Date & Time</p>
+                            <div class="fw-bold text-dark" id="modalDate">Jan 01, 2026 12:00 PM</div>
+                        </div>
+                        <div class="col-6">
+                            <p class="x-small text-muted uppercase tracking-wider mb-1">Cashier</p>
+                            <div class="fw-bold text-dark" id="modalCashier">Cashier Name</div>
+                        </div>
+                        <div class="col-6 text-end">
+                            <p class="x-small text-muted uppercase tracking-wider mb-1">Payment Method</p>
+                            <div class="badge bg-white text-dark border shadow-sm" id="modalPayment">Cash</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Items List -->
+                <div class="p-4" style="max-height: 300px; overflow-y: auto;">
+                    <p class="x-small text-muted uppercase tracking-wider mb-3">Order Items</p>
+                    <div id="modalItemsList" class="d-flex flex-column gap-3">
+                        <!-- Items injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Total -->
+                <div class="p-4 bg-light border-top">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted uppercase tracking-wider small">Total Amount</span>
+                        <h4 class="fw-bold text-primary mb-0" id="modalTotal">₱0.00</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-3">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold flex-fill" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold flex-fill" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>Print Receipt
+                </button>
             </div>
         </div>
     </div>
@@ -73,13 +184,111 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function() {
-            $('#transactionSearch').on('keyup', function() {
-                var value = $(this).val().toLowerCase();
-                $("table tbody tr").filter(function() {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-                });
+        const orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
+        const searchInput = document.getElementById('transactionSearch');
+        const statusFilter = document.getElementById('statusFilter');
+        const dateFilter = document.getElementById('dateFilter');
+        const rows = document.querySelectorAll('.transaction-row');
+
+        function filterTransactions() {
+            const term = searchInput.value.toLowerCase();
+            const status = statusFilter.value;
+            const date = dateFilter.value;
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const rowStatus = row.dataset.status;
+                const rowDate = row.dataset.date.split('T')[0]; // simple date match
+
+                const matchesSearch = text.includes(term);
+                const matchesStatus = status === "" || rowStatus === status || (status === "Paid" && (rowStatus === "Completed" || rowStatus === "Paid"));
+                const matchesDate = date === "" || row.dataset.date.startsWith(date);
+
+                row.style.display = (matchesSearch && matchesStatus && matchesDate) ? '' : 'none';
             });
-        });
+        }
+
+        searchInput.addEventListener('keyup', filterTransactions);
+        statusFilter.addEventListener('change', filterTransactions);
+        dateFilter.addEventListener('change', filterTransactions);
+
+        async function openOrderModal(id) {
+            try {
+                const response = await fetch(`@Url.Action("GetOrderDetails", "Admin")?id=${id}`);
+                if (!response.ok) throw new Error('Failed to fetch order details');
+                
+                const order = await response.json();
+                
+                document.getElementById('modalOrderId').textContent = `Order #${order.orderID}`; // assuming Guid sent as string or object
+                document.getElementById('modalCustomer').textContent = order.customerName;
+                document.getElementById('modalDate').textContent = order.orderDate;
+                document.getElementById('modalCashier').textContent = order.cashierName;
+                document.getElementById('modalPayment').textContent = order.paymentMethod;
+                document.getElementById('modalTotal').textContent = `₱${order.totalAmount.toFixed(2)}`;
+
+                const itemsContainer = document.getElementById('modalItemsList');
+                itemsContainer.innerHTML = '';
+                
+                order.items.forEach(item => {
+                    const el = document.createElement('div');
+                    el.className = 'd-flex justify-content-between align-items-center';
+                    // Use template literal for currency, avoid Razor conflict
+                    el.innerHTML = `
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar-xs bg-light rounded px-2 py-1 small fw-bold text-muted">${item.quantity}x</div>
+                            <div>
+                                <div class="fw-medium text-dark">${item.productName}</div>
+                                <div class="x-small text-muted">@@ ${item.unitPrice.toFixed(2)}</div>
+                            </div>
+                        </div>
+                        <div class="fw-bold text-dark">₱${item.total.toFixed(2)}</div>
+                    `;
+                    itemsContainer.appendChild(el);
+                });
+
+                orderModal.show();
+            } catch (err) {
+                console.error(err);
+                alert('Failed to load order.');
+            }
+        }
     </script>
 }
+
+<style>
+    .x-small { font-size: 0.75rem; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    .avatar-xs { width: 32px; height: 32px; }
+    tbody tr:hover { background-color: rgba(var(--bs-primary-rgb), 0.03) !important; }
+    
+    /* Sticky Header fix */
+    thead.sticky-top th {
+        background-color: #f8f9fa; /* Ensure header has background when scrolling */
+        box-shadow: 0 1px 0 rgba(0,0,0,0.05); /* Optional: add border effect */
+    }
+    
+    /* Custom Scrollbar */
+    .table-responsive::-webkit-scrollbar {
+        width: 6px;
+    }
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 3px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #999;
+    }
+
+    @@media print {
+        body * { visibility: hidden; }
+        #orderModal, #orderModal * { visibility: visible; }
+        #orderModal { position: absolute; left: 0; top: 0; margin: 0; padding: 0; width: 100%; height: 100%; }
+        .modal-dialog { max-width: 100%; margin: 0; }
+        .modal-content { box-shadow: none !important; border: none !important; }
+        .btn-close, .modal-footer { display: none !important; }
+    }
+</style>

@@ -34,6 +34,10 @@ namespace ljp_itsolutions.Models
         public bool ReduceMotion { get; set; } = false;
 
         public string? ProfilePictureUrl { get; set; }
+        
+        // Brute Force protection
+        public int AccessFailedCount { get; set; } = 0;
+        public DateTimeOffset? LockoutEnd { get; set; }
 
         // Legacy compatibility
         [NotMapped]

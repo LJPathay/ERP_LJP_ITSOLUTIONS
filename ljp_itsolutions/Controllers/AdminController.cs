@@ -54,9 +54,8 @@ namespace ljp_itsolutions.Controllers
         {
             var query = _db.Users.AsQueryable();
             
-            // For Admin, maybe exclude SuperAdmins if they shouldn't manage them?
-            // But usually Admin is powerful. Let's keep it simple for now as requested.
-            
+            query = query.Where(u => u.Role != "SuperAdmin");
+
             if (showArchived)
                 query = query.Where(u => !u.IsActive);
             else
@@ -320,15 +319,97 @@ namespace ljp_itsolutions.Controllers
             return View(logs);
         }
 
-        // Redirect system-level concerns to SuperAdmin dashboard for Admins
-        public IActionResult SystemSettings()
+        // API Endpoints for Modals
+        [HttpGet]
+        public async Task<IActionResult> GetUser(string id)
         {
-            return RedirectToAction("Dashboard", "SuperAdmin");
+            if (string.IsNullOrEmpty(id)) return BadRequest();
+            
+            var user = await _db.Users
+                .Where(u => u.UserID.ToString() == id)
+                .Select(u => new 
+                {
+                    u.UserID,
+                    u.Username,
+                    u.Email,
+                    u.FullName,
+                    u.Role,
+                    u.IsActive,
+                    u.CreatedAt,
+                    u.ProfilePictureUrl
+                })
+                .FirstOrDefaultAsync();
+                
+            if (user == null) return NotFound();
+            return Json(user);
         }
 
-        public IActionResult Backups()
+        [HttpGet]
+        public async Task<IActionResult> GetOrderDetails(Guid id)
         {
-            return RedirectToAction("Dashboard", "SuperAdmin");
+            var order = await _db.Orders
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(od => od.Product)
+                .Include(o => o.Cashier)
+                .Include(o => o.Customer)
+                .Where(o => o.OrderID == id)
+                .Select(o => new
+                {
+                    o.OrderID,
+                    OrderDate = o.OrderDate.ToString("MMM dd, yyyy HH:mm"),
+                    CustomerName = o.Customer != null ? o.Customer.FullName : "Walk-in Customer",
+                    CashierName = o.Cashier != null ? o.Cashier.FullName : "N/A",
+                    o.PaymentMethod,
+                    o.PaymentStatus,
+                    TotalAmount = o.FinalAmount,
+                    Items = o.OrderDetails.Select(od => new
+                    {
+                        ProductName = od.Product.Name,
+                        od.Quantity,
+                        od.UnitPrice,
+                        Total = od.Quantity * od.UnitPrice
+                    })
+                })
+                .FirstOrDefaultAsync();
+
+            if (order == null) return NotFound();
+            return Json(order);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditUser([FromBody] User user)
+        {
+            var existingUser = await _db.Users.FindAsync(user.UserID);
+            if (existingUser == null) return NotFound();
+
+            if (existingUser.Role == "SuperAdmin") return Forbid();
+
+            existingUser.FullName = user.FullName;
+            existingUser.Email = user.Email;
+            existingUser.Role = user.Role;
+            // existingUser.Username is usually not changed or needs checks
+
+            _db.Users.Update(existingUser);
+            await _db.SaveChangesAsync();
+            await LogAudit("Updated User: " + user.Username, existingUser.UserID);
+
+            return Ok();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ToggleUserStatus(Guid id)
+        {
+            var user = await _db.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            if (user.Role == "SuperAdmin") return Forbid();
+
+            user.IsActive = !user.IsActive;
+            _db.Users.Update(user);
+            await _db.SaveChangesAsync();
+            await LogAudit((user.IsActive ? "Restored" : "Archived") + " User: " + user.Username, user.UserID);
+
+            return Ok();
         }
     }
 }

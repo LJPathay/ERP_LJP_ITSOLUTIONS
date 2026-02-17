@@ -9,6 +9,19 @@ namespace ljp_itsolutions.Models
         public int TotalUsers { get; set; }
         public int TotalOrders { get; set; }
         public decimal TotalRevenue { get; set; }
+        
+        // Growth Metrics
+        public double RevenueGrowth { get; set; }
+        public double OrderGrowth { get; set; }
+        public double ProductGrowth { get; set; }
+        public double UserGrowth { get; set; }
+
+        // Chart Data
+        public List<string> DailyRevenueLabels { get; set; } = new();
+        public List<decimal> DailyRevenueData { get; set; } = new();
+        public List<string> CategoryLabels { get; set; } = new();
+        public List<int> CategoryData { get; set; } = new();
+
         public List<Ingredient> LowStockIngredients { get; set; } = new();
         public List<Order> RecentOrders { get; set; } = new();
         public List<ProductSalesSummary> TopProducts { get; set; } = new();

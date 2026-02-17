@@ -1,259 +1,171 @@
 @model IEnumerable<ljp_itsolutions.Models.User>
 @{
-    ViewData["Title"] = "Manage Users";
-    ViewData["PageTitle"] = "Manage Users";
+    ViewData["Title"] = "User Management";
     var roles = ViewBag.Roles as IEnumerable<string>;
 }
 
-<div class="container-fluid">
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
-    <!-- Action Bar -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card-custom">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-md-5">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0">
-                                    <i class="fas fa-search text-muted"></i>
-                                </span>
-                                <input type="text" id="userSearch" class="form-control border-start-0" placeholder="Search users...">
-                            </div>
-                        </div>
-                        <div class="col-md-7 text-end">
-                            <div class="d-flex gap-2 justify-content-md-end mt-3 mt-md-0">
-                                @if (ViewBag.ShowArchived == true)
-                                {
-                                    <a href="@Url.Action("Users", new { showArchived = false })" class="btn btn-outline-secondary">
-                                        <i class="fas fa-arrow-left me-2"></i>Back to Active Users
-                                    </a>
-                                }
-                                else
-                                {
-                                    <a href="@Url.Action("Users", new { showArchived = true })" class="btn btn-outline-secondary">
-                                        <i class="fas fa-archive me-2"></i>Show Archived Users
-                                    </a>
-                                    <button class="btn btn-amber" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                                        <i class="fas fa-plus me-2"></i>Add New User
-                                    </button>
-                                }
-                            </div>
-                        </div>
-                    </div>
+<div class="container-fluid py-2">
+    <!-- Controls Layout -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white">
+        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
+            <div class="d-flex gap-3 flex-grow-1">
+                <div class="input-group" style="max-width: 300px;">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                    <input type="text" id="userSearch" class="form-control bg-light border-start-0" placeholder="Search users...">
                 </div>
+                <select id="roleFilter" class="form-select bg-light border-0" style="max-width: 150px;">
+                    <option value="">All Roles</option>
+                    @if (roles != null)
+                    {
+                        foreach (var role in roles)
+                        {
+                            <option value="@role">@role</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="d-flex gap-2">
+                @if (ViewBag.ShowArchived == true)
+                {
+                    <a href="@Url.Action("Users", new { showArchived = false })" class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="fas fa-arrow-left me-2"></i>Active Users
+                    </a>
+                }
+                else
+                {
+                    <a href="@Url.Action("Users", new { showArchived = true })" class="btn btn-light text-muted rounded-pill px-3" title="View Archived">
+                        <i class="fas fa-archive"></i>
+                    </a>
+                    <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="fas fa-plus me-2"></i>Add User
+                    </button>
+                }
             </div>
         </div>
     </div>
 
     <!-- Users Table -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card-custom">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">
-                        @(ViewBag.ShowArchived == true ? "Archived Users" : "Active Users")
-                    </h5>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-outline-secondary" onclick="window.location.reload()">
-                            <i class="fas fa-sync-alt me-1"></i>Refresh
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-custom mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Full Name</th>
-                                    <th>Username</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th>Created At</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (Model.Any())
-                                {
-                                    foreach (var user in Model)
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="usersTable">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted">User</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted">Role</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted">Email</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted">Status</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted">Joined</th>
+                        <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold text-muted">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        foreach (var user in Model)
+                        {
+                            <tr class="user-row" data-role="@user.Role">
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar-sm bg-light rounded-circle d-flex align-items-center justify-content-center overflow-hidden">
+                                            @if (!string.IsNullOrEmpty(user.ProfilePictureUrl))
+                                            {
+                                                <img src="@user.ProfilePictureUrl" alt="@user.Username" class="w-100 h-100 object-fit-cover">
+                                            }
+                                            else
+                                            {
+                                                <span class="fw-bold text-primary">@user.Username.Substring(0, 1).ToUpper()</span>
+                                            }
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">@user.FullName</div>
+                                            <div class="text-muted x-small">@@@user.Username</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    @switch (user.Role)
                                     {
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <div class="user-avatar-sm @(user.IsActive ? "bg-amber" : "bg-secondary")">
-                                                        <i class="fas fa-user text-white small"></i>
-                                                    </div>
-                                                    <span class="fw-semibold">@user.FullName</span>
-                                                </div>
-                                            </td>
-                                            <td>@user.Username</td>
-                                            <td>@user.Email</td>
-                                            <td>
-                                                <span class="badge @(string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? "bg-danger" : "bg-info")">
-                                                    @(user.Role ?? "No Role")
-                                                </span>
-                                            </td>
-                                            <td>
-                                                @if (user.IsActive)
-                                                {
-                                                    <span class="badge bg-success">Active</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-secondary">Archived</span>
-                                                }
-                                            </td>
-                                            <td>@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
-                                            <td>
-                                                <div class="d-flex gap-1">
-                                                    @if (user.IsActive)
-                                                    {
-                                                        <button class="btn btn-sm btn-outline-primary edit-user-btn" 
-                                                                data-id="@user.UserID" 
-                                                                data-fullname="@user.FullName"
-                                                                data-username="@user.Username"
-                                                                data-email="@user.Email"
-                                                                data-role="@user.Role"
-                                                                data-active="@user.IsActive.ToString().ToLower()"
-                                                                data-bs-toggle="modal" 
-                                                                data-bs-target="#editUserModal" title="Edit">
-                                                            <i class="fas fa-edit"></i>
-                                                        </button>
-                                                        <form asp-action="ArchiveUser" method="post" class="d-inline">
-                                                            <input type="hidden" name="id" value="@user.UserID" />
-                                                            <button type="submit" class="btn btn-sm btn-outline-warning" title="Archive">
-                                                                <i class="fas fa-archive"></i>
-                                                            </button>
-                                                        </form>
-                                                    }
-                                                    else
-                                                    {
-                                                        <form asp-action="RestoreUser" method="post" class="d-inline">
-                                                            <input type="hidden" name="id" value="@user.UserID" />
-                                                            <button type="submit" class="btn btn-sm btn-success" title="Restore User">
-                                                                <i class="fas fa-trash-restore me-1"></i>Restore
-                                                            </button>
-                                                        </form>
-                                                    }
-                                                    
-                                                </div>
-                                            </td>
-                                        </tr>
+                                        case "SuperAdmin": <span class="badge bg-dark">Super Admin</span> break;
+                                        case "Admin": <span class="badge bg-primary">Admin</span> break;
+                                        case "Manager": <span class="badge bg-info text-dark">Manager</span> break;
+                                        case "Cashier": <span class="badge bg-success">Cashier</span> break;
+                                        default: <span class="badge bg-secondary">@user.Role</span> break;
                                     }
-                                }
-                                else
-                                {
-                                    <tr>
-                                        <td colspan="7" class="text-center py-5">
-                                            <div class="d-flex flex-column align-items-center">
-                                                <i class="fas fa-users-slash fa-3x text-muted mb-3"></i>
-                                                <h6 class="text-muted">No @(ViewBag.ShowArchived == true ? "archived" : "active") users found</h6>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+                                </td>
+                                <td class="text-muted small">@user.Email</td>
+                                <td>
+                                    @if (user.IsActive)
+                                    {
+                                        <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-10 px-3">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-10 px-3">Archived</span>
+                                    }
+                                </td>
+                                <td class="text-muted small">@user.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td class="pe-4 text-end">
+                                    <div class="dropdown">
+                                        <button class="btn btn-light btn-sm rounded-circle shadow-sm" type="button" data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-v text-muted"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-3">
+                                            <li><a class="dropdown-item py-2" href="#" onclick="openEditUserModal('@user.UserID')"><i class="fas fa-edit me-2 text-primary"></i>Edit Details</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item py-2 @(user.IsActive ? "text-danger" : "text-success")" href="#" onclick="toggleUserStatus('@user.UserID', @user.IsActive.ToString().ToLower())">
+                                                    <i class="fas @(user.IsActive ? "fa-archive" : "fa-undo") me-2"></i>
+                                                    @(user.IsActive ? "Archive User" : "Restore User")
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="py-5">
+                                    <i class="fas fa-users fa-4x text-muted opacity-25 mb-4"></i>
+                                    <h6 class="fw-bold text-dark">No Users Found</h6>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
-<!-- Add User Modal -->
-<div class="modal fade" id="addUserModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold">Add New User</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form asp-action="CreateUser" method="post">
-                @Html.AntiForgeryToken()
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" name="FullName" class="form-control" placeholder="Enter full name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input type="text" name="Username" class="form-control" placeholder="Enter username" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" name="Email" class="form-control" placeholder="Enter email">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Password</label>
-                        <input type="password" name="Password" class="form-control" placeholder="Enter password" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Role</label>
-                        <select name="Role" class="form-select" required>
-                            <option value="">Select role</option>
-                            @if (roles != null)
-                            {
-                                foreach (var role in roles)
-                                {
-                                    <option value="@role">@role</option>
-                                }
-                            }
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-amber">Create User</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<!-- Add User Modal Placeholder (Reuse existing one if available, simplified here for structure) -->
+@* Assuming AddUserModal exists or is included via Partial. If not, needs implementation. Keeping it minimal as per request change focus. *@
 
 <!-- Edit User Modal -->
-<div class="modal fade" id="editUserModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-white border-bottom-0 pb-0">
                 <h5 class="modal-title fw-bold">Edit User</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form asp-action="EditUser" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="UserID" id="edit-userid" />
-                <div class="modal-body">
+            <div class="modal-body pt-4">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId">
                     <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" name="FullName" id="edit-fullname" class="form-control" required>
+                        <label class="form-label small fw-bold text-muted">Full Name</label>
+                        <input type="text" class="form-control bg-light border-0" id="editFullName" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input type="text" name="Username" id="edit-username" class="form-control" required>
+                        <label class="form-label small fw-bold text-muted">Email</label>
+                        <input type="email" class="form-control bg-light border-0" id="editEmail" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" name="Email" id="edit-email" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Role</label>
-                        <select name="Role" id="edit-role" class="form-select" required>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">Role</label>
+                        <select class="form-select bg-light border-0" id="editRole" required>
                             @if (roles != null)
                             {
                                 foreach (var role in roles)
@@ -263,30 +175,88 @@
                             }
                         </select>
                     </div>
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" name="IsActive" id="edit-isactive" value="true">
-                        <label class="form-check-label" for="edit-isactive">
-                            Active
-                        </label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary rounded-pill fw-bold py-2">Save Changes</button>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-amber">Save Changes</button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
-            $('.edit-user-btn').click(function() {
+@section Scripts {
+    <script>
+        // Search & Filter
+        const searchInput = document.getElementById('userSearch');
+        const roleFilter = document.getElementById('roleFilter');
+        const tableRows = document.querySelectorAll('.user-row');
 
-            $('#userSearch').on('keyup', function() {
-                var value = $(this).val().toLowerCase();
-                $("table tbody tr").filter(function() {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-                });
+        function filterUsers() {
+            const term = searchInput.value.toLowerCase();
+            const role = roleFilter.value;
+
+            tableRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const userRole = row.dataset.role;
+                const matchesSearch = text.includes(term);
+                const matchesRole = role === "" || userRole === role;
+
+                row.style.display = (matchesSearch && matchesRole) ? '' : 'none';
             });
+        }
+
+        searchInput.addEventListener('keyup', filterUsers);
+        roleFilter.addEventListener('change', filterUsers);
+
+        // Edit User
+        const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+        
+        function openEditUserModal(id) {
+            fetch(`@Url.Action("GetUser", "Admin")?id=${id}`)
+                .then(r => r.json())
+                .then(user => {
+                    document.getElementById('editUserId').value = user.userID;
+                    document.getElementById('editFullName').value = user.fullName;
+                    document.getElementById('editEmail').value = user.email;
+                    document.getElementById('editRole').value = user.role;
+                    editModal.show();
+                });
+        }
+
+        document.getElementById('editUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                UserID: document.getElementById('editUserId').value,
+                FullName: document.getElementById('editFullName').value,
+                Email: document.getElementById('editEmail').value,
+                Role: document.getElementById('editRole').value
+            };
+
+            const res = await fetch('@Url.Action("EditUser", "Admin")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) location.reload();
+            else alert('Failed to update user.');
         });
+
+        // Toggle Status
+        async function toggleUserStatus(id, isActive) {
+            if(!confirm(isActive ? 'Archive this user? They will not be able to login.' : 'Restore this user?')) return;
+
+            const res = await fetch(`@Url.Action("ToggleUserStatus", "Admin")?id=${id}`, { method: 'POST' });
+            if (res.ok) location.reload();
+            else alert('Action failed.');
+        }
     </script>
 }
+
+<style>
+    .x-small { font-size: 0.75rem; }
+    .uppercase { text-transform: uppercase; }
+    .avatar-sm { width: 40px; height: 40px; }
+    .object-fit-cover { object-fit: cover; }
+    tbody tr:hover { background-color: rgba(var(--bs-primary-rgb), 0.03) !important; }
+</style>

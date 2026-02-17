@@ -48,6 +48,12 @@ namespace ljp_itsolutions.Controllers
             var chartLabels = last7Days.Select(d => d.ToString("MMM dd")).ToList();
             var chartData = last7Days.Select(d => salesActivity.FirstOrDefault(s => s.Date == d)?.Count ?? 0).ToList();
 
+            // Customer Retention: New vs Returning
+            // Returning customers = customers who have placed at least one order
+            var orderingCustomerIds = await _db.Orders.Select(o => o.CustomerID).Distinct().ToListAsync();
+            var returningCustomersCount = orderingCustomerIds.Count;
+            var newCustomersCount = totalCustomers - returningCustomersCount;
+
             var model = new
             {
                 TotalCustomers = totalCustomers,
@@ -56,13 +62,16 @@ namespace ljp_itsolutions.Controllers
                 TotalPointsAwarded = totalPointsAwarded,
                 TopCustomers = topCustomers,
                 ChartLabels = chartLabels,
-                ChartData = chartData
+                ChartData = chartData,
+                NewCustomersCount = newCustomersCount,
+                ReturningCustomersCount = returningCustomersCount
             };
 
             return View(model);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateReward(int customerId)
         {
             var customer = await _db.Customers.FindAsync(customerId);
@@ -113,8 +122,15 @@ namespace ljp_itsolutions.Controllers
         {
             if (ModelState.IsValid)
             {
+                // Set approval workflow defaults
+                promotion.ApprovalStatus = "Pending";
+                promotion.ApprovedBy = null;
+                promotion.ApprovedDate = null;
+                
                 _db.Promotions.Add(promotion);
                 await _db.SaveChangesAsync();
+                
+                TempData["SuccessMessage"] = $"Campaign '{promotion.PromotionName}' created and submitted for manager approval.";
                 return RedirectToAction(nameof(Promotions));
             }
             return View(promotion);

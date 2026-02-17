@@ -1,58 +1,93 @@
 @model ljp_itsolutions.Models.Promotion
 @{
-    ViewData["Title"] = "Create Marketing Campaign";
+    Layout = "_Layout";
+    ViewData["Title"] = "Strategy: New Marketing Campaign";
 }
 
-<div class="container py-4">
+<div class="container py-2">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 mt-2">
-                <div class="card-body p-4">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-header bg-primary py-4 px-4 text-white border-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="avatar-sm bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="fas fa-bullhorn fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0">Provision New Strategic Campaign</h5>
+                            <p class="mb-0 x-small text-white text-opacity-75 uppercase tracking-wider">Strategic Marketing Initiative</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4 p-md-5">
                     <form asp-action="CreateCampaign" method="post">
-                        <div class="mb-4">
-                            <label asp-for="PromotionName" class="form-label fw-bold">Campaign Name</label>
-                            <input asp-for="PromotionName" class="form-control form-control-lg rounded-3" placeholder="e.g., Summer Coffee Blast" />
-                            <span asp-validation-for="PromotionName" class="text-danger small"></span>
-                        </div>
-
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label asp-for="DiscountType" class="form-label fw-bold">Discount Type</label>
-                                <select asp-for="DiscountType" class="form-select rounded-3">
-                                    <option value="Percentage">Percentage (%)</option>
-                                    <option value="Fixed">Fixed Amount (₱)</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label asp-for="DiscountValue" class="form-label fw-bold">Value</label>
-                                <input asp-for="DiscountValue" class="form-control rounded-3" placeholder="e.g., 20" />
-                                <span asp-validation-for="DiscountValue" class="text-danger small"></span>
+                        @Html.AntiForgeryToken()
+                        
+                        <!-- Section: Identity -->
+                        <div class="mb-5">
+                            <h6 class="fw-bold text-dark mb-3"><i class="fas fa-fingerprint text-primary me-2"></i>Campaign Identity</h6>
+                            <div class="mb-3">
+                                <label asp-for="PromotionName" class="form-label x-small fw-bold text-muted uppercase tracking-wider">Display Name</label>
+                                <input asp-for="PromotionName" class="form-control form-control-lg rounded-3 border-2" placeholder="e.g. Q1 Seasonal Rewards Blast" required />
+                                <span asp-validation-for="PromotionName" class="text-danger x-small"></span>
                             </div>
                         </div>
 
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label asp-for="StartDate" class="form-label fw-bold">Start Date</label>
-                                <input asp-for="StartDate" type="date" class="form-control rounded-3" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
-                            </div>
-                            <div class="col-md-6">
-                                <label asp-for="EndDate" class="form-label fw-bold">End Date</label>
-                                <input asp-for="EndDate" type="date" class="form-control rounded-3" value="@DateTime.Now.AddDays(30).ToString("yyyy-MM-dd")" />
+                        <!-- Section: Financial Logic -->
+                        <div class="mb-5">
+                            <h6 class="fw-bold text-dark mb-3"><i class="fas fa-tag text-success me-2"></i>Incentive Logic</h6>
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label asp-for="DiscountType" class="form-label x-small fw-bold text-muted uppercase tracking-wider">Calculation Type</label>
+                                    <select asp-for="DiscountType" class="form-select rounded-3 py-2">
+                                        <option value="Percentage">Relational Percentage (%)</option>
+                                        <option value="Fixed">Static Fixed Amount (₱)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="DiscountValue" class="form-label x-small fw-bold text-muted uppercase tracking-wider">Face Value</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0 rounded-start-3"><i class="fas fa-coins x-small"></i></span>
+                                        <input asp-for="DiscountValue" class="form-control rounded-end-3" placeholder="20" required />
+                                    </div>
+                                    <span asp-validation-for="DiscountValue" class="text-danger x-small"></span>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mb-4 d-flex align-items-center gap-3">
-                            <div class="form-check form-switch p-0" style="padding-left: 2.5em !important;">
-                                <input class="form-check-input ms-0" asp-for="IsActive" type="checkbox" id="isActiveSwitch" checked>
-                                <label class="form-check-label fw-bold" for="isActiveSwitch">Launch Immediately</label>
+                        <!-- Section: Scheduling -->
+                        <div class="mb-5">
+                            <h6 class="fw-bold text-dark mb-3"><i class="fas fa-calendar-check text-warning me-2"></i>Temporal Bounds</h6>
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label asp-for="StartDate" class="form-label x-small fw-bold text-muted uppercase tracking-wider">Activation Date</label>
+                                    <input asp-for="StartDate" type="date" class="form-control rounded-3" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="EndDate" class="form-label x-small fw-bold text-muted uppercase tracking-wider">Termination Date</label>
+                                    <input asp-for="EndDate" type="date" class="form-control rounded-3" value="@DateTime.Now.AddDays(30).ToString("yyyy-MM-dd")" />
+                                </div>
                             </div>
                         </div>
 
-                        <hr class="my-4 opacity-10">
+                        <!-- Status & Toggle -->
+                        <div class="p-4 bg-light rounded-4 mb-5 border border-white shadow-sm border-2">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">Operational Status</h6>
+                                    <p class="text-muted x-small mb-0">Should this initiative be live in the POS environment upon creation?</p>
+                                </div>
+                                <div class="form-check form-switch p-0" style="padding-left: 0 !important;">
+                                    <input class="form-check-input ms-0 mt-0" asp-for="IsActive" type="checkbox" id="isActiveSwitch" checked style="width: 50px; height: 26px; cursor: pointer;">
+                                </div>
+                            </div>
+                        </div>
 
-                        <div class="d-flex gap-2 justify-content-end">
-                            <a asp-action="Promotions" class="btn btn-light px-4 rounded-pill">Cancel</a>
-                            <button type="submit" class="btn btn-primary px-5 rounded-pill shadow-sm">Launch Campaign</button>
+                        <div class="d-flex gap-3 justify-content-end align-items-center">
+                            <a asp-action="Promotions" class="text-muted text-decoration-none x-small fw-bold uppercase px-3 hvr-underline">Discard Draft</a>
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm fw-bold">
+                                <i class="fas fa-rocket me-2 small"></i>Commit Initiative
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -60,3 +95,13 @@
         </div>
     </div>
 </div>
+
+<style>
+    .x-small { font-size: 0.75rem; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.1em; }
+    .hvr-underline:hover { text-decoration: underline !important; color: var(--danger-color) !important; }
+    .form-control-lg { border-color: #f1f5f9; }
+    .form-control-lg:focus { border-color: var(--primary-color); box-shadow: none; }
+    .card-header { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important; }
+</style>

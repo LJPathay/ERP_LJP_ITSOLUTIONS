@@ -1,122 +1,169 @@
 @model dynamic
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "System SuperAdmin Dashboard";
+    ViewData["Title"] = "System Control Center";
 }
 
-<div class="container-fluid">
-    <div class="mb-4 d-none">
-        <h2 class="fw-bold">System SuperAdmin Dashboard</h2>
-        <p class="text-muted mb-0">Full control over the system configuration, users, and data.</p>
+<div class="container-fluid py-2">
+    <!-- Quick Actions (Refined) -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4 col-sm-6">
+            <a href="@Url.Action("Users")" class="action-card-refined shadow-sm text-decoration-none">
+                <div class="action-card-icon bg-amber-light text-amber">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div class="ms-3">
+                    <h6 class="fw-bold mb-1 text-dark">Identity & Access</h6>
+                    <p class="text-muted x-small mb-0">Manage system users and access roles</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-sm-6">
+            <a href="@Url.Action("SystemSettings")" class="action-card-refined shadow-sm text-decoration-none">
+                <div class="action-card-icon bg-secondary bg-opacity-10 text-secondary">
+                    <i class="fas fa-sliders-h"></i>
+                </div>
+                <div class="ms-3">
+                    <h6 class="fw-bold mb-1 text-dark">Global Settings</h6>
+                    <p class="text-muted x-small mb-0">Advanced system-wide configurations</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-sm-6">
+            <a href="@Url.Action("Backups")" class="action-card-refined shadow-sm text-decoration-none">
+                <div class="action-card-icon bg-success bg-opacity-10 text-success">
+                    <i class="fas fa-cloud-download-alt"></i>
+                </div>
+                <div class="ms-3">
+                    <h6 class="fw-bold mb-1 text-dark">System Backups</h6>
+                    <p class="text-muted x-small mb-0">Manage data redundancy & recovery</p>
+                </div>
+            </a>
+        </div>
     </div>
 
-    <!-- Quick Actions (Moved Up) -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card-custom border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="fw-bold mb-0">
-                            <i class="fas fa-bolt text-warning me-2"></i>Critical System Tasks
-                        </h6>
+    <!-- Overview Section (Color Schema Aligned) -->
+    <div class="row g-4 mb-5">
+        <div class="col-xl-8">
+            <div class="card-custom border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-0">Enterprise Overview</h5>
+                        <p class="text-muted x-small mb-0">Real-time system health and user engagement</p>
                     </div>
-                    <div class="row g-3">
-                        <div class="col-md-3 col-sm-6">
-                            <a href="@Url.Action("Users")" class="btn btn-outline-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center gap-2">
-                                <i class="fas fa-user-shield fa-lg"></i>
-                                <span>Identity & Access</span>
-                            </a>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="stat-widget-refined p-3 rounded-4 border">
+                                <p class="text-muted x-small mb-1 uppercase tracking-wider fw-bold">Uptime</p>
+                                <h4 class="fw-bold text-primary mb-0">@Model.SystemUptime</h4>
+                            </div>
                         </div>
-                        <div class="col-md-3 col-sm-6">
-                            <a href="@Url.Action("SystemSettings")" class="btn btn-outline-secondary w-100 py-3 d-flex flex-column align-items-center justify-content-center gap-2">
-                                <i class="fas fa-sliders-h fa-lg"></i>
-                                <span>Global Settings</span>
-                            </a>
+                        <div class="col-md-4">
+                            <div class="stat-widget-refined p-3 rounded-4 border">
+                                <p class="text-muted x-small mb-1 uppercase tracking-wider fw-bold">Growth</p>
+                                <h4 class="fw-bold text-success mb-0">@Model.GrowthIndex</h4>
+                            </div>
                         </div>
-                        <div class="col-md-3 col-sm-6">
-                            <a href="@Url.Action("Backups")" class="btn btn-outline-success w-100 py-3 d-flex flex-column align-items-center justify-content-center gap-2">
-                                <i class="fas fa-cloud-download-alt fa-lg"></i>
-                                <span>Backups</span>
-                            </a>
-                        </div>
-                        <div class="col-md-3 col-sm-6">
-                            <a href="@Url.Action("AuditLogs")" class="btn btn-outline-info w-100 py-3 d-flex flex-column align-items-center justify-content-center gap-2">
-                                <i class="fas fa-history fa-lg"></i>
-                                <span>Audit Logs</span>
-                            </a>
+                        <div class="col-md-4">
+                            <div class="stat-widget-refined p-3 rounded-4 border">
+                                <p class="text-muted x-small mb-1 uppercase tracking-wider fw-bold">Total Users</p>
+                                <h4 class="fw-bold text-dark mb-0">@Model.UserCount</h4>
+                            </div>
                         </div>
                     </div>
+                    <div class="mt-4 p-3 bg-light rounded-4 d-flex align-items-center gap-3">
+                        <div class="pulse-indicator bg-success"></div>
+                        <span class="small fw-medium text-muted">All background node services are performing optimally.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integrated Security Panel -->
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-uppercase small tracking-wider">
+                        <i class="fas fa-shield-alt text-danger me-2"></i>Security Watch
+                    </h6>
+                    @if (Model.LockedOutUsersCount > 0)
+                    {
+                        <span class="badge bg-danger pulse-dot">ALERT</span>
+                    }
+                </div>
+                <div class="card-body p-4">
+                    <div class="security-stat-row mb-4">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small">Failed login attempts</span>
+                            <span class="fw-bold @(Model.FailedLoginsCount > 10 ? "text-warning" : "text-dark")">@Model.FailedLoginsCount</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: @Math.Min(100, Model.FailedLoginsCount * 5)%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="security-stat-row mb-4">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small">Locked accounts</span>
+                            <span class="fw-bold @(Model.LockedOutUsersCount > 0 ? "text-danger" : "text-dark")">@Model.LockedOutUsersCount</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: @(Model.UserCount > 0 ? (Model.LockedOutUsersCount * 100 / Model.UserCount) : 0)%"></div>
+                        </div>
+                    </div>
+
+                    <a href="@Url.Action("AuditLogs")" class="btn btn-sm btn-dark w-100 rounded-pill mt-2">
+                        View Audit Trails <i class="fas fa-arrow-right ms-2 x-small"></i>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Business Overview Section (Improved) -->
-    <div class="row g-4 mb-4">
-        <div class="col-12">
-            <div class="card-custom border-0 shadow-lg overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
-                <div class="card-body text-white p-4">
-                    <div class="row align-items-center">
-                        <div class="col-lg-8">
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 px-3">Live Status</span>
-                                <h4 class="fw-bold mb-0">Business Health Overview</h4>
-                            </div>
-                            <p class="text-white-50 mb-4">Global system-wide performance and engagement metrics.</p>
-                            <div class="row g-3">
-                                <div class="col-sm-4">
-                                    <div class="p-3 bg-white bg-opacity-5 rounded-lg border border-white border-opacity-10 backdrop-blur">
-                                        <p class="text-white-50 small mb-1">Growth Index</p>
-                                        <h4 class="fw-bold mb-0 text-success">@Model.GrowthIndex</h4>
-                                    </div>
-                                </div>
-                                <div class="col-sm-4">
-                                    <div class="p-3 bg-white bg-opacity-5 rounded-lg border border-white border-opacity-10 backdrop-blur">
-                                        <p class="text-white-50 small mb-1">System Uptime</p>
-                                        <h4 class="fw-bold mb-0 text-info">@Model.SystemUptime</h4>
-                                    </div>
-                                </div>
-                                <div class="col-sm-4">
-                                    <div class="p-3 bg-white bg-opacity-5 rounded-lg border border-white border-opacity-10 backdrop-blur">
-                                        <p class="text-white-50 small mb-1">Service Health</p>
-                                        <h4 class="fw-bold mb-0 text-success">Optimal</h4>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-4 d-none d-lg-block text-end">
-                            <i class="fas fa-microchip fa-8x opacity-10"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    <!-- Recent System Activity -->
     <div class="row">
         <div class="col-12">
-            <div class="card-custom">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">Recent System Logs</h5>
-                    <a href="@Url.Action("AuditLogs")" class="btn btn-sm btn-link">View All</a>
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 py-4 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">System Activity Audit</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-custom mb-0">
-                            <thead>
+                        <table class="table align-middle mb-0">
+                            <thead class="bg-light bg-opacity-50">
                                 <tr>
-                                    <th>User</th>
-                                    <th>Action</th>
-                                    <th>Timestamp</th>
+                                    <th class="ps-4 text-uppercase x-small fw-bold text-muted">Operator</th>
+                                    <th class="text-uppercase x-small fw-bold text-muted">Activity Description</th>
+                                    <th class="text-uppercase x-small fw-bold text-muted">Timestamp</th>
+                                    <th class="pe-4 text-end text-uppercase x-small fw-bold text-muted">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var log in Model.AuditLogs)
                                 {
                                     <tr>
-                                        <td>@(log.User?.FullName ?? "System")</td>
-                                        <td>@log.Action</td>
-                                        <td>@log.Timestamp.ToString("MMM dd, HH:mm:ss")</td>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="avatar-sm-refined rounded-circle text-white d-flex align-items-center justify-content-center fw-bold" style="background: var(--primary-color);">
+                                                    @(log.User?.FullName?.Substring(0, 1) ?? "S")
+                                                </div>
+                                                <div>
+                                                    <p class="mb-0 fw-bold small">@(log.User?.FullName ?? "System Process")</p>
+                                                    <p class="text-muted x-small mb-0">ID: #@log.AuditID</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="small fw-medium">@log.Action</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-muted x-small">@log.Timestamp.ToString("MMM dd, yyyy • HH:mm:ss")</span>
+                                        </td>
+                                        <td class="pe-4 text-end">
+                                            <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3">COMPLETED</span>
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -127,3 +174,69 @@
         </div>
     </div>
 </div>
+
+<style>
+    .action-card-refined {
+        background: white;
+        border: 1px solid var(--border-color);
+        padding: 1.25rem;
+        border-radius: 1.1rem;
+        display: flex;
+        align-items: center;
+        transition: all 0.2s ease;
+    }
+
+    .action-card-refined:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-md) !important;
+        border-color: var(--accent-color);
+    }
+
+    .action-card-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .stat-widget-refined {
+        background: var(--light-bg);
+        transition: all 0.2s ease;
+    }
+
+    .stat-widget-refined:hover {
+        background: white;
+        border-color: var(--accent-color) !important;
+    }
+
+    .pulse-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        animation: pulse-green 2s infinite;
+    }
+
+    .pulse-dot {
+        animation: pulse-red 2s infinite;
+    }
+
+    @@keyframes pulse-green {
+        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+        70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    @@keyframes pulse-red {
+        0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+        70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    .avatar-sm-refined { width: 36px; height: 36px; font-size: 0.85rem; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.05em; }
+</style>

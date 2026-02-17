@@ -1,85 +1,243 @@
 @model IEnumerable<ljp_itsolutions.Models.Ingredient>
 @{
-    Layout = "_Layout";
-    ViewData["Title"] = "Inventory Overview";
+    ViewData["Title"] = "Inventory Control";
 }
 
-<div class="container-fluid">
-    <div class="row g-4 mb-4">
+<div class="container-fluid py-2">
+    <!-- Controls -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white">
+        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
+            <div class="input-group" style="max-width: 300px;">
+                <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                <input type="text" id="inventorySearch" class="form-control bg-light border-start-0" placeholder="Search ingredients...">
+            </div>
+            <button class="btn btn-light shadow-sm" onclick="location.reload()">
+                <i class="fas fa-sync-alt text-primary"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="stat-card border-0 shadow-sm">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <p class="text-muted small mb-1">Low Stock Ingredients</p>
-                        <h3 class="fw-bold mb-0">@ViewBag.LowStockCount</h3>
+            <div class="card border-0 shadow-sm rounded-4 bg-primary text-white overflow-hidden">
+                <div class="card-body p-4 position-relative">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="avatar-sm bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="fas fa-cubes"></i>
+                        </div>
+                        <span class="badge bg-white text-primary rounded-pill">Total Items</span>
                     </div>
-                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
+                    <h3 class="fw-bold mb-0">@ViewBag.TotalCount</h3>
+                    <p class="mb-0 x-small opacity-75">Tracked Ingredients</p>
+                    <i class="fas fa-boxes position-absolute bottom-0 end-0 opacity-10 fa-5x me-n3 mb-n3"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="stat-card border-0 shadow-sm">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <p class="text-muted small mb-1">Out of Stock</p>
-                        <h3 class="fw-bold mb-0">@ViewBag.OutOfStockCount</h3>
+            <div class="card border-0 shadow-sm rounded-4 bg-danger text-white overflow-hidden">
+                <div class="card-body p-4 position-relative">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="avatar-sm bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <span class="badge bg-white text-danger rounded-pill">Critical</span>
                     </div>
-                    <div class="stat-icon bg-danger bg-opacity-10 text-danger">
-                        <i class="fas fa-times-circle"></i>
-                    </div>
+                    <h3 class="fw-bold mb-0">@ViewBag.OutOfStockCount</h3>
+                    <p class="mb-0 x-small opacity-75">Out of Stock Items</p>
+                    <i class="fas fa-ban position-absolute bottom-0 end-0 opacity-10 fa-5x me-n3 mb-n3"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="stat-card border-0 shadow-sm">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <p class="text-muted small mb-1">Total Items Tracker</p>
-                        <h3 class="fw-bold mb-0">@ViewBag.TotalCount</h3>
+            <div class="card border-0 shadow-sm rounded-4 bg-warning text-dark overflow-hidden">
+                <div class="card-body p-4 position-relative">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="avatar-sm bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                        <span class="badge bg-white text-warning rounded-pill border">Low Stock</span>
                     </div>
-                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
-                        <i class="fas fa-leaf"></i>
-                    </div>
+                    <h3 class="fw-bold mb-0">@ViewBag.LowStockCount</h3>
+                    <p class="mb-0 x-small opacity-75">Restock Needed Soon</p>
+                    <i class="fas fa-battery-quarter position-absolute bottom-0 end-0 opacity-10 fa-5x me-n3 mb-n3"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card-custom border-0 shadow-sm">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom">
-            <h5 class="fw-bold mb-0">Raw Material Status</h5>
-            <a href="@Url.Action("Inventory", "Manager")" class="btn btn-sm btn-outline-primary rounded-pill">Manage Inventory</a>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-custom mb-0">
-                    <thead>
-                        <tr>
-                            <th class="ps-4">Ingredient Name</th>
-                            <th>Current Stock</th>
-                            <th>Unit</th>
-                            <th>Threshold</th>
-                            <th class="text-end pe-4">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model)
+    <!-- Inventory Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="inventoryTable">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted">Item Name</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted">Unit</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted" style="width: 30%;">Stock Level</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted">Status</th>
+                        <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold text-muted">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        foreach (var item in Model)
                         {
-                            var statusClass = item.StockQuantity == 0 ? "bg-danger" : (item.StockQuantity < item.LowStockThreshold ? "bg-warning text-dark" : "bg-success");
-                            var statusText = item.StockQuantity == 0 ? "Out of Stock" : (item.StockQuantity < item.LowStockThreshold ? "Low Stock" : "Healthy");
-                            <tr>
-                                <td class="ps-4 fw-bold">@item.Name</td>
-                                <td>@item.StockQuantity.ToString("F2")</td>
-                                <td><span class="text-muted">@item.Unit</span></td>
-                                <td><span class="text-muted small">@item.LowStockThreshold @item.Unit</span></td>
-                                <td class="text-end pe-4"><span class="badge @statusClass">@statusText</span></td>
+                            var stockPercent = Math.Min(100, (double)item.StockQuantity / ((double)item.LowStockThreshold * 3) * 100);
+                            string colorClass = "success";
+                            string statusText = "In Stock";
+                            
+                            if (item.StockQuantity == 0)
+                            {
+                                colorClass = "danger";
+                                statusText = "Out of Stock";
+                            }
+                            else if (item.StockQuantity < item.LowStockThreshold)
+                            {
+                                colorClass = "warning";
+                                statusText = "Low Stock";
+                            }
+
+                            <tr style="cursor: pointer;" onclick="openItemModal(@item.IngredientID)">
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">@item.Name</div>
+                                </td>
+                                <td class="text-muted small">@item.Unit</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height: 6px;">
+                                            <div class="progress-bar bg-@colorClass" role="progressbar" style="width: @stockPercent%"></div>
+                                        </div>
+                                        <span class="x-small fw-bold text-muted" style="width: 50px;">
+                                            @item.StockQuantity / @(item.LowStockThreshold * 3)
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill bg-@colorClass bg-opacity-10 text-@colorClass border border-@colorClass border-opacity-10 px-3">
+                                        @statusText
+                                    </span>
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <button class="btn btn-sm btn-light rounded-pill px-3 fw-bold text-primary shadow-sm"
+                                            onclick="event.stopPropagation(); openItemModal(@item.IngredientID)">
+                                        Details
+                                    </button>
+                                </td>
                             </tr>
+                            
+                            <!-- Hidden Data for Modal -->
+                            <div id="data-@item.IngredientID" class="d-none"
+                                 data-name="@item.Name"
+                                 data-unit="@item.Unit"
+                                 data-stock="@item.StockQuantity"
+                                 data-threshold="@item.LowStockThreshold"
+                                 data-status="@statusText"
+                                 data-color="@colorClass">
+                            </div>
                         }
-                    </tbody>
-                </table>
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="py-5">
+                                    <i class="fas fa-box-open fa-4x text-muted opacity-25 mb-4"></i>
+                                    <h6 class="fw-bold text-dark">Inventory Empty</h6>
+                                    <p class="text-muted small">No ingredients found in the inventory.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Item Details Modal -->
+<div class="modal fade" id="itemModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-primary text-white border-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar-sm bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div>
+                        <h6 class="modal-title fw-bold mb-0">Item Details</h6>
+                        <p class="mb-0 x-small text-white text-opacity-75 uppercase tracking-wider" id="modalItemName">Item Name</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="mb-4">
+                    <h2 class="display-4 fw-bold text-dark mb-0" id="modalStock">0</h2>
+                    <p class="text-muted text-uppercase x-small fw-bold" id="modalUnit">Units</p>
+                    <span class="badge bg-success rounded-pill px-3 py-2" id="modalStatusBadge">In Stock</span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <small class="text-muted d-block uppercase x-small fw-bold mb-1">Restock Threshold</small>
+                            <div class="fw-medium text-dark" id="modalThreshold">0</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <small class="text-muted d-block uppercase x-small fw-bold mb-1">Last Updated</small>
+                            <div class="fw-medium text-dark">Today</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-3">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold flex-fill" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        const itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
+
+        // Search functionality
+        document.getElementById('inventorySearch').addEventListener('keyup', function() {
+            const value = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#inventoryTable tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(value) ? '' : 'none';
+            });
+        });
+
+        function openItemModal(id) {
+            const data = document.getElementById(`data-${id}`);
+            if (!data) return;
+
+            document.getElementById('modalItemName').textContent = data.dataset.name;
+            document.getElementById('modalStock').textContent = data.dataset.stock;
+            document.getElementById('modalUnit').textContent = data.dataset.unit;
+            document.getElementById('modalThreshold').textContent = data.dataset.threshold;
+            
+            const badge = document.getElementById('modalStatusBadge');
+            badge.textContent = data.dataset.status;
+            badge.className = `badge bg-${data.dataset.color} rounded-pill px-3 py-2`;
+            
+            itemModal.show();
+        }
+    </script>
+}
+
+<style>
+    .x-small { font-size: 0.75rem; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    .avatar-sm { width: 40px; height: 40px; }
+    tbody tr:hover { background-color: rgba(var(--bs-primary-rgb), 0.03) !important; }
+</style>

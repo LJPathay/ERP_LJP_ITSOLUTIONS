@@ -1,38 +1,98 @@
 @model IEnumerable<System.IO.FileInfo>
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Database Backups";
+    ViewData["Title"] = "System Snapshot & Backups";
 }
 
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold mb-1">Database Backups</h2>
-            <p class="text-muted">Manual recovery points for system data.</p>
+<div class="container-fluid py-2">
+    <!-- Header Section -->
+    <div class="row align-items-center mb-5">
+        <div class="col">
+            <div class="d-flex align-items-center gap-3">
+                <div class="avatar-sm rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                    <i class="fas fa-database fa-lg"></i>
+                </div>
+                <div>
+                    <p class="text-muted small mb-0">Secure manual recovery points for system records and configurations.</p>
+                </div>
+            </div>
         </div>
-        <form asp-action="CreateBackup" method="post">
-            <button type="submit" class="btn btn-primary">Create New Snapshot</button>
-        </form>
+        <div class="col-auto">
+            <form asp-action="CreateBackup" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="fas fa-plus-circle me-2"></i>Create New Snapshot
+                </button>
+            </form>
+        </div>
     </div>
 
-    <div class="card-custom">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success border-0 shadow-sm rounded-4 alert-dismissible fade show mb-4 py-3">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-check-circle me-3 fa-lg"></i>
+                <div>@TempData["Success"]</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-body p-0">
-             <div class="table-responsive">
-                <table class="table table-custom mb-0">
-                    <thead>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="bg-light bg-opacity-50">
                         <tr>
-                            <th>Filename</th>
-                            <th>Date</th>
-                            <th>Size</th>
+                            <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted">Snapshot Filename</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted">Creation Timestamp</th>
+                            <th class="py-3 text-uppercase x-small fw-bold text-muted">Storage Size</th>
+                            <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold text-muted">Operations</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var file in Model)
+                        @if (Model.Any())
+                        {
+                            @foreach (var file in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <i class="fas fa-file-code text-primary opacity-50"></i>
+                                            <span class="fw-bold text-dark">@file.Name</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="small">
+                                            <div class="fw-medium text-dark">@file.CreationTime.ToString("MMM dd, yyyy")</div>
+                                            <div class="text-muted x-small">at @file.CreationTime.ToString("HH:mm:ss")</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge rounded-pill bg-light text-dark border px-3">
+                                            @((file.Length / 1024.0).ToString("N2")) KB
+                                        </span>
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <button class="btn btn-sm btn-light rounded-pill px-3 shadow-none border-0" disabled>
+                                            <i class="fas fa-download me-1 x-small"></i> Download
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger rounded-pill px-3 ms-1" disabled>
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
                         {
                             <tr>
-                                <td>@file.Name</td>
-                                <td>@file.CreationTime.ToString("yyyy-MM-dd HH:mm")</td>
-                                <td>@((file.Length / 1024.0).ToString("N2")) KB</td>
+                                <td colspan="4" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="fas fa-archive fa-3x mb-3 opacity-25"></i>
+                                        <p>No system snapshots have been created yet.</p>
+                                    </div>
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -41,3 +101,7 @@
         </div>
     </div>
 </div>
+
+<style>
+    .x-small { font-size: 0.75rem; }
+</style>

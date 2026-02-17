@@ -27,6 +27,44 @@ namespace ljp_itsolutions.Controllers
         public async Task<IActionResult> Dashboard()
         {
             var today = DateTime.Today;
+            var sevenDaysAgo = today.AddDays(-6);
+            var thirtyDaysAgo = today.AddDays(-29);
+
+            // Chart Data: Daily Revenue (Last 7 Days)
+            var recentOrders = await _db.Orders
+                .Where(o => o.OrderDate >= sevenDaysAgo)
+                .ToListAsync();
+
+            var dailyRevenueLabels = new List<string>();
+            var dailyRevenueData = new List<decimal>();
+
+            for (int i = 0; i < 7; i++)
+            {
+                var date = sevenDaysAgo.AddDays(i);
+                dailyRevenueLabels.Add(date.ToString("MMM dd"));
+                dailyRevenueData.Add(recentOrders.Where(o => o.OrderDate.Date == date.Date).Sum(o => o.FinalAmount));
+            }
+
+            // Category Distribution
+            var categoryData = await _db.OrderDetails
+                .Include(od => od.Product)
+                    .ThenInclude(p => p.Category)
+                .GroupBy(od => od.Product.Category.CategoryName)
+                .Select(g => new { Name = g.Key, Count = g.Count() })
+                .OrderByDescending(g => g.Count)
+                .Take(5)
+                .ToListAsync();
+
+            // Growth Calculations (Last 30 days vs Previous 30 days)
+            var sixtyDaysAgo = thirtyDaysAgo.AddDays(-30);
+            
+            var currentRevenue = await _db.Orders.Where(o => o.OrderDate >= thirtyDaysAgo).SumAsync(o => o.FinalAmount);
+            var previousRevenue = await _db.Orders.Where(o => o.OrderDate >= sixtyDaysAgo && o.OrderDate < thirtyDaysAgo).SumAsync(o => o.FinalAmount);
+            double revenueGrowth = previousRevenue > 0 ? (double)((currentRevenue - previousRevenue) / previousRevenue * 100) : 0;
+
+            var currentOrdersCount = await _db.Orders.Where(o => o.OrderDate >= thirtyDaysAgo).CountAsync();
+            var previousOrdersCount = await _db.Orders.Where(o => o.OrderDate >= sixtyDaysAgo && o.OrderDate < thirtyDaysAgo).CountAsync();
+            double orderGrowth = previousOrdersCount > 0 ? (double)(currentOrdersCount - previousOrdersCount) / (double)previousOrdersCount * 100 : 0;
 
             var viewModel = new ManagerDashboardViewModel
             {
@@ -34,6 +72,15 @@ namespace ljp_itsolutions.Controllers
                 TotalUsers = await _db.Users.CountAsync(),
                 TotalOrders = await _db.Orders.CountAsync(),
                 TotalRevenue = await _db.Orders.SumAsync(o => o.FinalAmount),
+                
+                RevenueGrowth = revenueGrowth,
+                OrderGrowth = orderGrowth,
+                
+                DailyRevenueLabels = dailyRevenueLabels,
+                DailyRevenueData = dailyRevenueData,
+                CategoryLabels = categoryData.Select(c => c.Name).ToList(),
+                CategoryData = categoryData.Select(c => c.Count).ToList(),
+
                 LowStockIngredients = await _db.Ingredients
                     .Where(i => i.StockQuantity < i.LowStockThreshold)
                     .OrderBy(i => i.StockQuantity)
@@ -57,6 +104,19 @@ namespace ljp_itsolutions.Controllers
                     .ToListAsync()
             };
 
+            // Hourly Sales Performance (Last 30 days)
+            var hourlyData = await _db.Orders
+                .Where(o => o.OrderDate >= thirtyDaysAgo)
+                .GroupBy(o => o.OrderDate.Hour)
+                .Select(g => new { Hour = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var peakHoursLabels = Enumerable.Range(0, 24).Select(h => DateTime.Today.AddHours(h).ToString("hh tt")).ToList();
+            var peakHoursData = Enumerable.Range(0, 24).Select(h => hourlyData.FirstOrDefault(x => x.Hour == h)?.Count ?? 0).ToList();
+
+            ViewBag.PeakHoursLabels = peakHoursLabels;
+            ViewBag.PeakHoursData = peakHoursData;
+
             return View(viewModel);
         }
 
@@ -68,6 +128,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateProduct(Product product, IFormFile photo)
         {
             if (photo != null && photo.Length > 0)
@@ -100,6 +161,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStock(int id, int stock)
         {
             var product = await _db.Products.FindAsync(id);
@@ -113,6 +175,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditProduct(Product product, IFormFile photo)
         {
             var existingProduct = await _db.Products.FindAsync(product.ProductID);
@@ -152,6 +215,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var product = await _db.Products.FindAsync(id);
@@ -239,8 +303,13 @@ namespace ljp_itsolutions.Controllers
 
         public async Task<IActionResult> Promotions()
         {
-            var promotions = await _db.Promotions.ToListAsync();
-            return View(promotions);
+            // Managers only see pending campaigns for approval
+            var pendingCampaigns = await _db.Promotions
+                .Where(p => p.ApprovalStatus == "Pending")
+                .OrderBy(p => p.PromotionID)
+                .ToListAsync();
+            
+            return View(pendingCampaigns);
         }
 
         public async Task<IActionResult> Marketing()
@@ -277,6 +346,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> VoidOrder(int id)
         {
             var order = await _db.Orders.FindAsync(id);
@@ -292,6 +362,7 @@ namespace ljp_itsolutions.Controllers
 
         // --- EXPENSE CRUD ---
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateExpense(Expense expense)
         {
             if (ModelState.IsValid)
@@ -305,6 +376,7 @@ namespace ljp_itsolutions.Controllers
 
         // --- INGREDIENT CRUD ---
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateIngredient(Ingredient ingredient)
         {
             if (ModelState.IsValid)
@@ -317,6 +389,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditIngredient(Ingredient ingredient)
         {
             var existing = await _db.Ingredients.FindAsync(ingredient.IngredientID);
@@ -348,6 +421,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteIngredient(int id)
         {
             var ingredient = await _db.Ingredients.FindAsync(id);
@@ -360,37 +434,7 @@ namespace ljp_itsolutions.Controllers
             return RedirectToAction("Inventory");
         }
 
-        // --- PROMOTION CRUD ---
-        [HttpPost]
-        public async Task<IActionResult> CreatePromotion(Promotion promotion)
-        {
-            if (ModelState.IsValid)
-            {
-                _db.Promotions.Add(promotion);
-                await _db.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Promotion campaign created!";
-            }
-            return RedirectToAction("Promotions");
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> EditPromotion(Promotion promotion)
-        {
-            var existing = await _db.Promotions.FindAsync(promotion.PromotionID);
-            if (existing != null)
-            {
-                existing.PromotionName = promotion.PromotionName;
-                existing.DiscountType = promotion.DiscountType;
-                existing.DiscountValue = promotion.DiscountValue;
-                existing.StartDate = promotion.StartDate;
-                existing.EndDate = promotion.EndDate;
-                existing.IsActive = promotion.IsActive;
-                await _db.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Promotion updated successfully!";
-            }
-            return RedirectToAction("Promotions");
-        }
-
+        // --- CAMPAIGN APPROVAL WORKFLOW ---
 
         public async Task<IActionResult> Recipes()
         {
@@ -426,6 +470,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateRecipe(int ProductID, List<RecipeItemDto> Recipes)
         {
             // Remove existing recipes for this product
@@ -454,17 +499,56 @@ namespace ljp_itsolutions.Controllers
             return RedirectToAction("Recipes");
         }
 
-        [HttpPost]
-        public async Task<IActionResult> DeletePromotion(int id)
+        // --- CAMPAIGN APPROVAL WORKFLOW ---
+        public async Task<IActionResult> PendingCampaigns()
         {
-            var promotion = await _db.Promotions.FindAsync(id);
-            if (promotion != null)
-            {
-                _db.Promotions.Remove(promotion);
-                await _db.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Promotion deleted!";
-            }
-            return RedirectToAction("Promotions");
+            var pendingCampaigns = await _db.Promotions
+                .Where(p => p.ApprovalStatus == "Pending")
+                .OrderBy(p => p.PromotionID)
+                .ToListAsync();
+            
+            return View(pendingCampaigns);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> ApproveCampaign(int id)
+        {
+            var campaign = await _db.Promotions.FindAsync(id);
+            if (campaign == null)
+                return NotFound();
+
+            campaign.ApprovalStatus = "Approved";
+            campaign.ApprovedDate = DateTime.Now;
+            // TODO: Get current user ID from authentication
+            // campaign.ApprovedBy = User.GetUserId();
+            
+            await _db.SaveChangesAsync();
+            
+            TempData["SuccessMessage"] = $"Campaign '{campaign.PromotionName}' approved successfully!";
+            return Ok();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RejectCampaign([FromBody] RejectCampaignDto dto)
+        {
+            var campaign = await _db.Promotions.FindAsync(dto.Id);
+            if (campaign == null)
+                return NotFound();
+
+            campaign.ApprovalStatus = "Rejected";
+            campaign.RejectionReason = dto.Reason;
+            campaign.IsActive = false; // Ensure rejected campaigns are not active
+            
+            await _db.SaveChangesAsync();
+            
+            TempData["SuccessMessage"] = $"Campaign '{campaign.PromotionName}' rejected.";
+            return Ok();
+        }
+    }
+
+    public class RejectCampaignDto
+    {
+        public int Id { get; set; }
+        public string Reason { get; set; } = string.Empty;
     }
 }

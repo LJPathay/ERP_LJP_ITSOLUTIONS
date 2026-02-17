@@ -1,54 +1,54 @@
 @model dynamic
 @{
-    ViewData["Title"] = "Marketing Dashboard";
+    ViewData["Title"] = "Marketing Strategic Overview";
 }
 
-<div class="marketing-dashboard py-4">
-    <!-- Quick Stats (Standardized) -->
+<div class="marketing-dashboard py-2">
+    <!-- Quick Stats (Premium Command Center Style) -->
     <div class="row g-4 mb-4">
         <div class="col-md-3">
-            <div class="card-custom border-0 shadow-sm transition-hover" style="background: linear-gradient(135deg, white 0%, #f1f5f9 100%); border-radius: 1.25rem;">
+            <div class="card border-0 shadow-sm rounded-4 transition-hover">
                 <div class="card-body p-4 text-center">
-                    <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3" style="width: 52px; height: 52px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3 shadow-sm rounded-4 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
                         <i class="fas fa-user-friends fa-lg"></i>
                     </div>
-                    <p class="text-secondary small fw-bold text-uppercase mb-1">Total Reach</p>
+                    <p class="text-secondary x-small fw-bold text-uppercase tracking-wider mb-1">Total Reach</p>
                     <h2 class="fw-bold mb-1">@Model.TotalCustomers</h2>
-                    <div class="text-success x-small fw-bold"><i class="fas fa-caret-up me-1"></i>+12% growth</div>
+                    <div class="text-success x-small fw-bold"><i class="fas fa-arrow-up me-1"></i>+12% vs last month</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card-custom border-0 shadow-sm transition-hover" style="background: linear-gradient(135deg, white 0%, #f0fdf4 100%); border-radius: 1.25rem;">
+            <div class="card border-0 shadow-sm rounded-4 transition-hover">
                 <div class="card-body p-4 text-center">
-                    <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3" style="width: 52px; height: 52px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
+                    <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3 shadow-sm rounded-4 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
                         <i class="fas fa-tags fa-lg"></i>
                     </div>
-                    <p class="text-secondary small fw-bold text-uppercase mb-1">Active Offers</p>
+                    <p class="text-secondary x-small fw-bold text-uppercase tracking-wider mb-1">Active Offers</p>
                     <h2 class="fw-bold mb-1">@Model.ActivePromotions</h2>
-                    <div class="text-success x-small fw-bold"><i class="fas fa-bullhorn me-1"></i>Live status</div>
+                    <div class="text-success x-small fw-bold"><i class="fas fa-check-circle me-1"></i>Live & Operational</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card-custom border-0 shadow-sm transition-hover" style="background: linear-gradient(135deg, white 0%, #fff7ed 100%); border-radius: 1.25rem;">
+            <div class="card border-0 shadow-sm rounded-4 transition-hover">
                 <div class="card-body p-4 text-center">
-                    <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3" style="width: 52px; height: 52px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3 shadow-sm rounded-4 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
                         <i class="fas fa-star fa-lg"></i>
                     </div>
-                    <p class="text-secondary small fw-bold text-uppercase mb-1">Loyalty Points</p>
+                    <p class="text-secondary x-small fw-bold text-uppercase tracking-wider mb-1">Loyalty Points</p>
                     <h2 class="fw-bold mb-1">@Model.TotalPointsAwarded</h2>
-                    <div class="text-muted x-small">System-wide total</div>
+                    <div class="text-muted x-small">Network-wide equity</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card-custom border-0 shadow-sm transition-hover" style="background: linear-gradient(135deg, white 0%, #f0f9ff 100%); border-radius: 1.25rem;">
+            <div class="card border-0 shadow-sm rounded-4 transition-hover">
                 <div class="card-body p-4 text-center">
-                    <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3" style="width: 52px; height: 52px; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
+                    <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3 shadow-sm rounded-4 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
                         <i class="fas fa-chart-line fa-lg"></i>
                     </div>
-                    <p class="text-secondary small fw-bold text-uppercase mb-1">Conversions</p>
+                    <p class="text-secondary x-small fw-bold text-uppercase tracking-wider mb-1">Conversions</p>
                     <h2 class="fw-bold mb-1">@Model.TotalOrders</h2>
                     <div class="text-success x-small fw-bold"><i class="fas fa-caret-up me-1"></i>+4.2% shift</div>
                 </div>
@@ -56,13 +56,16 @@
         </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Main Chart -->
+    <div class="row g-4 mb-4">
+        <!-- Performance Chart -->
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between">
-                    <h5 class="fw-bold">Campaign Performance</h5>
-                    <span class="x-small text-muted">Weekly Transaction Volume</span>
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold mb-0">Engagement Velocity</h6>
+                        <p class="text-muted x-small mb-0">Weekly campaign transaction volume</p>
+                    </div>
+                    <div class="badge rounded-pill bg-light text-dark border px-3">Real-time Data</div>
                 </div>
                 <div class="card-body p-4">
                     <canvas id="performanceChart" style="min-height: 300px; width: 100%;"></canvas>
@@ -70,33 +73,66 @@
             </div>
         </div>
         
-        <!-- Top Customers -->
+        <!-- Customer Retention -->
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
                 <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h5 class="fw-bold">Most Loyal Customers</h5>
+                    <h6 class="fw-bold mb-0">Audience Composition</h6>
                 </div>
-                <div class="card-body px-0">
-                    <div class="list-group list-group-flush">
+                <div class="card-body p-4 d-flex flex-column align-items-center justify-content-center">
+                    <div style="height: 220px; width: 100%;">
+                        <canvas id="retentionChart"></canvas>
+                    </div>
+                    <div class="mt-4 w-100 p-3 bg-light rounded-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="x-small fw-bold text-muted text-uppercase tracking-wider">Returning Loyalty</span>
+                            <span class="fw-bold text-primary">@Model.ReturningCustomersCount</span>
+                        </div>
+                        <div class="progress rounded-pill shadow-none" style="height: 8px;">
+                            <div class="progress-bar bg-primary rounded-pill shadow-none" role="progressbar" 
+                                 style="width: @(Model.TotalCustomers > 0 ? (Model.ReturningCustomersCount * 100 / Model.TotalCustomers) : 0)%; 
+                                        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)) !important;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Top Customers -->
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0">VIP Performance Index</h6>
+                    <a asp-action="Customers" class="btn btn-sm btn-light rounded-pill px-3 border-0 shadow-none">
+                        All Personas <i class="fas fa-chevron-right ms-1 x-small opacity-50"></i>
+                    </a>
+                </div>
+                <div class="card-body px-0 pt-2">
+                    <div class="row px-4 g-3">
                         @foreach (var customer in Model.TopCustomers)
                         {
-                            <div class="list-group-item border-0 py-3 px-4 d-flex align-items-center gap-3 transition-hover">
-                                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
-                                    @customer.FullName.Substring(0, 1)
+                            <div class="col-xl-3 col-md-6 mb-2">
+                                <div class="p-3 border-0 bg-light rounded-4 d-flex align-items-center gap-3 transition-hover shadow-sm-hover border border-white">
+                                    <div class="avatar-sm bg-white text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 44px; height: 44px; font-size: 1.1rem; border: 2px solid #fff;">
+                                        @customer.FullName.Substring(0, 1)
+                                    </div>
+                                    <div class="flex-fill">
+                                        <p class="mb-0 fw-bold x-small text-dark">@customer.FullName</p>
+                                        <p class="text-success x-small fw-bold mb-0">@customer.Points pts</p>
+                                    </div>
+                                    <button class="btn btn-sm btn-white rounded-circle shadow-sm d-flex align-items-center justify-content-center ms-auto" 
+                                            onclick="generateReward(@customer.CustomerID)" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-gift text-primary x-small"></i>
+                                    </button>
                                 </div>
-                                <div class="flex-fill">
-                                    <p class="mb-0 fw-bold">@customer.FullName</p>
-                                    <small class="text-muted">@customer.Points Points</small>
-                                </div>
-                                <button class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="generateReward(@customer.CustomerID)">
-                                    <i class="fas fa-gift me-1"></i>Reward
-                                </button>
                             </div>
                         }
                     </div>
                 </div>
-                <div class="card-footer bg-white border-0 text-center pb-4">
-                    <a asp-action="Customers" class="text-decoration-none small fw-bold">View All Customers <i class="fas fa-chevron-right ms-1"></i></a>
+                <div class="card-footer bg-light bg-opacity-50 border-0 text-center py-3">
+                    <span class="x-small text-muted italic">Click the gift icon to provision immediate loyalty benefits to top-tier patrons.</span>
                 </div>
             </div>
         </div>
@@ -104,23 +140,29 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#4f46e5';
+        const secondaryColor = getComputedStyle(document.documentElement).getPropertyValue('--secondary-color').trim() || '#fbbf24';
+
         // Performance Chart Initialization
-        const ctx = document.getElementById('performanceChart').getContext('2d');
-        new Chart(ctx, {
+        const ctxPerformance = document.getElementById('performanceChart').getContext('2d');
+        new Chart(ctxPerformance, {
             type: 'line',
             data: {
                 labels: @Html.Raw(Json.Serialize(Model.ChartLabels)),
                 datasets: [{
-                    label: 'Transactions',
+                    label: 'Engagement Volume',
                     data: @Html.Raw(Json.Serialize(Model.ChartData)),
-                    borderColor: '#4f46e5',
-                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    borderColor: primaryColor,
+                    backgroundColor: 'rgba(79, 70, 229, 0.05)',
                     fill: true,
-                    tension: 0.4,
-                    borderWidth: 3,
-                    pointBackgroundColor: '#4f46e5',
-                    pointBorderColor: '#fff',
+                    tension: 0.45,
+                    borderWidth: 3.5,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: primaryColor,
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
                     pointHoverRadius: 6
                 }]
             },
@@ -128,36 +170,90 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#fff',
+                        titleColor: '#1e293b',
+                        bodyColor: '#1e293b',
+                        borderColor: '#e2e8f0',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: false
+                    }
                 },
                 scales: {
-                    y: { beginAtZero: true, grid: { display: false } },
-                    x: { grid: { display: false } }
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: '#f1f5f9', drawBorder: false },
+                        ticks: { color: '#64748b', font: { size: 10 } }
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { size: 10 } }
+                    }
+                }
+            }
+        });
+
+        // Retention Chart Initialization
+        const ctxRetention = document.getElementById('retentionChart').getContext('2d');
+        new Chart(ctxRetention, {
+            type: 'doughnut',
+            data: {
+                labels: ['New Patrons', 'Returning Patrons'],
+                datasets: [{
+                    data: [@Model.NewCustomersCount, @Model.ReturningCustomersCount],
+                    backgroundColor: ['#e2e8f0', primaryColor],
+                    borderWidth: 8,
+                    borderColor: '#fff',
+                    hoverOffset: 12
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            padding: 25,
+                            font: { size: 11, weight: 'bold' },
+                            color: '#64748b'
+                        }
+                    }
                 }
             }
         });
 
         async function generateReward(customerId) {
-            if (!confirm('Generate a 15% discount promo code for this customer?')) return;
+            if (!confirm('Provision a strategic 15% incentive for this customer?')) return;
             
             try {
                 const response = await fetch('@Url.Action("GenerateReward", "Marketing")?customerId=' + customerId, {
                     method: 'POST',
                     headers: {
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
                     }
                 });
                 
                 const data = await response.json();
                 if (data.success) {
-                    alert('Success! Code: ' + data.promoCode + '\n' + data.message);
+                    alert('Provisioned! Automated Promo Code: ' + data.promoCode);
                 } else {
                     alert(data.message);
                 }
             } catch (err) {
-                alert('Error generating reward.');
+                alert('Network error during reward provisioning.');
             }
         }
     </script>
 }
 
+<style>
+    .x-small { font-size: 0.75rem; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    .shadow-sm-hover:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important; transform: translateY(-2px); }
+</style>
