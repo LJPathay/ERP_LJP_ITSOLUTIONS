@@ -93,6 +93,11 @@ namespace ljp_itsolutions.Data
                 b.Property(e => e.Amount).HasPrecision(18, 2);
             });
 
+            builder.Entity<InventoryLog>(b =>
+            {
+                b.Property(l => l.QuantityChange).HasPrecision(18, 3);
+            });
+
 
             // Seed Categories
             builder.Entity<Category>().HasData(

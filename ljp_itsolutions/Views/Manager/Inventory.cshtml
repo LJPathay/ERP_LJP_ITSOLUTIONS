@@ -63,13 +63,13 @@
                         <th>Unit</th>
                         <th>Threshold</th>
                         <th>Status</th>
-                        <th class="text-end pe-4">Actions</th>
+                        <th class="text-end pe-4 sticky-action-col">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Model.Ingredients)
                     {
-                        <tr>
+                        <tr class="clickable-row" data-id="@item.IngredientID" style="cursor: pointer;">
                             <td class="ps-4">
                                 <div class="fw-bold">@item.Name</div>
                                 <div class="text-muted text-xs">ID: #@item.IngredientID</div>
@@ -93,14 +93,15 @@
                                     <span class="status-badge success">In Stock</span>
                                 }
                             </td>
-                            <td class="text-end pe-4">
-                                <div class="d-flex justify-content-end gap-2">
+                            <td class="text-end pe-4 sticky-action-col">
+                                <div class="d-flex justify-content-end gap-2" onclick="event.stopPropagation();">
                                     <button class="action-btn btn-edit-ingredient" 
                                             data-id="@item.IngredientID"
                                             data-name="@item.Name"
                                             data-stock="@item.StockQuantity"
                                             data-unit="@item.Unit"
-                                            data-threshold="@item.LowStockThreshold">
+                                            data-threshold="@item.LowStockThreshold"
+                                            data-expiry="@(item.ExpiryDate?.ToString("yyyy-MM-dd"))">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <form asp-action="DeleteIngredient" method="post" class="d-inline" onsubmit="return confirm('Remove this ingredient?');">
@@ -167,6 +168,10 @@
                         <input type="number" step="0.001" name="LowStockThreshold" class="form-control" required value="1" />
                         <div class="form-text">Notify me when stock falls below this level.</div>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Expiry Date (Optional)</label>
+                        <input type="date" name="ExpiryDate" class="form-control" />
+                    </div>
                 </div>
                 <div class="modal-footer bg-light border-0">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
@@ -212,6 +217,10 @@
                         <label class="form-label">Low Stock Threshold</label>
                         <input type="number" step="0.001" name="LowStockThreshold" id="edit-ing-threshold" class="form-control" required />
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Expiry Date (Optional)</label>
+                        <input type="date" name="ExpiryDate" id="edit-ing-expiry" class="form-control" />
+                    </div>
                 </div>
                 <div class="modal-footer bg-light border-0">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
@@ -222,25 +231,147 @@
     </div>
 </div>
 
+<!-- Ingredient Details Modal -->
+<div class="modal fade" id="ingredientDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold">Ingredient Details: <span id="detail-name"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3">
+                            <h6 class="fw-bold mb-3"><i class="fas fa-info-circle me-2 text-primary"></i>Stock Summary</h6>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Current Stock:</span>
+                                <span class="fw-bold" id="detail-stock"></span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Low Stock Threshold:</span>
+                                <span class="fw-bold" id="detail-threshold"></span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Last Stocked:</span>
+                                <span class="fw-bold" id="detail-last-stocked"></span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted small">Expiry Date:</span>
+                                <span class="fw-bold text-danger" id="detail-expiry"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded-3 h-100">
+                            <h6 class="fw-bold mb-3"><i class="fas fa-history me-2 text-primary"></i>Quick Actions</h6>
+                            <button class="btn btn-sm btn-outline-primary w-100 mb-2 btn-edit-from-detail">
+                                <i class="fas fa-edit me-2"></i>Edit Ingredient
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-3"><i class="fas fa-list me-2 text-primary"></i>Recent Inventory Activity</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="small">Date</th>
+                                <th class="small">Change</th>
+                                <th class="small">Type</th>
+                                <th class="small">Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detail-logs-body" class="small">
+                            <!-- Logs will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         $(document).ready(function() {
+            // Edit Button Click
             $('.btn-edit-ingredient').on('click', function() {
                 var id = $(this).data('id');
                 var name = $(this).data('name');
                 var stock = $(this).data('stock');
                 var unit = $(this).data('unit');
                 var threshold = $(this).data('threshold');
+                var expiry = $(this).data('expiry');
 
                 $('#edit-ing-id').val(id);
                 $('#edit-ing-name').val(name);
                 $('#edit-ing-stock').val(stock);
                 $('#edit-ing-unit').val(unit);
                 $('#edit-ing-threshold').val(threshold);
+                $('#edit-ing-expiry').val(expiry);
 
                 var myModal = new bootstrap.Modal(document.getElementById('editIngredientModal'));
                 myModal.show();
             });
+
+            // Row Click for Details
+            $('.clickable-row').on('click', function() {
+                var id = $(this).data('id');
+                loadIngredientDetails(id);
+            });
+
+            async function loadIngredientDetails(id) {
+                try {
+                    const response = await fetch(`/Manager/GetIngredientDetails?id=${id}`);
+                    const data = await response.json();
+                    
+                    if (data) {
+                        const ing = data.ingredient;
+                        const logs = data.logs;
+
+                        $('#detail-name').text(ing.name || ing.Name);
+                        $('#detail-stock').text(`${(ing.stockQuantity || ing.StockQuantity || 0).toFixed(2)} ${ing.unit || ing.Unit}`);
+                        $('#detail-threshold').text(`${(ing.lowStockThreshold || ing.LowStockThreshold || 0).toFixed(2)} ${ing.unit || ing.Unit}`);
+                        $('#detail-last-stocked').text((ing.lastStockedDate || ing.LastStockedDate) ? new Date(ing.lastStockedDate || ing.LastStockedDate).toLocaleDateString() : 'Never');
+                        $('#detail-expiry').text((ing.expiryDate || ing.ExpiryDate) ? new Date(ing.expiryDate || ing.ExpiryDate).toLocaleDateString() : 'N/A');
+
+                        const logsBody = $('#detail-logs-body');
+                        logsBody.empty();
+
+                        if (logs && logs.length > 0) {
+                            logs.forEach(log => {
+                                const date = new Date(log.logDate).toLocaleString();
+                                const changeColor = log.quantityChange > 0 ? 'text-success' : (log.quantityChange < 0 ? 'text-danger' : '');
+                                const prefix = log.quantityChange > 0 ? '+' : '';
+                                
+                                logsBody.append(`
+                                    <tr>
+                                        <td>${date}</td>
+                                        <td class="fw-bold ${changeColor}">${prefix}${log.quantityChange.toFixed(2)}</td>
+                                        <td><span class="badge bg-light text-dark">${log.changeType}</span></td>
+                                        <td class="text-muted">${log.remarks || ''}</td>
+                                    </tr>
+                                `);
+                            });
+                        } else {
+                            logsBody.append('<tr><td colspan="4" class="text-center text-muted py-3">No activity logs found.</td></tr>');
+                        }
+
+                        // Set up "Edit" button in detail modal
+                        $('.btn-edit-from-detail').off('click').on('click', function() {
+                            $('#ingredientDetailsModal').modal('hide');
+                            $(`.btn-edit-ingredient[data-id="${id}"]`).click();
+                        });
+
+                        var detailModal = new bootstrap.Modal(document.getElementById('ingredientDetailsModal'));
+                        detailModal.show();
+                    }
+                } catch (error) {
+                    console.error('Error loading ingredient details:', error);
+                }
+            }
         });
     </script>
 }

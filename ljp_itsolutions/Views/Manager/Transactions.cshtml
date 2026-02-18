@@ -1,6 +1,17 @@
-@model IEnumerable<ljp_itsolutions.Models.Order>
-@{
-    ViewData["Title"] = "Transaction Overrides";
+@section Styles {
+    <style>
+        .sticky-action {
+            position: sticky;
+            right: 0;
+            background: white !important;
+            box-shadow: -4px 0 8px rgba(0,0,0,0.02);
+            z-index: 10;
+        }
+        thead th.sticky-action {
+            background: #f8f9fa !important;
+            z-index: 11;
+        }
+    </style>
 }
 
 <div class="container-fluid py-4">
@@ -14,7 +25,7 @@
                         <th>Cashier</th>
                         <th>Amount</th>
                         <th>Status</th>
-                        <th class="text-end pe-4">Manager Actions</th>
+                        <th class="text-end pe-4 sticky-action">Manager Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -48,10 +59,10 @@
                                     <span class="badge bg-warning bg-opacity-10 text-warning">@order.PaymentStatus</span>
                                 }
                             </td>
-                            <td class="text-end pe-4">
-                                @if (order.PaymentStatus == "Paid" || order.PaymentStatus == "Paid (Digital)")
-                                {
-                                    <div class="d-flex justify-content-end gap-2">
+                            <td class="text-end pe-4 sticky-action">
+                                <div class="d-flex justify-content-end gap-2">
+                                    @if (order.PaymentStatus == "Paid" || order.PaymentStatus == "Paid (Digital)")
+                                    {
                                         <button class="btn btn-sm btn-outline-danger px-3 rounded-pill void-btn" 
                                                 data-id="@order.OrderID" 
                                                 data-bs-toggle="modal" 
@@ -64,12 +75,21 @@
                                                 data-bs-target="#refundModal">
                                             <i class="fas fa-undo me-1"></i>Refund
                                         </button>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-light text-muted border">Locked</span>
-                                }
+                                    }
+                                    else if (order.PaymentStatus == "Pending" || order.PaymentStatus == "Processing")
+                                    {
+                                        <button class="btn btn-sm btn-primary px-3 rounded-pill sync-btn"
+                                                data-id="@order.OrderID"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#syncModal">
+                                            <i class="fas fa-sync-alt me-1"></i>Sync Status
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-light text-muted border">Locked</span>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }
@@ -133,6 +153,33 @@
     </div>
 </div>
 
+<!-- Sync Confirmation Modal -->
+<div class="modal fade" id="syncModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">Manual Payment Sync</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-4 text-center">
+                <div class="mb-4">
+                    <i class="fas fa-sync-alt fa-4x text-primary"></i>
+                </div>
+                <h5 class="fw-bold">Sync with Payment Gateway?</h5>
+                <p class="text-muted mb-0">This will verify if the payment was actually completed on PayMongo/E-Wallet.</p>
+            </div>
+            <div class="modal-footer bg-light border-0">
+                <form asp-action="SyncPaymentStatus" method="post" class="w-100">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="sync-orderid" />
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 float-end">Check Payment Now</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         $(document).ready(function() {
@@ -141,6 +188,9 @@
             });
             $('.refund-btn').click(function() {
                 $('#refund-orderid').val($(this).data('id'));
+            });
+            $('.sync-btn').click(function() {
+                $('#sync-orderid').val($(this).data('id'));
             });
         });
     </script>

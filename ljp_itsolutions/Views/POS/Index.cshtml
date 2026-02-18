@@ -32,7 +32,13 @@
         <div class="products-grid" id="productsGrid">
             @foreach (var product in products)
             {
-                <div class="product-card" data-category="@product.Category?.CategoryName" onclick="addToCart('@product.ProductID', '@product.ProductName', @product.Price)">
+                var isStocked = product.StockQuantity > 0;
+                // If it has a recipe, checking ingredient stock here would be expensive, 
+                // but at least we check direct product stock.
+                
+                <div class="product-card @(isStocked ? "" : "out-of-stock")" 
+                     data-category="@product.Category?.CategoryName" 
+                     onclick="@(isStocked ? $"addToCart('{product.ProductID}', '{product.ProductName}', {product.Price})" : "")">
                     <div class="product-image-container">
                         @if (!string.IsNullOrEmpty(product.ImageURL))
                         {
@@ -44,6 +50,13 @@
                                 @if (product.Category?.CategoryName == "Coffee") { <i class="fas fa-coffee"></i> }
                                 else if (product.Category?.CategoryName == "Tea") { <i class="fas fa-leaf"></i> }
                                 else { <i class="fas fa-cookie"></i> }
+                            </div>
+                        }
+                        
+                        @if (!isStocked)
+                        {
+                            <div class="out-of-stock-overlay">
+                                <span class="badge bg-danger">Sold Out</span>
                             </div>
                         }
                     </div>
@@ -83,7 +96,7 @@
                 </div>
             </div>
             <div id="selectedCustomerDisplay" class="mt-2" style="display:none">
-                <div class="d-flex align-items-center gap-2 p-2 bg-white rounded border border-primary border-opacity-25 shadow-sm">
+                <div class="d-flex align-items-center gap-2 p-2 bg-white rounded border border-primary border-opacity-25 shadow-sm position-relative">
                     <div class="flex-shrink-0 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
                         <i class="fas fa-user small"></i>
                     </div>
@@ -94,9 +107,13 @@
                             <span id="scPoints">0 pts</span>
                         </div>
                     </div>
+                    <button id="redeemBtn" class="btn btn-warning btn-xs px-2 rounded-pill fw-bold text-dark" onclick="toggleRedeem()" style="font-size: 0.65rem;">
+                        Redeem
+                    </button>
                 </div>
             </div>
             <input type="hidden" id="selectedCustomerId" value="">
+            <input type="hidden" id="isRedeeming" value="false">
         </div>
 
         <div class="cart-items" id="cartItems" style="display:none">
@@ -321,11 +338,56 @@
             updateTotals(subtotal);
         }
 
+        let isRedeeming = false;
+        let customerPoints = 0;
+
+        function toggleRedeem() {
+            if (customerPoints < 5) {
+                alert('You need at least 5 points to redeem a ₱50 discount.');
+                return;
+            }
+            isRedeeming = !isRedeeming;
+            const btn = document.getElementById('redeemBtn');
+            const sub = document.getElementById('subtotal').innerText.replace('₱', '');
+            
+            if (isRedeeming) {
+                btn.innerText = 'Redeeming';
+                btn.classList.add('btn-success');
+                btn.classList.remove('btn-warning');
+            } else {
+                btn.innerText = 'Redeem';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-warning');
+            }
+            renderCart();
+        }
+
         function updateTotals(subtotal) {
-            const tax = subtotal * 0.05;
-            totalAmount = subtotal + tax;
+            let discountFromPoints = isRedeeming ? 50 : 0;
+            if (discountFromPoints > subtotal) discountFromPoints = subtotal;
+
+            const tax = (subtotal - discountFromPoints) * 0.05;
+            totalAmount = (subtotal - discountFromPoints) + tax;
 
             document.getElementById('subtotal').innerText = `₱${subtotal.toFixed(2)}`;
+            
+            // Show point discount in UI if applied
+            const promoArea = document.querySelector('.promotion-area');
+            let pointsLabel = document.getElementById('pointsDiscountRow');
+            if (isRedeeming) {
+                if (!pointsLabel) {
+                    const row = document.createElement('div');
+                    row.id = 'pointsDiscountRow';
+                    row.className = 'summary-row text-success fw-bold';
+                    row.innerHTML = `<span>Point Reward</span><span>-₱${discountFromPoints.toFixed(2)}</span>`;
+                    document.querySelector('.summary-row.total').before(row);
+                } else {
+                    pointsLabel.querySelector('span:last-child').innerText = `-₱${discountFromPoints.toFixed(2)}`;
+                }
+            } else if (pointsLabel) {
+                pointsLabel.remove();
+            }
+
             document.getElementById('tax').innerText = `₱${tax.toFixed(2)}`;
             document.getElementById('total').innerText = `₱${totalAmount.toFixed(2)}`;
             
@@ -538,7 +600,8 @@
                         productIds, 
                         paymentMethod, 
                         promoCode,
-                        customerId: customerId ? parseInt(customerId) : null
+                        customerId: customerId ? parseInt(customerId) : null,
+                        redeemPoints: isRedeeming
                     })
                 });
 
@@ -623,12 +686,16 @@
             document.getElementById('selectedCustomerId').value = customer.customerID;
             document.getElementById('scName').innerText = customer.fullName;
             document.getElementById('scPoints').innerText = `${customer.points} pts`;
+            customerPoints = customer.points;
             
             document.getElementById('customerSearch').style.display = 'none';
             document.getElementById('selectedCustomerDisplay').style.display = 'block';
             document.getElementById('clearCustomerBtn').style.display = 'block';
             document.getElementById('customerSearchResults').style.display = 'none';
             document.getElementById('customerSearch').value = '';
+            
+            // Show/Hide redeem button based on points
+            document.getElementById('redeemBtn').style.display = customerPoints >= 5 ? 'block' : 'none';
         }
 
         function clearSelectedCustomer() {
@@ -636,6 +703,9 @@
             document.getElementById('customerSearch').style.display = 'block';
             document.getElementById('selectedCustomerDisplay').style.display = 'none';
             document.getElementById('clearCustomerBtn').style.display = 'none';
+            isRedeeming = false;
+            customerPoints = 0;
+            renderCart();
         }
 
         function showRegisterModal() {

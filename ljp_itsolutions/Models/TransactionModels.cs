@@ -53,11 +53,15 @@ namespace ljp_itsolutions.Models
         [Key]
         public int LogID { get; set; }
 
-        public int ProductID { get; set; }
+        public int? ProductID { get; set; }
         [ForeignKey("ProductID")]
-        public virtual Product Product { get; set; } = null!;
+        public virtual Product? Product { get; set; }
 
-        public int QuantityChange { get; set; }
+        public int? IngredientID { get; set; }
+        [ForeignKey("IngredientID")]
+        public virtual Ingredient? Ingredient { get; set; }
+
+        public decimal QuantityChange { get; set; }
 
         [Required]
         [StringLength(50)]
@@ -80,6 +84,8 @@ namespace ljp_itsolutions.Models
 
         [Required]
         public string Action { get; set; } = string.Empty;
+
+        public string? Details { get; set; }
 
         public DateTime Timestamp { get; set; } = DateTime.Now;
     }

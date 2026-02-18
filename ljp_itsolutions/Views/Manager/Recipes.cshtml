@@ -3,6 +3,13 @@
     ViewData["Title"] = "Recipe Management";
     var ingredients = ViewBag.Ingredients as IEnumerable<ljp_itsolutions.Models.Ingredient>;
 }
+<style>
+    .recipe-entry { transition: all 0.2s ease-in-out; }
+    .recipe-entry:hover { border-color: #0d6efd !important; box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.05) !important; }
+    .x-small { font-size: 0.75rem; }
+    .hover-scale { transition: transform 0.2s; }
+    .hover-scale:hover { transform: scale(1.1); }
+</style>
 
 <div class="container-fluid py-4">
     <!-- Recipe Cards -->
@@ -34,9 +41,17 @@
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div class="d-flex align-items-center">
                                                 <i class="fas fa-leaf text-success me-2"></i>
-                                                <span class="small">@recipe.Ingredient?.Name</span>
+                                                <div>
+                                                    <span class="small d-block fw-bold">@recipe.Ingredient?.Name</span>
+                                                    @{
+                                                        var stock = recipe.Ingredient?.StockQuantity ?? 0;
+                                                        var threshold = recipe.Ingredient?.LowStockThreshold ?? 0;
+                                                        var stockClass = stock <= threshold ? "text-danger" : "text-muted";
+                                                    }
+                                                    <small class="@stockClass x-small">Stock: @stock @recipe.Ingredient?.Unit</small>
+                                                </div>
                                             </div>
-                                            <span class="badge bg-light text-dark">
+                                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill">
                                                 @recipe.QuantityRequired @recipe.Ingredient?.Unit
                                             </span>
                                         </div>
@@ -140,28 +155,34 @@
             const rowId = rowCounter++;
             
             const row = document.createElement('div');
-            row.className = 'row g-2 mb-2 align-items-center';
+            row.className = 'recipe-entry p-3 bg-light rounded-3 mb-3 border transition-all';
             row.id = `recipe-row-${rowId}`;
             
             row.innerHTML = `
-                <div class="col-6">
-                    <select name="Recipes[${rowId}].IngredientID" class="form-select form-select-sm">
-                        <option value="">Select Ingredient</option>
-                        ${ingredientsList.map(ing => 
-                            `<option value="${ing.ingredientID}" ${ing.ingredientID == selectedIngredientId ? 'selected' : ''}>
-                                ${ing.name} (${ing.unit})
-                            </option>`
-                        ).join('')}
-                    </select>
-                </div>
-                <div class="col-5">
-                    <input type="number" step="0.001" name="Recipes[${rowId}].QuantityRequired" 
-                           class="form-control form-control-sm" placeholder="Quantity" value="${quantity}" />
-                </div>
-                <div class="col-1">
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(${rowId})">
-                        <i class="fas fa-times"></i>
-                    </button>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label class="form-label x-small fw-bold text-muted mb-1">Ingredient</label>
+                        <select name="Recipes[${rowId}].IngredientID" class="form-select border-0 shadow-sm">
+                            <option value="">Select Ingredient</option>
+                            ${ingredientsList.map(ing => 
+                                `<option value="${ing.IngredientID}" ${ing.IngredientID == selectedIngredientId ? 'selected' : ''}>
+                                    ${ing.Name} (Stock: ${ing.StockQuantity} ${ing.Unit})
+                                </option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label x-small fw-bold text-muted mb-1">Quantity</label>
+                        <div class="input-group shadow-sm">
+                            <input type="number" step="0.001" name="Recipes[${rowId}].QuantityRequired" 
+                                   class="form-control border-0" placeholder="0.00" value="${quantity}" />
+                        </div>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <button type="button" class="btn btn-outline-danger border-0 hover-scale" onclick="removeRow(${rowId})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
                 </div>
             `;
             

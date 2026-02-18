@@ -22,13 +22,14 @@ namespace ljp_itsolutions.Controllers
             _hasher = hasher;
         }
 
-        private async Task LogAudit(string action, Guid? userId = null)
+        private async Task LogAudit(string action, string? details = null, Guid? userId = null)
         {
             try
             {
                 var auditLog = new AuditLog
                 {
                     Action = action,
+                    Details = details,
                     Timestamp = DateTime.Now,
                     UserID = userId ?? (User.Identity?.IsAuthenticated == true ? GetCurrentUserId() : null)
                 };
@@ -37,7 +38,7 @@ namespace ljp_itsolutions.Controllers
             }
             catch
             {
-                // Fail silently for audit logs if something goes wrong
+                // Fail silently
             }
         }
 
@@ -392,7 +393,7 @@ namespace ljp_itsolutions.Controllers
 
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
-            await LogAudit("Created User: " + user.Username, user.UserID);
+            await LogAudit("Created User: " + user.Username, null, user.UserID);
 
             return Ok();
         }
@@ -416,7 +417,7 @@ namespace ljp_itsolutions.Controllers
 
                 _db.Users.Update(existingUser);
                 await _db.SaveChangesAsync();
-                await LogAudit("Updated User: " + existingUser.Username, existingUser.UserID);
+                await LogAudit("Updated User: " + existingUser.Username, null, existingUser.UserID);
 
                 return Ok();
             }
@@ -437,7 +438,7 @@ namespace ljp_itsolutions.Controllers
             user.IsActive = !user.IsActive;
             _db.Users.Update(user);
             await _db.SaveChangesAsync();
-            await LogAudit((user.IsActive ? "Restored" : "Archived") + " User: " + user.Username, user.UserID);
+            await LogAudit((user.IsActive ? "Restored" : "Archived") + " User: " + user.Username, null, user.UserID);
 
             return Ok();
         }

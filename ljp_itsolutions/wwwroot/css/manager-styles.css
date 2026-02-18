@@ -21,47 +21,74 @@
 /* KPI Cards */
 .kpi-card {
     background: white;
-    border: none;
-    border-radius: 1.25rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 1rem;
     padding: 1.5rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease-in-out;
     display: flex;
     flex-direction: column;
-    align-items: center;
 }
 
 .kpi-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .kpi-card-label {
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 0.85rem;
+    font-weight: 600;
     color: #64748b;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .kpi-card-value {
-    font-size: 2.25rem;
-    font-weight: 800;
+    font-size: 1.75rem;
+    font-weight: 700;
     margin: 0;
-    line-height: 1.1;
-    color: #1e293b;
+    color: #0f172a;
 }
 
 .kpi-card-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 1rem;
+    width: 44px;
+    height: 44px;
+    border-radius: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 1rem;
+}
+
+/* Border Accent Utilities */
+.kpi-card.blue {
+    border-left: 4px solid #3b82f6 !important;
+}
+
+.kpi-card.green {
+    border-left: 4px solid #10b981 !important;
+}
+
+.kpi-card.amber {
+    border-left: 4px solid #f59e0b !important;
+}
+
+.kpi-card.red {
+    border-left: 4px solid #ef4444 !important;
+}
+
+.kpi-card.purple {
+    border-left: 4px solid #8b5cf6 !important;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 2rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 /* Modern Tables */
@@ -101,6 +128,28 @@
     width: 100%;
 }
 
+.modern-table thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    padding: 1rem 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.modern-table tbody td {
+    padding: 1rem 0.75rem;
+    color: #1e293b;
+    font-size: 0.875rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.modern-table tr:hover {
+    background-color: #fbfcfe;
+}
+
 @media (max-width: 991px) {
     .modern-table {
         overflow-x: auto;
@@ -109,7 +158,32 @@
 
     .modern-table table {
         min-width: 800px;
-        /* Ensure table columns don't squish too much */
+    }
+}
+
+/* Sticky Header & Action Styles */
+.sticky-top-header th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #f8fafc !important;
+}
+
+.sticky-action-col {
+    position: sticky;
+    right: 0;
+    z-index: 5;
+    background: inherit;
+    box-shadow: -10px 0 10px -10px rgba(0, 0, 0, 0.1);
+}
+
+tr:hover .sticky-action-col {
+    background-color: #fbfcfe !important;
+}
+
+@media (max-width: 991px) {
+    .sticky-action-col {
+        background: #fff !important;
     }
 }
 
@@ -275,8 +349,8 @@
     backdrop-filter: blur(10px);
     position: sticky !important;
     top: 0 !important;
-    z-index: 2000 !important;
-    /* Increased and added positioning to ensure it stays above all body content */
+    z-index: 1020 !important;
+    /* Reduced to allow Bootstrap modals (z-index 1050+) to overlap correctly */
 }
 
 .header-left h1 {

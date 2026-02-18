@@ -18,6 +18,9 @@ namespace ljp_itsolutions.Models
         public string Unit { get; set; } = "pcs"; // g, ml, pcs, kg, etc.
 
         public decimal LowStockThreshold { get; set; }
+        
+        public DateTime? ExpiryDate { get; set; }
+        public DateTime? LastStockedDate { get; set; }
 
         public virtual ICollection<ProductRecipe> ProductRecipes { get; set; } = new List<ProductRecipe>();
     }

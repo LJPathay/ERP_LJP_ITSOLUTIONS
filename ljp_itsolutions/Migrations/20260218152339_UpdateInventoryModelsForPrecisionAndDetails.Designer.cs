@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ljp_itsolutions.Data;
 
@@ -11,9 +12,11 @@ using ljp_itsolutions.Data;
 namespace ljp_itsolutions.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260218152339_UpdateInventoryModelsForPrecisionAndDetails")]
+    partial class UpdateInventoryModelsForPrecisionAndDetails
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -277,8 +280,7 @@ namespace ljp_itsolutions.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("QuantityChange")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Remarks")
                         .HasMaxLength(255)
@@ -796,7 +798,7 @@ namespace ljp_itsolutions.Migrations
                         {
                             UserID = new Guid("4f7b6d1a-5b6c-4d8e-a9f2-0a1b2c3d4e5f"),
                             AccessFailedCount = 0,
-                            CreatedAt = new DateTime(2026, 2, 18, 23, 31, 50, 609, DateTimeKind.Local).AddTicks(2984),
+                            CreatedAt = new DateTime(2026, 2, 18, 23, 23, 37, 647, DateTimeKind.Local).AddTicks(7022),
                             Email = "admin@coffee.local",
                             FontSize = "default",
                             FullName = "System Admin",

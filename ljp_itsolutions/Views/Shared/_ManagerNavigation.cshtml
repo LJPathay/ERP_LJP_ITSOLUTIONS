@@ -55,7 +55,7 @@
 
     <!-- Inventory & Control -->
     <div class="nav-item dropdown">
-        <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret @(ViewContext.RouteData.Values["action"]?.ToString() == "Products" || ViewContext.RouteData.Values["action"]?.ToString() == "Transactions" ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret @(ViewContext.RouteData.Values["action"]?.ToString() == "Products" || ViewContext.RouteData.Values["action"]?.ToString() == "Transactions" || ViewContext.RouteData.Values["action"]?.ToString() == "Recipes" || ViewContext.RouteData.Values["action"]?.ToString() == "Inventory" ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="fas fa-shield-alt opacity-75"></i>
             <span>Operations & Control</span>
             <i class="fas fa-chevron-down ms-auto x-small opacity-50"></i>
@@ -77,6 +77,12 @@
                 <a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Manager" asp-action="Transactions">
                     <i class="fas fa-exchange-alt opacity-75"></i>
                     <span>Transaction Overrides</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2 @(ViewContext.RouteData.Values["action"]?.ToString() == "Recipes" ? "active" : "")" asp-controller="Manager" asp-action="Recipes">
+                    <i class="fas fa-flask opacity-75"></i>
+                    <span>Recipe Management</span>
                 </a>
             </li>
         </ul>

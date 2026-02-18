@@ -28,6 +28,7 @@ namespace ljp_itsolutions.Controllers
             public string PaymentMethod { get; set; } = "Cash";
             public int? CustomerId { get; set; }
             public string? PromoCode { get; set; }
+            public bool RedeemPoints { get; set; }
             public decimal? CashReceived { get; set; }
         }
 
@@ -77,9 +78,10 @@ namespace ljp_itsolutions.Controllers
                 };
 
                 // Basic Promotion handling
+                Promotion? promotion = null;
                 if (!string.IsNullOrEmpty(promoCode))
                 {
-                    var promotion = await _db.Promotions.FirstOrDefaultAsync(p => p.PromotionName == promoCode && p.IsActive);
+                    promotion = await _db.Promotions.FirstOrDefaultAsync(p => p.PromotionName == promoCode && p.IsActive);
                     if (promotion != null)
                     {
                         order.PromotionID = promotion.PromotionID;
@@ -90,6 +92,40 @@ namespace ljp_itsolutions.Controllers
                 var productGroups = productIds.GroupBy(id => id);
                 decimal total = 0;
 
+                // FIRST PASS: Validate Stock for EVERYTHING in the cart
+                foreach (var group in productGroups)
+                {
+                    var product = await _db.Products
+                        .Include(p => p.ProductRecipes)
+                        .ThenInclude(pr => pr.Ingredient)
+                        .FirstOrDefaultAsync(p => p.ProductID == group.Key);
+
+                    if (product == null) continue;
+                    int qty = group.Count();
+
+                    if (product.ProductRecipes != null && product.ProductRecipes.Any())
+                    {
+                        foreach (var recipe in product.ProductRecipes)
+                        {
+                            if (recipe.Ingredient.StockQuantity < (recipe.QuantityRequired * qty))
+                            {
+                                var msg = $"Insufficient {recipe.Ingredient.Name}. Need {recipe.QuantityRequired * qty}{recipe.Ingredient.Unit}, only {recipe.Ingredient.StockQuantity:0.##} left.";
+                                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Json(new { success = false, message = msg });
+                                TempData["ErrorMessage"] = msg;
+                                return RedirectToAction("CreateOrder");
+                            }
+                        }
+                    }
+                    else if (product.StockQuantity < qty)
+                    {
+                        var msg = $"Insufficient {product.ProductName}. Need {qty}, only {product.StockQuantity} left.";
+                        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Json(new { success = false, message = msg });
+                        TempData["ErrorMessage"] = msg;
+                        return RedirectToAction("CreateOrder");
+                    }
+                }
+
+                // SECOND PASS: Process Order Details and Deduct Stock
                 foreach (var group in productGroups)
                 {
                     var product = await _db.Products
@@ -134,26 +170,54 @@ namespace ljp_itsolutions.Controllers
                                 // Log ingredient usage
                                 _db.InventoryLogs.Add(new InventoryLog
                                 {
+                                    IngredientID = recipe.IngredientID,
                                     ProductID = product.ProductID,
-                                    QuantityChange = (int)-(recipe.QuantityRequired * qty),
+                                    QuantityChange = -(recipe.QuantityRequired * qty),
                                     ChangeType = "Recipe Deduction",
                                     LogDate = DateTime.Now,
-                                    Remarks = $"Used {recipe.Ingredient.Name} for Order #{order.OrderID.ToString().Substring(0, 8)}"
+                                    Remarks = $"Used for {product.ProductName} (Order #{order.OrderID.ToString().Substring(0, 8)})"
                                 });
                             }
                         }
                         else
                         {
                             product.StockQuantity -= qty;
-                            
-                            // Check if low stock for standalone product (if it has a threshold)
-                            // (Product model currently lacks a threshold, ignoring for now)
                         }
                     }
                 }
 
+                // Calculate Promotion Discount
+                decimal discount = 0;
+                if (promotion != null)
+                {
+                    if (string.Equals(promotion.DiscountType, "Percentage", StringComparison.OrdinalIgnoreCase))
+                    {
+                        discount = total * (promotion.DiscountValue / 100);
+                    }
+                    else // Fixed
+                    {
+                        discount = promotion.DiscountValue;
+                    }
+                    if (discount > total) discount = total;
+                }
+
+                // Reward Point Redemption (5 pts = ₱50 discount)
+                if (request.RedeemPoints && order.CustomerID.HasValue)
+                {
+                    var customer = await _db.Customers.FindAsync(order.CustomerID.Value);
+                    if (customer != null && customer.Points >= 5)
+                    {
+                        customer.Points -= 5;
+                        discount += 50;
+                        await LogAudit($"Redeemed 5 Points", $"Customer: {customer.FullName}, Discount: ₱50.00");
+                    }
+                }
+
+                if (discount > total) discount = total;
+
                 order.TotalAmount = total;
-                order.FinalAmount = total;
+                order.DiscountAmount = discount;
+                order.FinalAmount = total - discount;
 
                 // Trigger Notification for High Value Order
                 if (order.FinalAmount >= 500)
@@ -161,24 +225,24 @@ namespace ljp_itsolutions.Controllers
                     _db.Notifications.Add(new Notification
                     {
                         Title = "High Value Order",
-                        Message = $"Order #{order.OrderID.ToString().Substring(0, 8)} for {order.FinalAmount:C} received!",
+                        Message = $"Order #{order.OrderID.ToString().Substring(0, 8)} for ₱{order.FinalAmount:N2} received!",
                         Type = "success",
                         IconClass = "fas fa-star",
                         CreatedAt = DateTime.Now
                     });
                 }
 
-                // Record Payment
+                // Record Payment (Wait until after discount is applied)
                 order.Payments.Add(new Payment
                 {
                     OrderID = order.OrderID,
                     PaymentDate = DateTime.Now,
-                    AmountPaid = total,
+                    AmountPaid = order.FinalAmount,
                     PaymentMethod = paymentMethod,
                     PaymentStatus = "Success"
                 });
 
-                // Create Inventory Log
+                // Create Inventory Log for Sold Products
                 foreach (var detail in order.OrderDetails)
                 {
                     _db.InventoryLogs.Add(new InventoryLog
@@ -191,7 +255,7 @@ namespace ljp_itsolutions.Controllers
                     });
                 }
 
-                // Customer Loyalty Points (1 pt per 3 coffees)
+                // Customer Loyalty Points EARNING (1 pt per 3 coffees)
                 if (order.CustomerID.HasValue)
                 {
                     var customer = await _db.Customers.FindAsync(order.CustomerID.Value);
@@ -210,7 +274,10 @@ namespace ljp_itsolutions.Controllers
 
                 _db.Orders.Add(order);
                 await _db.SaveChangesAsync();
-                await LogAudit($"Placed Order #{order.OrderID.ToString().Substring(0, 8)} (Total: {order.FinalAmount:C})");
+                
+                // Detailed audit log with item count and total
+                var itemSummary = string.Join(", ", order.OrderDetails.Select(d => $"{d.Quantity}x {d.ProductID.ToString().Substring(0,4)}"));
+                await LogAudit($"Placed Order #{order.OrderID.ToString().Substring(0, 8)}", $"Total: ₱{order.FinalAmount:N2}, Method: {paymentMethod}, Items: {itemSummary}");
 
                 if (Request.Headers["X-Requested-With"] != "XMLHttpRequest")
                 {
@@ -268,6 +335,33 @@ namespace ljp_itsolutions.Controllers
             var productGroups = request.ProductIds.GroupBy(id => id);
             decimal total = 0;
 
+            // Perform Stock Validation BEFORE processing
+            foreach (var group in productGroups)
+            {
+                var product = await _db.Products
+                    .Include(p => p.ProductRecipes)
+                    .ThenInclude(pr => pr.Ingredient)
+                    .FirstOrDefaultAsync(p => p.ProductID == group.Key);
+
+                if (product == null) continue;
+                int qty = group.Count();
+
+                if (product.ProductRecipes != null && product.ProductRecipes.Any())
+                {
+                    foreach (var recipe in product.ProductRecipes)
+                    {
+                        if (recipe.Ingredient.StockQuantity < (recipe.QuantityRequired * qty))
+                        {
+                            return BadRequest($"Insufficient {recipe.Ingredient.Name} for one or more items.");
+                        }
+                    }
+                }
+                else if (product.StockQuantity < qty)
+                {
+                    return BadRequest($"Insufficient stock for {product.ProductName}.");
+                }
+            }
+
             foreach (var group in productGroups)
             {
                 var product = await _db.Products
@@ -296,14 +390,15 @@ namespace ljp_itsolutions.Controllers
                         foreach (var recipe in product.ProductRecipes)
                         {
                             recipe.Ingredient.StockQuantity -= (recipe.QuantityRequired * qty);
-                            _db.InventoryLogs.Add(new InventoryLog
-                            {
-                                ProductID = product.ProductID,
-                                QuantityChange = (int)-(recipe.QuantityRequired * qty),
-                                ChangeType = "Recipe Deduction",
-                                LogDate = DateTime.Now,
-                                Remarks = $"Used {recipe.Ingredient.Name} for Order #{order.OrderID.ToString().Substring(0, 8)}"
-                            });
+                                _db.InventoryLogs.Add(new InventoryLog
+                                {
+                                    IngredientID = recipe.IngredientID,
+                                    ProductID = product.ProductID,
+                                    QuantityChange = -(recipe.QuantityRequired * qty),
+                                    ChangeType = "Recipe Deduction",
+                                    LogDate = DateTime.Now,
+                                    Remarks = $"Used for {product.ProductName} (Order #{order.OrderID.ToString().Substring(0, 8)})"
+                                });
                         }
                     }
                 }
@@ -424,13 +519,14 @@ namespace ljp_itsolutions.Controllers
             return RedirectToAction("TransactionHistory");
         }
 
-        private async Task LogAudit(string action)
+        private async Task LogAudit(string action, string? details = null)
         {
             try
             {
                 var auditLog = new AuditLog
                 {
                     Action = action,
+                    Details = details,
                     Timestamp = DateTime.Now,
                     UserID = GetCurrentUserId()
                 };

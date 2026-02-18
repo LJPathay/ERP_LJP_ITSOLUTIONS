@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ljp_itsolutions.Data;
 
@@ -11,9 +12,11 @@ using ljp_itsolutions.Data;
 namespace ljp_itsolutions.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260218141628_AddDarkModeToUser")]
+    partial class AddDarkModeToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,9 +35,6 @@ namespace ljp_itsolutions.Migrations
 
                     b.Property<string>("Action")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Details")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("Timestamp")
@@ -183,12 +183,6 @@ namespace ljp_itsolutions.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IngredientID"));
 
-                    b.Property<DateTime?>("ExpiryDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("LastStockedDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<decimal>("LowStockThreshold")
                         .HasPrecision(18, 3)
                         .HasColumnType("decimal(18,3)");
@@ -267,26 +261,20 @@ namespace ljp_itsolutions.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int?>("IngredientID")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("LogDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("ProductID")
+                    b.Property<int>("ProductID")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("QuantityChange")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
+                    b.Property<int>("QuantityChange")
+                        .HasColumnType("int");
 
                     b.Property<string>("Remarks")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
                     b.HasKey("LogID");
-
-                    b.HasIndex("IngredientID");
 
                     b.HasIndex("ProductID");
 
@@ -759,6 +747,9 @@ namespace ljp_itsolutions.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
+                    b.Property<bool>("IsDarkMode")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsHighContrast")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -796,11 +787,12 @@ namespace ljp_itsolutions.Migrations
                         {
                             UserID = new Guid("4f7b6d1a-5b6c-4d8e-a9f2-0a1b2c3d4e5f"),
                             AccessFailedCount = 0,
-                            CreatedAt = new DateTime(2026, 2, 18, 23, 31, 50, 609, DateTimeKind.Local).AddTicks(2984),
+                            CreatedAt = new DateTime(2026, 2, 18, 22, 16, 27, 718, DateTimeKind.Local).AddTicks(4669),
                             Email = "admin@coffee.local",
                             FontSize = "default",
                             FullName = "System Admin",
                             IsActive = true,
+                            IsDarkMode = false,
                             IsHighContrast = false,
                             ReduceMotion = false,
                             Role = "Admin",
@@ -819,15 +811,11 @@ namespace ljp_itsolutions.Migrations
 
             modelBuilder.Entity("ljp_itsolutions.Models.InventoryLog", b =>
                 {
-                    b.HasOne("ljp_itsolutions.Models.Ingredient", "Ingredient")
-                        .WithMany()
-                        .HasForeignKey("IngredientID");
-
                     b.HasOne("ljp_itsolutions.Models.Product", "Product")
                         .WithMany()
-                        .HasForeignKey("ProductID");
-
-                    b.Navigation("Ingredient");
+                        .HasForeignKey("ProductID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Product");
                 });

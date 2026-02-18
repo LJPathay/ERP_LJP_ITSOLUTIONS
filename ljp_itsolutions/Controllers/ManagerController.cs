@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using ljp_itsolutions.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace ljp_itsolutions.Controllers
 {
@@ -355,13 +356,21 @@ namespace ljp_itsolutions.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> VoidOrder(Guid id)
         {
-            var order = await _db.Orders.FirstOrDefaultAsync(o => o.OrderID == id);
-            if (order != null)
+            var order = await _db.Orders
+                .Include(o => o.OrderDetails)
+                .FirstOrDefaultAsync(o => o.OrderID == id);
+
+            if (order != null && order.PaymentStatus != "Voided" && order.PaymentStatus != "Refunded")
             {
+                await RevertOrderInventory(order);
                 order.PaymentStatus = "Voided";
                 await _db.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Transaction voided successfully!";
+                TempData["SuccessMessage"] = "Transaction voided successfully and inventory restored!";
                 await LogAudit("Voided Order #" + order.OrderID);
+            }
+            else if (order != null)
+            {
+                TempData["ErrorMessage"] = "Order is already voided or refunded.";
             }
             return RedirectToAction("Transactions");
         }
@@ -370,15 +379,71 @@ namespace ljp_itsolutions.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RefundOrder(Guid id)
         {
-            var order = await _db.Orders.FirstOrDefaultAsync(o => o.OrderID == id);
-            if (order != null)
+            var order = await _db.Orders
+                .Include(o => o.OrderDetails)
+                .FirstOrDefaultAsync(o => o.OrderID == id);
+
+            if (order != null && order.PaymentStatus != "Voided" && order.PaymentStatus != "Refunded")
             {
+                await RevertOrderInventory(order);
                 order.PaymentStatus = "Refunded";
                 await _db.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Transaction refunded successfully!";
+                TempData["SuccessMessage"] = "Transaction refunded successfully and inventory restored!";
                 await LogAudit("Refunded Order #" + order.OrderID);
             }
+            else if (order != null)
+            {
+                TempData["ErrorMessage"] = "Order is already voided or refunded.";
+            }
             return RedirectToAction("Transactions");
+        }
+
+        private async Task RevertOrderInventory(Order order)
+        {
+            if (order == null || order.OrderDetails == null) return;
+
+            foreach (var detail in order.OrderDetails)
+            {
+                var product = await _db.Products
+                    .Include(p => p.ProductRecipes)
+                    .ThenInclude(pr => pr.Ingredient)
+                    .FirstOrDefaultAsync(p => p.ProductID == detail.ProductID);
+
+                if (product != null)
+                {
+                    if (product.ProductRecipes != null && product.ProductRecipes.Any())
+                    {
+                        foreach (var recipe in product.ProductRecipes)
+                        {
+                            recipe.Ingredient.StockQuantity += (recipe.QuantityRequired * detail.Quantity);
+                            
+                            // Log ingredient reversal
+                            _db.InventoryLogs.Add(new InventoryLog
+                            {
+                                IngredientID = recipe.IngredientID,
+                                QuantityChange = (recipe.QuantityRequired * detail.Quantity),
+                                ChangeType = "Reversal",
+                                LogDate = DateTime.Now,
+                                Remarks = $"Restored from Voided/Refunded Order #{order.OrderID.ToString().Substring(0, 8)} ({product.ProductName})"
+                            });
+                        }
+                    }
+                    else
+                    {
+                        product.StockQuantity += detail.Quantity;
+                    }
+
+                    // Log the product-level reversal
+                    _db.InventoryLogs.Add(new InventoryLog
+                    {
+                        ProductID = product.ProductID,
+                        QuantityChange = detail.Quantity,
+                        ChangeType = "Reversal",
+                        LogDate = DateTime.Now,
+                        Remarks = $"Stock restored from Order #{order.OrderID.ToString().Substring(0, 8)}"
+                    });
+                }
+            }
         }
 
         // --- EXPENSE CRUD ---
@@ -442,6 +507,11 @@ namespace ljp_itsolutions.Controllers
         {
             if (ModelState.IsValid)
             {
+                if (ingredient.StockQuantity > 0)
+                {
+                    ingredient.LastStockedDate = DateTime.Now;
+                }
+                
                 _db.Ingredients.Add(ingredient);
                 await _db.SaveChangesAsync();
                 await LogAudit($"Created Ingredient: {ingredient.Name}");
@@ -457,10 +527,17 @@ namespace ljp_itsolutions.Controllers
             var existing = await _db.Ingredients.FindAsync(ingredient.IngredientID);
             if (existing != null)
             {
+                // If stock is being increased, update LastStockedDate
+                if (ingredient.StockQuantity > existing.StockQuantity)
+                {
+                    existing.LastStockedDate = DateTime.Now;
+                }
+
                 existing.Name = ingredient.Name;
                 existing.StockQuantity = ingredient.StockQuantity;
                 existing.Unit = ingredient.Unit;
                 existing.LowStockThreshold = ingredient.LowStockThreshold;
+                existing.ExpiryDate = ingredient.ExpiryDate;
                 
                 // Trigger Persistent Notification if Low Stock
                 if (existing.StockQuantity <= existing.LowStockThreshold)
@@ -497,6 +574,30 @@ namespace ljp_itsolutions.Controllers
                 TempData["SuccessMessage"] = "Ingredient removed successfully!";
             }
             return RedirectToAction("Inventory");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetIngredientDetails(int id)
+        {
+            var ingredient = await _db.Ingredients
+                .FirstOrDefaultAsync(i => i.IngredientID == id);
+
+            if (ingredient == null) return NotFound();
+
+            var logs = await _db.InventoryLogs
+                .Where(l => l.IngredientID == id)
+                .OrderByDescending(l => l.LogDate)
+                .Take(10)
+                .Select(l => new 
+                {
+                    l.LogDate,
+                    l.QuantityChange,
+                    l.ChangeType,
+                    l.Remarks
+                })
+                .ToListAsync();
+
+            return Json(new { ingredient, logs });
         }
 
         // --- CAMPAIGN APPROVAL WORKFLOW ---
@@ -560,9 +661,31 @@ namespace ljp_itsolutions.Controllers
             }
 
             await _db.SaveChangesAsync();
-            await LogAudit($"Updated Recipe for Product ID: {ProductID}");
+            await LogAudit($"Updated Recipe for Product ID: {ProductID}", JsonSerializer.Serialize(Recipes));
             TempData["SuccessMessage"] = "Recipe updated successfully!";
             return RedirectToAction("Recipes");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SyncPaymentStatus(Guid id)
+        {
+            var order = await _db.Orders.FirstOrDefaultAsync(o => o.OrderID == id);
+            if (order == null) return NotFound();
+
+            if (order.PaymentStatus == "Pending" || order.PaymentStatus == "Processing")
+            {
+                // In a real app, this would call PayMongo API to check the source/payment status
+                // Simulating a successful sync for demonstration
+                order.PaymentStatus = order.PaymentMethod == "Paymongo" ? "Paid (Digital)" : "Paid";
+                await _db.SaveChangesAsync();
+                await LogAudit($"Manually Synced Payment Status for Order #{order.OrderID.ToString().Substring(0, 8)}", "Status updated from Pending to Paid via Sync Button");
+                TempData["SuccessMessage"] = "Payment status synchronized successfully!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Order is already in a final state.";
+            }
+            return RedirectToAction("Transactions");
         }
 
         // --- CAMPAIGN APPROVAL WORKFLOW ---
@@ -611,13 +734,14 @@ namespace ljp_itsolutions.Controllers
             return Ok();
         }
 
-        private async Task LogAudit(string action)
+        private async Task LogAudit(string action, string? details = null)
         {
             try
             {
                 var auditLog = new AuditLog
                 {
                     Action = action,
+                    Details = details,
                     Timestamp = DateTime.Now,
                     UserID = GetCurrentUserId()
                 };

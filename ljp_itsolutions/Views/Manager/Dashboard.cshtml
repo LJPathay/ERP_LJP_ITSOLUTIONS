@@ -4,67 +4,82 @@
 }
 
 <div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Manager Dashboard</h2>
+            <p class="text-muted small"><i class="fas fa-calendar-alt me-1"></i> @DateTime.Now.ToString("dddd, MMMM dd, yyyy")</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-white shadow-sm rounded-pill px-3" onclick="location.reload()">
+                <i class="fas fa-sync-alt text-primary me-2"></i>Refresh
+            </button>
+        </div>
+    </div>
+
     <!-- Quick Stats -->
     <div class="row g-4 mb-4">
         <!-- Stock KPI -->
         <div class="col-md-3">
-            <div class="kpi-card h-100 transition-hover" style="background: linear-gradient(135deg, white 0%, #f1f5f9 100%);">
-                <div class="kpi-card-icon bg-primary bg-opacity-10 text-primary mb-3">
-                    <i class="fas fa-coffee fa-lg"></i>
+            <div class="kpi-card blue h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="kpi-card-icon bg-primary bg-opacity-10 text-primary mb-0">
+                        <i class="fas fa-coffee fa-lg"></i>
+                    </div>
                 </div>
                 <p class="kpi-card-label">Stock Portfolio</p>
                 <div class="d-flex align-items-baseline gap-2">
                     <h2 class="kpi-card-value mb-0">@Model.TotalProducts</h2>
-                    <span class="badge bg-light text-dark x-small">Active Items</span>
+                    <span class="badge bg-light text-muted x-small">Active</span>
                 </div>
             </div>
         </div>
         <!-- Revenue KPI -->
         <div class="col-md-3">
-            <div class="kpi-card h-100 transition-hover" style="background: linear-gradient(135deg, white 0%, #f0f9ff 100%);">
-                <div class="kpi-card-icon bg-info bg-opacity-10 text-info mb-3">
-                    <i class="fas fa-peso-sign fa-lg"></i>
-                </div>
-                <p class="kpi-card-label">Gross Earnings</p>
-                <div class="d-flex align-items-baseline gap-2">
-                    <h2 class="kpi-card-value mb-0">₱@Model.TotalRevenue.ToString("N0")</h2>
+            <div class="kpi-card green h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="kpi-card-icon bg-success bg-opacity-10 text-success mb-0">
+                        <i class="fas fa-peso-sign fa-lg"></i>
+                    </div>
                     @if (Model.RevenueGrowth != 0)
                     {
-                        <span class="x-small fw-bold @(Model.RevenueGrowth > 0 ? "text-success" : "text-danger")">
-                            <i class="fas fa-caret-@(Model.RevenueGrowth > 0 ? "up" : "down") me-1"></i>@Math.Abs(Model.RevenueGrowth).ToString("N1")%
+                        <span class="badge bg-@(Model.RevenueGrowth > 0 ? "success" : "danger") bg-opacity-10 text-@(Model.RevenueGrowth > 0 ? "success" : "danger") x-small fw-bold">
+                            <i class="fas fa-caret-@(Model.RevenueGrowth > 0 ? "up" : "down")"></i> @Math.Abs(Model.RevenueGrowth).ToString("N1")%
                         </span>
                     }
                 </div>
+                <p class="kpi-card-label">Gross Earnings</p>
+                <h2 class="kpi-card-value mb-0">₱@Model.TotalRevenue.ToString("N0")</h2>
             </div>
         </div>
         <!-- Orders KPI -->
         <div class="col-md-3">
-            <div class="kpi-card h-100 transition-hover" style="background: linear-gradient(135deg, white 0%, #f0fdf4 100%);">
-                <div class="kpi-card-icon bg-success bg-opacity-10 text-success mb-3">
-                    <i class="fas fa-shopping-cart fa-lg"></i>
-                </div>
-                <p class="kpi-card-label">Total Demand</p>
-                <div class="d-flex align-items-baseline gap-2">
-                    <h2 class="kpi-card-value mb-0">@Model.TotalOrders</h2>
+            <div class="kpi-card purple h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="kpi-card-icon bg-purple bg-opacity-10 text-primary mb-0" style="color: #8b5cf6 !important; background-color: rgba(139, 92, 246, 0.1) !important;">
+                        <i class="fas fa-shopping-cart fa-lg"></i>
+                    </div>
                     @if (Model.OrderGrowth != 0)
                     {
-                        <span class="x-small fw-bold @(Model.OrderGrowth > 0 ? "text-success" : "text-danger")">
-                            <i class="fas fa-caret-@(Model.OrderGrowth > 0 ? "up" : "down") me-1"></i>@Math.Abs(Model.OrderGrowth).ToString("N1")%
+                        <span class="badge bg-@(Model.OrderGrowth > 0 ? "success" : "danger") bg-opacity-10 text-@(Model.OrderGrowth > 0 ? "success" : "danger") x-small fw-bold">
+                            <i class="fas fa-caret-@(Model.OrderGrowth > 0 ? "up" : "down")"></i> @Math.Abs(Model.OrderGrowth).ToString("N1")%
                         </span>
                     }
                 </div>
+                <p class="kpi-card-label">Total Orders</p>
+                <h2 class="kpi-card-value mb-0">@Model.TotalOrders</h2>
             </div>
         </div>
         <!-- Team KPI -->
         <div class="col-md-3">
-            <div class="kpi-card h-100 transition-hover" style="background: linear-gradient(135deg, white 0%, #fefce8 100%);">
+            <div class="kpi-card amber h-100">
                 <div class="kpi-card-icon bg-warning bg-opacity-10 text-warning mb-3">
                     <i class="fas fa-user-shield fa-lg"></i>
                 </div>
                 <p class="kpi-card-label">Team Presence</p>
                 <div class="d-flex align-items-baseline gap-2">
                     <h2 class="kpi-card-value mb-0">@Model.TotalUsers</h2>
-                    <span class="badge bg-light text-dark x-small">Registered</span>
+                    <span class="badge bg-light text-muted x-small">Staff</span>
                 </div>
             </div>
         </div>
@@ -76,7 +91,9 @@
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                     <div>
-                        <h5 class="fw-bold mb-0">Sales Performance</h5>
+                        <h5 class="fw-bold mb-0">
+                            <i class="fas fa-chart-line text-primary me-2"></i>Sales Performance
+                        </h5>
                         <p class="text-muted x-small mb-0">Daily revenue for the last 7 days</p>
                     </div>
                 </div>
@@ -88,7 +105,9 @@
         <div class="col-lg-5">
              <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h5 class="fw-bold mb-0">Peak Traffic Hours</h5>
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-clock text-warning me-2"></i>Peak Traffic Hours
+                    </h5>
                     <p class="text-muted x-small mb-0">Total order volume by time of day</p>
                 </div>
                 <div class="card-body p-4">
@@ -102,7 +121,9 @@
         <div class="col-lg-12">
              <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h5 class="fw-bold mb-0">Popular Categories</h5>
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-chart-pie text-success me-2"></i>Popular Categories
+                    </h5>
                     <p class="text-muted x-small mb-0">Order distribution by category</p>
                 </div>
                 <div class="card-body p-4 d-flex align-items-center justify-content-center">
