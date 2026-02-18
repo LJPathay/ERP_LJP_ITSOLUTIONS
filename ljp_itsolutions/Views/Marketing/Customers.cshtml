@@ -25,9 +25,6 @@
         </div>
         <div class="col text-end">
             <div class="d-flex gap-2 justify-content-end">
-                <button class="btn btn-light border rounded-pill px-4 shadow-none">
-                    <i class="fas fa-file-export me-2 text-muted"></i>Export List
-                </button>
                 <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
                     <i class="fas fa-plus-circle me-2"></i>New Customer
                 </button>
@@ -93,12 +90,20 @@
                                 </td>
                                 <td class="pe-4 text-end">
                                     <div class="d-flex gap-2 justify-content-end">
-                                        <button class="btn btn-sm btn-light border-0 rounded-pill px-3 shadow-none">
-                                            <i class="fas fa-user-circle me-1 x-small text-muted"></i> Profile
-                                        </button>
-                                        <button class="btn btn-sm btn-white border rounded-pill px-3 shadow-sm text-primary">
+                                        <button class="btn btn-sm btn-white border rounded-pill px-3 shadow-sm text-primary edit-btn"
+                                                data-id="@customer.CustomerID"
+                                                data-name="@customer.FullName"
+                                                data-phone="@customer.PhoneNumber"
+                                                data-points="@customer.Points">
                                             Edit
                                         </button>
+                                        <form asp-action="DeleteCustomer" method="post" onsubmit="return confirm('Remove this customer record?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@customer.CustomerID" />
+                                            <button type="submit" class="btn btn-sm btn-light text-danger border rounded-pill px-3">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -106,6 +111,69 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Customer Modal -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-primary text-white border-0 py-3">
+                <h5 class="modal-title fw-bold">New Customer Enrollment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="CreateCustomer" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Full Name</label>
+                        <input type="text" name="FullName" class="form-control rounded-3" required placeholder="e.g. John Doe" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Phone Number</label>
+                        <input type="text" name="PhoneNumber" class="form-control rounded-3" required placeholder="e.g. 09123456789" />
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Register Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Customer Modal -->
+<div class="modal fade" id="editCustomerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-primary text-white border-0 py-3">
+                <h5 class="modal-title fw-bold">Update Customer Profile</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="EditCustomer" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="CustomerID" id="edit-id" />
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Full Name</label>
+                        <input type="text" name="FullName" id="edit-name" class="form-control rounded-3" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Phone Number</label>
+                        <input type="text" name="PhoneNumber" id="edit-phone" class="form-control rounded-3" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Points</label>
+                        <input type="number" name="Points" id="edit-points" class="form-control rounded-3" required />
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Save Changes</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -144,11 +212,27 @@
 
             $('#customerSearch').on('keyup', filterCustomers);
             $('#tierFilter').on('change', filterCustomers);
+
+            $('.edit-btn').click(function() {
+                const id = $(this).data('id');
+                const name = $(this).data('name');
+                const phone = $(this).data('phone');
+                const points = $(this).data('points');
+
+                $('#edit-id').val(id);
+                $('#edit-name').val(name);
+                $('#edit-phone').val(phone);
+                $('#edit-points').val(points);
+
+                new bootstrap.Modal(document.getElementById('editCustomerModal')).show();
+            });
         });
     </script>
 }
 
 <style>
     .x-small { font-size: 0.75rem; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.1em; }
     .bg-light-subtle { background-color: #f8fafc; }
 </style>

@@ -105,6 +105,7 @@ namespace ljp_itsolutions.Controllers
                             
                             
                             await _db.SaveChangesAsync();
+                            await LogAudit($"PayMongo: Order #{orderId.ToString().Substring(0, 8)} confirmed paid.");
                             _logger.LogInformation("Order {OrderId} marked as paid via webhook.", orderId);
                         }
                     }
@@ -156,6 +157,22 @@ namespace ljp_itsolutions.Controllers
             {
                 return false;
             }
+        }
+
+        private async Task LogAudit(string action)
+        {
+            try
+            {
+                var auditLog = new AuditLog
+                {
+                    Action = action,
+                    Timestamp = DateTime.Now,
+                    UserID = null // System action
+                };
+                _db.AuditLogs.Add(auditLog);
+                await _db.SaveChangesAsync();
+            }
+            catch { /* Fail silently */ }
         }
     }
 }

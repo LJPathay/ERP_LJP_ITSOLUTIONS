@@ -113,12 +113,10 @@ namespace ljp_itsolutions.Data
                             modified = true;
                         }
 
-                        // ALWAYS reset password to '123' if it's missing or to ensure access in published env
-                        // This helps if the DB was manually tampered with or if hashes are incompatible
-                        var passwordCheck = hasher.VerifyHashedPassword(user, user.Password ?? "", "123");
-                        if (passwordCheck != PasswordVerificationResult.Success)
+                        // Reset password to '123' ONLY if it's currently null or empty
+                        if (string.IsNullOrEmpty(user.Password))
                         {
-                            Console.WriteLine($"Resetting password for: {username}");
+                            Console.WriteLine($"Setting initial password for: {username}");
                             user.Password = hasher.HashPassword(user, "123");
                             modified = true;
                         }

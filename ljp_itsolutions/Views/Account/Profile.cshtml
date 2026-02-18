@@ -149,15 +149,28 @@
                         <div class="row g-4">
                             <div class="col-md-4">
                                 <label class="modern-form-label">Current Password</label>
-                                <input type="password" name="CurrentPassword" class="modern-form-control w-100" required />
+                                <input type="password" name="CurrentPassword" id="currentPassword" class="modern-form-control w-100" required />
                             </div>
                             <div class="col-md-4">
                                 <label class="modern-form-label">New Password</label>
-                                <input type="password" name="NewPassword" class="modern-form-control w-100" required minlength="6" />
+                                <div class="password-toggle-group position-relative">
+                                    <input type="password" name="NewPassword" id="newPassword" class="modern-form-control w-100" required minlength="8" style="padding-right: 45px;" />
+                                    <button type="button" class="password-toggle-btn" onclick="toggleNewConfirmPassword(this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="strength-meter-container d-none" id="strengthContainer">
+                                    <div class="strength-meter-bar">
+                                        <div class="strength-meter-fill" id="strengthFill"></div>
+                                    </div>
+                                    <span class="strength-label" id="strengthLabel">Weak</span>
+                                </div>
                             </div>
                             <div class="col-md-4">
                                 <label class="modern-form-label">Confirm New Password</label>
-                                <input type="password" name="ConfirmPassword" class="modern-form-control w-100" required />
+                                <div class="password-toggle-group position-relative">
+                                    <input type="password" name="ConfirmPassword" id="confirmPassword" class="modern-form-control w-100" required />
+                                </div>
                             </div>
                         </div>
                         <div class="mt-4">
@@ -171,3 +184,61 @@
         </div>
     </div>
 </div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function toggleNewConfirmPassword(btn) {
+            const newPass = document.getElementById('newPassword');
+            const confPass = document.getElementById('confirmPassword');
+            const icon = btn.querySelector('i');
+            
+            if (newPass.type === 'password') {
+                newPass.type = 'text';
+                confPass.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                newPass.type = 'password';
+                confPass.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        document.getElementById('newPassword').addEventListener('input', function() {
+            const password = this.value;
+            const container = document.getElementById('strengthContainer');
+            const fill = document.getElementById('strengthFill');
+            const label = document.getElementById('strengthLabel');
+
+            if (password.length === 0) {
+                container.classList.add('d-none');
+                return;
+            }
+
+            container.classList.remove('d-none');
+
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+
+            fill.className = 'strength-meter-fill';
+            label.className = 'strength-label';
+
+            if (strength <= 1) {
+                fill.classList.add('strength-weak');
+                label.textContent = 'Weak';
+                label.classList.add('text-weak');
+            } else if (strength === 2) {
+                fill.classList.add('strength-medium');
+                label.textContent = 'Medium';
+                label.classList.add('text-medium');
+            } else {
+                fill.classList.add('strength-strong');
+                label.textContent = 'Strong';
+                label.classList.add('text-strong');
+            }
+        });
+    </script>
+}

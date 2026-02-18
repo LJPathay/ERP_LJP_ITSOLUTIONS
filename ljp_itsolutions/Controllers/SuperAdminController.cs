@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+using System.Security.Claims;
 
 namespace ljp_itsolutions.Controllers
 {
@@ -30,20 +31,26 @@ namespace ljp_itsolutions.Controllers
                 {
                     Action = action,
                     Timestamp = DateTime.Now,
-                    UserID = userId ?? (User.Identity?.IsAuthenticated == true ? GetCurrentUserId() : null)
+                    UserID = userId ?? GetCurrentUserId()
                 };
                 _db.AuditLogs.Add(auditLog);
                 await _db.SaveChangesAsync();
             }
-            catch { }
+            catch { /* Fail silently */ }
         }
 
         private Guid? GetCurrentUserId()
         {
+            if (User.Identity?.IsAuthenticated != true) return null;
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (Guid.TryParse(userIdStr, out var userId)) return userId;
+
             var username = User.Identity?.Name;
-            if (string.IsNullOrEmpty(username)) return null;
-            var user = _db.Users.FirstOrDefault(u => u.Username == username);
-            return user?.UserID;
+            if (!string.IsNullOrEmpty(username))
+            {
+                return _db.Users.FirstOrDefault(u => u.Username == username)?.UserID;
+            }
+            return null;
         }
 
         public IActionResult Dashboard()

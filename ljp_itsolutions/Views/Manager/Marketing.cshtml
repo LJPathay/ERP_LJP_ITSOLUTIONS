@@ -14,8 +14,8 @@
     <!-- Performance Charts Placeholder -->
     <div class="row g-4 mb-4">
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0 pt-3">
+            <div class="card border shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-bottom">
                     <h5 class="fw-bold mb-0">Campaign Success Rate</h5>
                 </div>
                 <div class="card-body">
@@ -24,8 +24,8 @@
             </div>
         </div>
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0 pt-3">
+            <div class="card border shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-bottom">
                     <h5 class="fw-bold mb-0">Top Performing Promo</h5>
                 </div>
                 <div class="card-body p-0">
@@ -56,31 +56,31 @@
     <!-- Marketing KPIs -->
     <div class="row g-4">
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-4 text-center">
-                <h6 class="text-muted small uppercase fw-bold mb-2">Active Campaigns</h6>
+            <div class="card border shadow-sm p-4 text-center h-100">
+                <h6 class="text-muted small fw-bold mb-2">Active Campaigns</h6>
                 <h3 class="fw-bold mb-0">@ViewBag.ActivePromos</h3>
                 <small class="text-info mt-2"><i class="fas fa-bullhorn me-1"></i>Current Live</small>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-4 text-center">
-                <h6 class="text-muted small uppercase fw-bold mb-2">Total Promo Uses</h6>
+            <div class="card border shadow-sm p-4 text-center h-100">
+                <h6 class="text-muted small fw-bold mb-2">Total Promo Uses</h6>
                 <h3 class="fw-bold mb-0">@ViewBag.TotalPromoUses</h3>
                 <small class="text-success mt-2"><i class="fas fa-check-circle me-1"></i>Orders with discount</small>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-4 text-center">
-                <h6 class="text-muted small uppercase fw-bold mb-2">Avg. Discount</h6>
+            <div class="card border shadow-sm p-4 text-center h-100">
+                <h6 class="text-muted small fw-bold mb-2">Avg. Discount</h6>
                 <h3 class="fw-bold mb-0">₱@ViewBag.AvgDiscount.ToString("N2")</h3>
                 <small class="text-danger mt-2"><i class="fas fa-tag me-1"></i>Average per order</small>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-4 text-center text-white bg-primary">
-                <h6 class="text-light small uppercase fw-bold mb-2">Promo Revenue</h6>
+            <div class="card border shadow-sm p-4 text-center h-100">
+                <h6 class="text-muted small fw-bold mb-2">Promo Revenue</h6>
                 <h3 class="fw-bold mb-0">₱@ViewBag.TotalPromoRevenue.ToString("N0")</h3>
-                <small class="text-light mt-2">Driven by campaigns</small>
+                <small class="text-primary mt-2">Driven by campaigns</small>
             </div>
         </div>
     </div>

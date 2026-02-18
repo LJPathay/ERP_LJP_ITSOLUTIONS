@@ -377,23 +377,53 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditUser([FromBody] User user)
+        public async Task<IActionResult> CreateUser([FromBody] User user)
         {
-            var existingUser = await _db.Users.FindAsync(user.UserID);
-            if (existingUser == null) return NotFound();
+            if (string.IsNullOrEmpty(user.Username) || string.IsNullOrEmpty(user.Password))
+                return BadRequest("Username and Password are required.");
 
-            if (existingUser.Role == "SuperAdmin") return Forbid();
+            if (_db.Users.Any(u => u.Username == user.Username))
+                return BadRequest("Username already exists.");
 
-            existingUser.FullName = user.FullName;
-            existingUser.Email = user.Email;
-            existingUser.Role = user.Role;
-            // existingUser.Username is usually not changed or needs checks
+            user.UserID = Guid.NewGuid();
+            user.Password = _hasher.HashPassword(user, user.Password);
+            user.CreatedAt = DateTime.Now;
+            user.IsActive = true;
 
-            _db.Users.Update(existingUser);
+            _db.Users.Add(user);
             await _db.SaveChangesAsync();
-            await LogAudit("Updated User: " + user.Username, existingUser.UserID);
+            await LogAudit("Created User: " + user.Username, user.UserID);
 
             return Ok();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditUser([FromBody] JsonElement data)
+        {
+            try
+            {
+                var jsonId = data.GetProperty("UserID").GetString();
+                if (string.IsNullOrEmpty(jsonId)) return BadRequest("Invalid UserID");
+                var id = Guid.Parse(jsonId);
+                var existingUser = await _db.Users.FindAsync(id);
+                if (existingUser == null) return NotFound();
+
+                if (existingUser.Role == "SuperAdmin") return Forbid();
+
+                existingUser.FullName = data.GetProperty("FullName").GetString() ?? existingUser.FullName;
+                existingUser.Email = data.GetProperty("Email").GetString() ?? existingUser.Email;
+                existingUser.Role = data.GetProperty("Role").GetString() ?? existingUser.Role;
+
+                _db.Users.Update(existingUser);
+                await _db.SaveChangesAsync();
+                await LogAudit("Updated User: " + existingUser.Username, existingUser.UserID);
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost]
@@ -409,6 +439,30 @@ namespace ljp_itsolutions.Controllers
             await _db.SaveChangesAsync();
             await LogAudit((user.IsActive ? "Restored" : "Archived") + " User: " + user.Username, user.UserID);
 
+            return Ok();
+        }
+        // Inventory Actions
+        [HttpPost]
+        public async Task<IActionResult> AddIngredient([FromBody] Ingredient ingredient)
+        {
+            if (string.IsNullOrEmpty(ingredient.Name)) return BadRequest("Name is required.");
+
+            _db.Ingredients.Add(ingredient);
+            await _db.SaveChangesAsync();
+            await LogAudit("Added Ingredient: " + ingredient.Name);
+            return Ok();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateStock(int id, decimal quantity)
+        {
+            var ingredient = await _db.Ingredients.FindAsync(id);
+            if (ingredient == null) return NotFound();
+
+            ingredient.StockQuantity = quantity;
+            _db.Ingredients.Update(ingredient);
+            await _db.SaveChangesAsync();
+            await LogAudit("Updated Stock for " + ingredient.Name + " to " + quantity);
             return Ok();
         }
     }

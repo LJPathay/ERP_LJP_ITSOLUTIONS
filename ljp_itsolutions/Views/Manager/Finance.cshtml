@@ -13,36 +13,54 @@
     <!-- Financial Summary Cards -->
     <div class="row g-4 mb-4">
         <div class="col-md-4">
-            <div class="kpi-card h-100 transition-hover">
-                <div class="kpi-card-icon bg-success bg-opacity-10 text-success">
-                    <i class="fas fa-arrow-up fa-lg"></i>
+            <div class="card border shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-success bg-opacity-10 text-success p-3 rounded-circle">
+                            <i class="fas fa-arrow-up fa-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted small fw-bold mb-1">Total Revenue</p>
+                            <h3 class="fw-bold mb-0 text-success">₱@Model.TotalRevenue.ToString("N2")</h3>
+                        </div>
+                    </div>
                 </div>
-                <p class="kpi-card-label">Total Revenue</p>
-                <h3 class="kpi-card-value text-success">₱@Model.TotalRevenue.ToString("N2")</h3>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="kpi-card h-100 transition-hover">
-                <div class="kpi-card-icon bg-danger bg-opacity-10 text-danger">
-                    <i class="fas fa-arrow-down fa-lg"></i>
+            <div class="card border shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-danger bg-opacity-10 text-danger p-3 rounded-circle">
+                            <i class="fas fa-arrow-down fa-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted small fw-bold mb-1">Total Expenses</p>
+                            <h3 class="fw-bold mb-0 text-danger">₱@Model.TotalExpenses.ToString("N2")</h3>
+                        </div>
+                    </div>
                 </div>
-                <p class="kpi-card-label">Total Expenses</p>
-                <h3 class="kpi-card-value text-danger">₱@Model.TotalExpenses.ToString("N2")</h3>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="kpi-card h-100 transition-hover">
-                <div class="kpi-card-icon bg-primary bg-opacity-10 text-primary">
-                    <i class="fas fa-wallet fa-lg"></i>
+            <div class="card border shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
+                            <i class="fas fa-wallet fa-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted small fw-bold mb-1">Net Profit</p>
+                            <h3 class="fw-bold mb-0 text-primary">₱@Model.NetProfit.ToString("N2")</h3>
+                        </div>
+                    </div>
                 </div>
-                <p class="kpi-card-label">Net Profit</p>
-                <h3 class="kpi-card-value text-primary">₱@Model.NetProfit.ToString("N2")</h3>
             </div>
         </div>
     </div>
 
     <!-- Financial Trends Chart -->
-    <div class="card border-0 shadow-soft rounded-lg overflow-hidden mb-4">
+    <div class="card border shadow-sm rounded-3 overflow-hidden mb-4">
         <div class="card-header bg-white py-3 border-bottom">
             <h5 class="fw-bold mb-0">Financial Performance Overview</h5>
         </div>
@@ -56,8 +74,8 @@
     <div class="row g-4">
         <!-- Recent Expenses -->
         <div class="col-lg-7">
-            <div class="modern-table h-100">
-                <div class="p-3 bg-light border-bottom">
+            <div class="card border shadow-sm rounded-3 overflow-hidden h-100">
+                <div class="card-header bg-light py-3 border-bottom">
                     <h6 class="fw-bold mb-0">Recent Business Expenses</h6>
                 </div>
                 <div class="table-responsive">
@@ -67,7 +85,8 @@
                                 <th class="ps-4">Expense Item</th>
                                 <th>Category</th>
                                 <th>Date</th>
-                                <th class="text-end pe-4">Amount</th>
+                                <th class="text-end">Amount</th>
+                                <th class="text-end pe-4">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -80,15 +99,35 @@
                                     </td>
                                     <td><span class="status-badge warning text-xs">@exp.Category</span></td>
                                     <td><span class="text-muted text-xs">@exp.ExpenseDate.ToString("MMM dd")</span></td>
-                                    <td class="text-end pe-4 fw-bold text-danger">-₱@exp.Amount.ToString("N2")</td>
+                                    <td class="text-end fw-bold text-danger">-₱@exp.Amount.ToString("N2")</td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <button class="btn btn-sm btn-white border rounded-pill px-3 edit-expense-btn"
+                                                    data-id="@exp.ExpenseID"
+                                                    data-title="@exp.Title"
+                                                    data-desc="@exp.Description"
+                                                    data-cat="@exp.Category"
+                                                    data-amount="@exp.Amount"
+                                                    data-date="@exp.ExpenseDate.ToString("yyyy-MM-dd")">
+                                                Edit
+                                            </button>
+                                            <form asp-action="DeleteExpense" method="post" onsubmit="return confirm('Remove this expense record?');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@exp.ExpenseID" />
+                                                <button type="submit" class="btn btn-sm btn-light text-danger border rounded-pill px-3">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
                                 </tr>
                             }
                             @if (!Model.Expenses.Any())
                             {
                                 <tr>
-                                    <td colspan="4">
-                                        <div class="empty-state p-4">
-                                            <i class="fas fa-receipt empty-state-icon fa-2x"></i>
+                                    <td colspan="5">
+                                        <div class="empty-state p-4 text-center">
+                                            <i class="fas fa-receipt empty-state-icon fa-2x opacity-25 mb-2"></i>
                                             <p class="text-muted small">No expenses recorded.</p>
                                         </div>
                                     </td>
@@ -102,7 +141,7 @@
 
         <!-- Recent Income -->
         <div class="col-lg-5">
-            <div class="card border-0 shadow-soft rounded-lg h-100">
+            <div class="card border shadow-sm rounded-3 h-100">
                 <div class="card-header bg-white py-3 border-bottom">
                     <h6 class="fw-bold mb-0">Record Stream (Latest Income)</h6>
                 </div>
@@ -139,17 +178,17 @@
             <form asp-action="CreateExpense" method="post">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="modern-form-label">Expense Title</label>
-                        <input type="text" name="Title" class="modern-form-control w-100" required placeholder="e.g. Electricity Bill Jan" />
+                        <label class="form-label small fw-bold">Expense Title</label>
+                        <input type="text" name="Title" class="form-control" required placeholder="e.g. Electricity Bill Jan" />
                     </div>
                     <div class="mb-3">
-                        <label class="modern-form-label">Description</label>
-                        <textarea name="Description" class="modern-form-control w-100" rows="2" placeholder="Brief details about this expense..."></textarea>
+                        <label class="form-label small fw-bold">Description</label>
+                        <textarea name="Description" class="form-control" rows="2" placeholder="Brief details about this expense..."></textarea>
                     </div>
                     <div class="row mb-3">
                         <div class="col">
-                            <label class="modern-form-label">Category</label>
-                            <select name="Category" class="modern-form-control w-100" required>
+                            <label class="form-label small fw-bold">Category</label>
+                            <select name="Category" class="form-select" required>
                                 <option value="Supplies">Supplies</option>
                                 <option value="Utilities">Utilities</option>
                                 <option value="Salary">Salary</option>
@@ -159,13 +198,13 @@
                             </select>
                         </div>
                         <div class="col">
-                            <label class="modern-form-label">Amount (₱)</label>
-                            <input type="number" step="0.01" name="Amount" class="modern-form-control w-100" required placeholder="0.00" />
+                            <label class="form-label small fw-bold">Amount (₱)</label>
+                            <input type="number" step="0.01" name="Amount" class="form-control" required placeholder="0.00" />
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="modern-form-label">Date</label>
-                        <input type="date" name="ExpenseDate" class="modern-form-control w-100" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                        <label class="form-label small fw-bold">Date</label>
+                        <input type="date" name="ExpenseDate" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -177,10 +216,75 @@
     </div>
 </div>
 
+<!-- Edit Expense Modal -->
+<div class="modal fade modern-modal" id="editExpenseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">Update Expense Record</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="EditExpense" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ExpenseID" id="edit-exp-id" />
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Expense Title</label>
+                        <input type="text" name="Title" id="edit-exp-title" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Description</label>
+                        <textarea name="Description" id="edit-exp-desc" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label small fw-bold">Category</label>
+                            <select name="Category" id="edit-exp-cat" class="form-select" required>
+                                <option value="Supplies">Supplies</option>
+                                <option value="Utilities">Utilities</option>
+                                <option value="Salary">Salary</option>
+                                <option value="Rent">Rent</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="General">General</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label class="form-label small fw-bold">Amount (₱)</label>
+                            <input type="number" step="0.01" name="Amount" id="edit-exp-amount" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Date</label>
+                        <input type="date" name="ExpenseDate" id="edit-exp-date" class="form-control" required />
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Update Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            // Edit Expense Logic
+            document.querySelectorAll('.edit-expense-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.getElementById('edit-exp-id').value = this.dataset.id;
+                    document.getElementById('edit-exp-title').value = this.dataset.title;
+                    document.getElementById('edit-exp-desc').value = this.dataset.desc;
+                    document.getElementById('edit-exp-cat').value = this.dataset.cat;
+                    document.getElementById('edit-exp-amount').value = this.dataset.amount;
+                    document.getElementById('edit-exp-date').value = this.dataset.date;
+                    
+                    new bootstrap.Modal(document.getElementById('editExpenseModal')).show();
+                });
+            });
+
             const ctx = document.getElementById('financeTrendChart').getContext('2d');
             new Chart(ctx, {
                 type: 'line',
@@ -264,8 +368,4 @@
     </script>
 }
 
-<style>
-    .x-small { font-size: 0.75rem; }
-    .shadow-soft { box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-    .rounded-lg { border-radius: 16px; }
-</style>
+

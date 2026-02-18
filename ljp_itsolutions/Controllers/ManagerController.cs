@@ -4,6 +4,7 @@ using ljp_itsolutions.Services;
 using Microsoft.AspNetCore.Authorization;
 using ljp_itsolutions.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace ljp_itsolutions.Controllers
 {
@@ -156,6 +157,7 @@ namespace ljp_itsolutions.Controllers
             product.IsAvailable = true;
             _db.Products.Add(product);
             await _db.SaveChangesAsync();
+            await LogAudit($"Created Product: {product.ProductName}");
             TempData["SuccessMessage"] = "Product created successfully!";
             return RedirectToAction("Products");
         }
@@ -169,6 +171,7 @@ namespace ljp_itsolutions.Controllers
             {
                 product.StockQuantity = stock;
                 await _db.SaveChangesAsync();
+                await LogAudit($"Updated Stock for {product.ProductName} to {stock}");
                 TempData["SuccessMessage"] = "Stock updated successfully!";
             }
             return RedirectToAction("Products");
@@ -210,6 +213,7 @@ namespace ljp_itsolutions.Controllers
             existingProduct.IsAvailable = Request.Form["IsAvailable"] == "true";
 
             await _db.SaveChangesAsync();
+            await LogAudit($"Edited Product: {existingProduct.ProductName}");
             TempData["SuccessMessage"] = "Product updated successfully!";
             return RedirectToAction("Products");
         }
@@ -221,8 +225,10 @@ namespace ljp_itsolutions.Controllers
             var product = await _db.Products.FindAsync(id);
             if (product != null)
             {
+                var prodName = product.ProductName;
                 _db.Products.Remove(product);
                 await _db.SaveChangesAsync();
+                await LogAudit($"Deleted Product: {prodName}");
                 TempData["SuccessMessage"] = "Product deleted successfully!";
             }
             return RedirectToAction("Products");
@@ -347,15 +353,30 @@ namespace ljp_itsolutions.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> VoidOrder(int id)
+        public async Task<IActionResult> VoidOrder(Guid id)
         {
-            var order = await _db.Orders.FindAsync(id);
+            var order = await _db.Orders.FirstOrDefaultAsync(o => o.OrderID == id);
             if (order != null)
             {
                 order.PaymentStatus = "Voided";
-                // Optionally restore stock here if needed
                 await _db.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Transaction voided successfully!";
+                await LogAudit("Voided Order #" + order.OrderID);
+            }
+            return RedirectToAction("Transactions");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RefundOrder(Guid id)
+        {
+            var order = await _db.Orders.FirstOrDefaultAsync(o => o.OrderID == id);
+            if (order != null)
+            {
+                order.PaymentStatus = "Refunded";
+                await _db.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Transaction refunded successfully!";
+                await LogAudit("Refunded Order #" + order.OrderID);
             }
             return RedirectToAction("Transactions");
         }
@@ -370,6 +391,46 @@ namespace ljp_itsolutions.Controllers
                 _db.Expenses.Add(expense);
                 await _db.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Expense recorded successfully!";
+                await LogAudit("Created Expense: " + expense.Title);
+            }
+            return RedirectToAction("Finance");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditExpense(Expense expense)
+        {
+            if (ModelState.IsValid)
+            {
+                var existing = await _db.Expenses.FindAsync(expense.ExpenseID);
+                if (existing != null)
+                {
+                    existing.Title = expense.Title;
+                    existing.Description = expense.Description;
+                    existing.Category = expense.Category;
+                    existing.Amount = expense.Amount;
+                    existing.ExpenseDate = expense.ExpenseDate;
+                    
+                    _db.Expenses.Update(existing);
+                    await _db.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Expense updated successfully!";
+                    await LogAudit("Edited Expense: " + expense.Title);
+                }
+            }
+            return RedirectToAction("Finance");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteExpense(int id)
+        {
+            var expense = await _db.Expenses.FindAsync(id);
+            if (expense != null)
+            {
+                _db.Expenses.Remove(expense);
+                await _db.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Expense deleted successfully!";
+                await LogAudit("Deleted Expense: " + expense.Title);
             }
             return RedirectToAction("Finance");
         }
@@ -383,6 +444,7 @@ namespace ljp_itsolutions.Controllers
             {
                 _db.Ingredients.Add(ingredient);
                 await _db.SaveChangesAsync();
+                await LogAudit($"Created Ingredient: {ingredient.Name}");
                 TempData["SuccessMessage"] = "Ingredient added successfully!";
             }
             return RedirectToAction("Inventory");
@@ -415,6 +477,7 @@ namespace ljp_itsolutions.Controllers
                 }
 
                 await _db.SaveChangesAsync();
+                await LogAudit($"Edited Ingredient: {existing.Name}");
                 TempData["SuccessMessage"] = "Ingredient updated successfully!";
             }
             return RedirectToAction("Inventory");
@@ -427,8 +490,10 @@ namespace ljp_itsolutions.Controllers
             var ingredient = await _db.Ingredients.FindAsync(id);
             if (ingredient != null)
             {
+                var ingName = ingredient.Name;
                 _db.Ingredients.Remove(ingredient);
                 await _db.SaveChangesAsync();
+                await LogAudit($"Deleted Ingredient: {ingName}");
                 TempData["SuccessMessage"] = "Ingredient removed successfully!";
             }
             return RedirectToAction("Inventory");
@@ -495,6 +560,7 @@ namespace ljp_itsolutions.Controllers
             }
 
             await _db.SaveChangesAsync();
+            await LogAudit($"Updated Recipe for Product ID: {ProductID}");
             TempData["SuccessMessage"] = "Recipe updated successfully!";
             return RedirectToAction("Recipes");
         }
@@ -519,10 +585,9 @@ namespace ljp_itsolutions.Controllers
 
             campaign.ApprovalStatus = "Approved";
             campaign.ApprovedDate = DateTime.Now;
-            // TODO: Get current user ID from authentication
-            // campaign.ApprovedBy = User.GetUserId();
             
             await _db.SaveChangesAsync();
+            await LogAudit($"Approved Campaign: {campaign.PromotionName}");
             
             TempData["SuccessMessage"] = $"Campaign '{campaign.PromotionName}' approved successfully!";
             return Ok();
@@ -540,9 +605,40 @@ namespace ljp_itsolutions.Controllers
             campaign.IsActive = false; // Ensure rejected campaigns are not active
             
             await _db.SaveChangesAsync();
+            await LogAudit($"Rejected Campaign: {campaign.PromotionName} (Reason: {dto.Reason})");
             
             TempData["SuccessMessage"] = $"Campaign '{campaign.PromotionName}' rejected.";
             return Ok();
+        }
+
+        private async Task LogAudit(string action)
+        {
+            try
+            {
+                var auditLog = new AuditLog
+                {
+                    Action = action,
+                    Timestamp = DateTime.Now,
+                    UserID = GetCurrentUserId()
+                };
+                _db.AuditLogs.Add(auditLog);
+                await _db.SaveChangesAsync();
+            }
+            catch { /* Fail silently */ }
+        }
+
+        private Guid? GetCurrentUserId()
+        {
+            if (User.Identity?.IsAuthenticated != true) return null;
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (Guid.TryParse(userIdStr, out var userId)) return userId;
+
+            var username = User.Identity?.Name;
+            if (!string.IsNullOrEmpty(username))
+            {
+                return _db.Users.FirstOrDefault(u => u.Username == username)?.UserID;
+            }
+            return null;
         }
     }
 

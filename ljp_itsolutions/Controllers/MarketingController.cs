@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace ljp_itsolutions.Controllers
 {
@@ -129,11 +130,53 @@ namespace ljp_itsolutions.Controllers
                 
                 _db.Promotions.Add(promotion);
                 await _db.SaveChangesAsync();
+                await LogAudit($"Created Campaign: {promotion.PromotionName}");
                 
                 TempData["SuccessMessage"] = $"Campaign '{promotion.PromotionName}' created and submitted for manager approval.";
                 return RedirectToAction(nameof(Promotions));
             }
             return View(promotion);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditCampaign(Promotion promotion)
+        {
+            var existing = await _db.Promotions.FindAsync(promotion.PromotionID);
+            if (existing == null) return NotFound();
+
+            existing.PromotionName = promotion.PromotionName;
+            existing.DiscountType = promotion.DiscountType;
+            existing.DiscountValue = promotion.DiscountValue;
+            existing.StartDate = promotion.StartDate;
+            existing.EndDate = promotion.EndDate;
+            existing.IsActive = promotion.IsActive;
+            
+            // If edited, reset approval status to pending
+            existing.ApprovalStatus = "Pending";
+            existing.ApprovedBy = null;
+            existing.ApprovedDate = null;
+
+            await _db.SaveChangesAsync();
+            await LogAudit($"Edited Campaign: {promotion.PromotionName}");
+            TempData["SuccessMessage"] = "Campaign updated and resubmitted for approval.";
+            return RedirectToAction(nameof(Promotions));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteCampaign(int id)
+        {
+            var promotion = await _db.Promotions.FindAsync(id);
+            if (promotion != null)
+            {
+                var promoName = promotion.PromotionName;
+                _db.Promotions.Remove(promotion);
+                await _db.SaveChangesAsync();
+                await LogAudit($"Deleted Campaign: {promoName}");
+                TempData["SuccessMessage"] = "Campaign deleted successfully.";
+            }
+            return RedirectToAction(nameof(Promotions));
         }
 
         public async Task<IActionResult> PromotionPerformance()
@@ -155,6 +198,54 @@ namespace ljp_itsolutions.Controllers
         {
             var customers = await _db.Customers.ToListAsync();
             return View(customers);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateCustomer(Customer customer)
+        {
+            if (ModelState.IsValid)
+            {
+                customer.Points = 0;
+                _db.Customers.Add(customer);
+                await _db.SaveChangesAsync();
+                await LogAudit($"Enrolled Customer: {customer.FullName}");
+                TempData["SuccessMessage"] = "Customer added successfully.";
+            }
+            return RedirectToAction(nameof(Customers));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditCustomer(Customer customer)
+        {
+            var existing = await _db.Customers.FindAsync(customer.CustomerID);
+            if (existing == null) return NotFound();
+
+            existing.FullName = customer.FullName;
+            existing.PhoneNumber = customer.PhoneNumber;
+            existing.Points = customer.Points;
+
+            await _db.SaveChangesAsync();
+            await LogAudit($"Edited Customer: {customer.FullName}");
+            TempData["SuccessMessage"] = "Customer updated successfully.";
+            return RedirectToAction(nameof(Customers));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteCustomer(int id)
+        {
+            var customer = await _db.Customers.FindAsync(id);
+            if (customer != null)
+            {
+                var custName = customer.FullName;
+                _db.Customers.Remove(customer);
+                await _db.SaveChangesAsync();
+                await LogAudit($"Deleted Customer: {custName}");
+                TempData["SuccessMessage"] = "Customer removed successfully.";
+            }
+            return RedirectToAction(nameof(Customers));
         }
 
         public async Task<IActionResult> LoyaltyOverview()
@@ -213,6 +304,36 @@ namespace ljp_itsolutions.Controllers
                 })
                 .ToListAsync();
             return View(campaigns);
+        }
+
+        private async Task LogAudit(string action)
+        {
+            try
+            {
+                var auditLog = new AuditLog
+                {
+                    Action = action,
+                    Timestamp = DateTime.Now,
+                    UserID = GetCurrentUserId()
+                };
+                _db.AuditLogs.Add(auditLog);
+                await _db.SaveChangesAsync();
+            }
+            catch { /* Fail silently */ }
+        }
+
+        private Guid? GetCurrentUserId()
+        {
+            if (User.Identity?.IsAuthenticated != true) return null;
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (Guid.TryParse(userIdStr, out var userId)) return userId;
+
+            var username = User.Identity?.Name;
+            if (!string.IsNullOrEmpty(username))
+            {
+                return _db.Users.FirstOrDefault(u => u.Username == username)?.UserID;
+            }
+            return null;
         }
     }
 }

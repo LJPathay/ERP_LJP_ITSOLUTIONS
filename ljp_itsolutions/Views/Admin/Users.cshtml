@@ -141,8 +141,52 @@
     </div>
 </div>
 
-<!-- Add User Modal Placeholder (Reuse existing one if available, simplified here for structure) -->
-@* Assuming AddUserModal exists or is included via Partial. If not, needs implementation. Keeping it minimal as per request change focus. *@
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-primary text-white border-bottom-0">
+                <h5 class="modal-title fw-bold">Add New User</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-4">
+                <form id="addUserForm">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Full Name</label>
+                        <input type="text" class="form-control bg-light border-0" id="addFullName" placeholder="e.g. John Doe" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Username</label>
+                        <input type="text" class="form-control bg-light border-0" id="addUsername" placeholder="Unique username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Email</label>
+                        <input type="email" class="form-control bg-light border-0" id="addEmail" placeholder="email@example.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Temporary Password</label>
+                        <input type="password" class="form-control bg-light border-0" id="addPassword" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">Role</label>
+                        <select class="form-select bg-light border-0" id="addRole" required>
+                            @if (roles != null)
+                            {
+                                foreach (var role in roles)
+                                {
+                                    <option value="@role">@role</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary rounded-pill fw-bold py-2">Create User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Edit User Modal -->
 <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
@@ -207,6 +251,41 @@
 
         searchInput.addEventListener('keyup', filterUsers);
         roleFilter.addEventListener('change', filterUsers);
+
+        // Add User
+        document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+
+            const data = {
+                FullName: document.getElementById('addFullName').value,
+                Username: document.getElementById('addUsername').value,
+                Email: document.getElementById('addEmail').value,
+                Password: document.getElementById('addPassword').value,
+                Role: document.getElementById('addRole').value
+            };
+
+            try {
+                const res = await fetch('@Url.Action("CreateUser", "Admin")', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) location.reload();
+                else {
+                    const err = await res.text();
+                    alert(err || 'Failed to create user.');
+                }
+            } catch (err) {
+                alert('An error occurred.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Create User';
+            }
+        });
 
         // Edit User
         const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));

@@ -210,6 +210,7 @@ namespace ljp_itsolutions.Controllers
 
                 _db.Orders.Add(order);
                 await _db.SaveChangesAsync();
+                await LogAudit($"Placed Order #{order.OrderID.ToString().Substring(0, 8)} (Total: {order.FinalAmount:C})");
 
                 if (Request.Headers["X-Requested-With"] != "XMLHttpRequest")
                 {
@@ -412,6 +413,7 @@ namespace ljp_itsolutions.Controllers
 
             _db.Customers.Add(customer);
             await _db.SaveChangesAsync();
+            await LogAudit($"Registered Customer: {customer.FullName}");
 
             return Json(new { success = true, customerId = customer.CustomerID, fullName = customer.FullName });
         }
@@ -420,6 +422,36 @@ namespace ljp_itsolutions.Controllers
         {
             // Fully integrated into PlaceOrder for the POS flow
             return RedirectToAction("TransactionHistory");
+        }
+
+        private async Task LogAudit(string action)
+        {
+            try
+            {
+                var auditLog = new AuditLog
+                {
+                    Action = action,
+                    Timestamp = DateTime.Now,
+                    UserID = GetCurrentUserId()
+                };
+                _db.AuditLogs.Add(auditLog);
+                await _db.SaveChangesAsync();
+            }
+            catch { /* Fail silently */ }
+        }
+
+        private Guid? GetCurrentUserId()
+        {
+            if (User.Identity?.IsAuthenticated != true) return null;
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (Guid.TryParse(userIdStr, out var userId)) return userId;
+
+            var username = User.Identity?.Name;
+            if (!string.IsNullOrEmpty(username))
+            {
+                return _db.Users.FirstOrDefault(u => u.Username == username)?.UserID;
+            }
+            return null;
         }
     }
 }

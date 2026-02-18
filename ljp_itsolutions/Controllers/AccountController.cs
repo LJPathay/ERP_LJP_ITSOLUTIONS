@@ -107,6 +107,7 @@ namespace ljp_itsolutions.Controllers
                 }
                 
                 await _db.SaveChangesAsync();
+                await LogAudit("Failed Login Attempt", user.UserID);
                 return View(model);
             }
  
@@ -133,6 +134,7 @@ namespace ljp_itsolutions.Controllers
  
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+            await LogAudit("User Login", user.UserID);
  
             // Set session variables for layout consistency
             HttpContext.Session.SetString("UserRole", roleName);
@@ -224,6 +226,7 @@ namespace ljp_itsolutions.Controllers
             // Simple reset: replace password hash directly (token omitted in this simplified flow)
             user.Password = _hasher.HashPassword(user, model.NewPassword);
             await _db.SaveChangesAsync();
+            await LogAudit("Password Reset Successful", user.UserID);
 
             TempData["Message"] = "Password has been reset.";
             return RedirectToAction("Login");
@@ -240,6 +243,7 @@ namespace ljp_itsolutions.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
+            await LogAudit("User Logout");
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login", "Account");
         }
@@ -333,7 +337,13 @@ namespace ljp_itsolutions.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["Error"] = "Please provide all required fields.";
+                TempData["Error"] = "Please provide all required fields correctly.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            if (model.NewPassword != model.ConfirmPassword)
+            {
+                TempData["Error"] = "New password and confirmation do not match.";
                 return RedirectToAction(nameof(Profile));
             }
 
@@ -351,11 +361,26 @@ namespace ljp_itsolutions.Controllers
                 TempData["Error"] = "Incorrect current password.";
                 return RedirectToAction(nameof(Profile));
             }
+            if (model.NewPassword.Length < 8 || !model.NewPassword.Any(char.IsUpper) || !model.NewPassword.Any(char.IsDigit))
+            {
+                TempData["Error"] = "Password must be at least 8 characters long and contain at least one uppercase letter and one number.";
+                return RedirectToAction(nameof(Profile));
+            }
 
             user.Password = _hasher.HashPassword(user, model.NewPassword);
-            await _db.SaveChangesAsync();
+            _db.Users.Update(user);
+            var result = await _db.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Password updated successfully.";
+            if (result > 0)
+            {
+                await LogAudit("Self-Service Password Change", user.UserID);
+                TempData["SuccessMessage"] = "Password updated successfully.";
+            }
+            else
+            {
+                TempData["Error"] = "Failed to update password in database.";
+            }
+
             return RedirectToAction(nameof(Profile));
         }
 
@@ -367,6 +392,36 @@ namespace ljp_itsolutions.Controllers
             foreach (var n in unread) n.IsRead = true;
             await _db.SaveChangesAsync();
             return Ok();
+        }
+
+        private async Task LogAudit(string action, Guid? userId = null)
+        {
+            try
+            {
+                var auditLog = new AuditLog
+                {
+                    Action = action,
+                    Timestamp = DateTime.Now,
+                    UserID = userId ?? GetCurrentUserId()
+                };
+                _db.AuditLogs.Add(auditLog);
+                await _db.SaveChangesAsync();
+            }
+            catch { /* Fail silently */ }
+        }
+
+        private Guid? GetCurrentUserId()
+        {
+            if (User.Identity?.IsAuthenticated != true) return null;
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (Guid.TryParse(userIdStr, out var userId)) return userId;
+
+            var username = User.Identity?.Name;
+            if (!string.IsNullOrEmpty(username))
+            {
+                return _db.Users.FirstOrDefault(u => u.Username == username)?.UserID;
+            }
+            return null;
         }
     }
 }

@@ -16,10 +16,10 @@
 
     <div class="row g-4 mb-4">
         <div class="col-lg-7">
-            <div class="card border-0 shadow-soft rounded-lg overflow-hidden">
+            <div class="card border shadow-sm rounded-3 overflow-hidden">
                 <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                     <h5 class="fw-bold mb-0">Sales Volume</h5>
-                    <span class="text-muted text-xs">Unit Sales History</span>
+                    <span class="text-muted small">Unit Sales History</span>
                 </div>
                 <div class="card-body">
                     <div style="height: 350px;">
@@ -29,7 +29,7 @@
             </div>
         </div>
         <div class="col-lg-5">
-            <div class="card border-0 shadow-soft rounded-lg overflow-hidden">
+            <div class="card border shadow-sm rounded-3 overflow-hidden">
                 <div class="card-header bg-white py-3 border-bottom">
                     <h5 class="fw-bold mb-0">Revenue Distribution</h5>
                 </div>
@@ -42,7 +42,7 @@
         </div>
     </div>
 
-    <div class="modern-table mb-4">
+    <div class="card border shadow-sm rounded-3 overflow-hidden mb-4">
         <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
             <h5 class="fw-bold mb-0">Top Performing Products</h5>
             <button class="btn btn-sm btn-outline-primary rounded-pill px-4"><i class="fas fa-file-export me-2"></i>Export Summary</button>
@@ -74,7 +74,7 @@
                                     <div class="progress rounded-pill me-2" style="height: 6px; width: 100px;">
                                         <div class="progress-bar bg-primary" style="width: @progress%"></div>
                                     </div>
-                                    <span class="text-xs text-muted">@progress%</span>
+                                    <span class="small text-muted">@progress%</span>
                                 </div>
                             </td>
                         </tr>
@@ -159,8 +159,4 @@
     </script>
 }
 
-<style>
-    .shadow-soft { box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-    .rounded-lg { border-radius: 16px; }
-    .text-xs { font-size: 0.75rem; }
-</style>
+

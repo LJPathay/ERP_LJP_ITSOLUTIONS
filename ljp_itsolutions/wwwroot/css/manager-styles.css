@@ -273,7 +273,10 @@
 .layout-header {
     background: rgba(255, 255, 255, 0.8) !important;
     backdrop-filter: blur(10px);
-    z-index: 1000;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 2000 !important;
+    /* Increased and added positioning to ensure it stays above all body content */
 }
 
 .header-left h1 {
@@ -373,4 +376,98 @@
 
 .shadow-soft {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Password Visibility Toggle moved to site.css for global availability */
+.password-toggle-group {
+    position: relative;
+    display: block;
+}
+
+/* Password Requirements Indicator */
+.password-requirements {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+}
+
+.requirement-item {
+    font-size: 0.75rem;
+    color: #ef4444;
+    margin-bottom: 4px;
+    display: none;
+    /* Hidden by default, show only when unmet */
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s;
+}
+
+.requirement-item.unmet {
+    display: flex;
+}
+
+/* Password Strength Meter */
+.strength-meter-container {
+    margin-top: 10px;
+}
+
+.strength-meter-bar {
+    height: 6px;
+    border-radius: 3px;
+    background-color: #e2e8f0;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.strength-meter-fill {
+    height: 100%;
+    width: 0;
+    transition: all 0.3s ease;
+}
+
+.strength-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.strength-weak {
+    background-color: #ef4444;
+    width: 33.33%;
+}
+
+.strength-medium {
+    background-color: #f59e0b;
+    width: 66.66%;
+}
+
+.strength-strong {
+    background-color: #10b981;
+    width: 100%;
+}
+
+.text-weak {
+    color: #ef4444;
+}
+
+.text-medium {
+    color: #f59e0b;
+}
+
+.text-strong {
+    color: #10b981;
+}
+
+.dropdown-menu {
+    z-index: 2050 !important;
+}
+
+/* Update login and modern custom input group for toggle */
+.input-group-custom.password-toggle-group .form-control-custom,
+.password-toggle-group .modern-form-control {
+    padding-right: 45px !important;
+}
+
+.input-group-custom.password-toggle-group .password-toggle-btn,
+.password-toggle-group .password-toggle-btn {
+    right: 15px;
 }
