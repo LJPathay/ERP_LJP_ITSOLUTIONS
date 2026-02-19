@@ -9,7 +9,7 @@ using System.Text.Json;
 
 namespace ljp_itsolutions.Controllers
 {
-    [Authorize(Roles = "Manager,Admin")]
+    [Authorize(Roles = "Manager,Admin,SuperAdmin")]
     public class ManagerController : Controller
     {
         private readonly ApplicationDbContext _db;

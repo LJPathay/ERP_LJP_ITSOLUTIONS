@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ljp_itsolutions.Controllers
 {
-    [Authorize(Roles = "Cashier,Admin,Manager")]
+    [Authorize(Roles = "Cashier,Admin,Manager,SuperAdmin")]
     public class CashierController : Controller
     {
         private readonly ApplicationDbContext _db;

@@ -22,50 +22,44 @@
         </div>
     </div>
 
-    <!-- Stats Row -->
+    <!-- Stats Row (Simplified) -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 bg-primary text-white overflow-hidden">
-                <div class="card-body p-4 position-relative">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="avatar-sm bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center">
-                            <i class="fas fa-cubes"></i>
-                        </div>
-                        <span class="badge bg-white text-primary rounded-pill">Total Items</span>
+            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden p-1" style="border-left: 4px solid #3b82f6 !important;">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                        <i class="fas fa-cubes"></i>
                     </div>
-                    <h3 class="fw-bold mb-0">@ViewBag.TotalCount</h3>
-                    <p class="mb-0 x-small opacity-75">Tracked Ingredients</p>
-                    <i class="fas fa-boxes position-absolute bottom-0 end-0 opacity-10 fa-5x me-n3 mb-n3"></i>
+                    <div>
+                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">Total Items</p>
+                        <h4 class="fw-bold mb-0">@ViewBag.TotalCount</h4>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 bg-danger text-white overflow-hidden">
-                <div class="card-body p-4 position-relative">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="avatar-sm bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <span class="badge bg-white text-danger rounded-pill">Critical</span>
+            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden p-1" style="border-left: 4px solid #ef4444 !important;">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="avatar-sm bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                        <i class="fas fa-exclamation-triangle"></i>
                     </div>
-                    <h3 class="fw-bold mb-0">@ViewBag.OutOfStockCount</h3>
-                    <p class="mb-0 x-small opacity-75">Out of Stock Items</p>
-                    <i class="fas fa-ban position-absolute bottom-0 end-0 opacity-10 fa-5x me-n3 mb-n3"></i>
+                    <div>
+                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">Critical</p>
+                        <h4 class="fw-bold mb-0 text-danger">@ViewBag.OutOfStockCount</h4>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 bg-warning text-dark overflow-hidden">
-                <div class="card-body p-4 position-relative">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="avatar-sm bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center">
-                            <i class="fas fa-arrow-down"></i>
-                        </div>
-                        <span class="badge bg-white text-warning rounded-pill border">Low Stock</span>
+            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden p-1" style="border-left: 4px solid #f59e0b !important;">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="avatar-sm bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                        <i class="fas fa-arrow-down"></i>
                     </div>
-                    <h3 class="fw-bold mb-0">@ViewBag.LowStockCount</h3>
-                    <p class="mb-0 x-small opacity-75">Restock Needed Soon</p>
-                    <i class="fas fa-battery-quarter position-absolute bottom-0 end-0 opacity-10 fa-5x me-n3 mb-n3"></i>
+                    <div>
+                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">Low Stock</p>
+                        <h4 class="fw-bold mb-0 text-warning">@ViewBag.LowStockCount</h4>
+                    </div>
                 </div>
             </div>
         </div>
@@ -81,7 +75,6 @@
                         <th class="py-3 text-uppercase x-small fw-bold text-muted">Unit</th>
                         <th class="py-3 text-uppercase x-small fw-bold text-muted" style="width: 30%;">Stock Level</th>
                         <th class="py-3 text-uppercase x-small fw-bold text-muted">Status</th>
-                        <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold text-muted">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -104,7 +97,7 @@
                                 statusText = "Low Stock";
                             }
 
-                            <tr style="cursor: pointer;" onclick="openItemModal(@item.IngredientID)">
+                            <tr style="cursor: pointer;" onclick="openItemModal(@item.IngredientID)" class="inventory-row">
                                 <td class="ps-4">
                                     <div class="fw-bold text-dark">@item.Name</div>
                                 </td>
@@ -124,16 +117,10 @@
                                         @statusText
                                     </span>
                                 </td>
-                                <td class="pe-4 text-end">
-                                    <button class="btn btn-sm btn-light rounded-pill px-3 fw-bold text-primary shadow-sm"
-                                            onclick="event.stopPropagation(); openItemModal(@item.IngredientID)">
-                                        Details
-                                    </button>
-                                </td>
                             </tr>
                             
-                            <!-- Hidden Data for Modal -->
-                            <div id="data-@item.IngredientID" class="d-none"
+                            <!-- Hidden Data Store -->
+                            <div id="data-@item.IngredientID" class="d-none inventory-data"
                                  data-name="@item.Name"
                                  data-unit="@item.Unit"
                                  data-stock="@item.StockQuantity"
@@ -146,7 +133,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="5" class="text-center py-5">
+                            <td colspan="4" class="text-center py-5">
                                 <div class="py-5">
                                     <i class="fas fa-box-open fa-4x text-muted opacity-25 mb-4"></i>
                                     <h6 class="fw-bold text-dark">Inventory Empty</h6>
@@ -157,6 +144,17 @@
                     }
                 </tbody>
             </table>
+        </div>
+        <!-- Pagination Controls -->
+        <div class="d-flex justify-content-between align-items-center p-3 bg-light border-top">
+            <div class="text-muted x-small">
+                Showing <span id="startRange">0</span> to <span id="endRange">0</span> of <span id="totalItems">0</span> items
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0" id="pagination">
+                    <!-- Pagination buttons will be injected here -->
+                </ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -251,16 +249,98 @@
     <script>
         const itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
 
+        // Pagination state
+        let currentPage = 1;
+        const rowsPerPage = 10;
+        let filteredRows = [];
+
+        function initPagination() {
+            const rows = Array.from(document.querySelectorAll('#inventoryTable tbody tr.inventory-row'));
+            filteredRows = rows;
+            updatePagination();
+        }
+
+        function updatePagination() {
+            const totalItems = filteredRows.length;
+            const totalPages = Math.ceil(totalItems / rowsPerPage);
+            
+            if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+
+            // Hide all rows
+            document.querySelectorAll('#inventoryTable tbody tr.inventory-row').forEach(row => row.style.display = 'none');
+            
+            // Show filtered
+            filteredRows.slice(start, end).forEach(row => row.style.display = '');
+
+            // Update range text
+            if (totalItems > 0) {
+                document.getElementById('startRange').textContent = start + 1;
+                document.getElementById('endRange').textContent = Math.min(end, totalItems);
+                document.getElementById('totalItems').textContent = totalItems;
+            } else {
+                document.getElementById('startRange').textContent = 0;
+                document.getElementById('endRange').textContent = 0;
+                document.getElementById('totalItems').textContent = 0;
+            }
+
+            renderPaginationButtons(totalPages);
+        }
+
+        function renderPaginationButtons(totalPages) {
+            const container = document.getElementById('pagination');
+            container.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1})"><i class="fas fa-chevron-left x-small"></i></a>`;
+            container.appendChild(prevLi);
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const li = document.createElement('li');
+                    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                    li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i})">${i}</a>`;
+                    container.appendChild(li);
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    const li = document.createElement('li');
+                    li.className = 'page-item disabled';
+                    li.innerHTML = '<span class="page-link">...</span>';
+                    container.appendChild(li);
+                }
+            }
+
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1})"><i class="fas fa-chevron-right x-small"></i></a>`;
+            container.appendChild(nextLi);
+        }
+
+        window.changePage = function(page) {
+            if (page < 1 || page > Math.ceil(filteredRows.length / rowsPerPage)) return;
+            currentPage = page;
+            updatePagination();
+            event.preventDefault();
+        };
+
         // Search functionality
         document.getElementById('inventorySearch').addEventListener('keyup', function() {
-            const value = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#inventoryTable tbody tr');
+            const searchValue = this.value.toLowerCase();
+            const allRows = Array.from(document.querySelectorAll('#inventoryTable tbody tr.inventory-row'));
             
-            rows.forEach(row => {
+            filteredRows = allRows.filter(row => {
                 const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(value) ? '' : 'none';
+                return text.includes(searchValue);
             });
+            
+            currentPage = 1;
+            updatePagination();
         });
+
+        document.addEventListener('DOMContentLoaded', initPagination);
 
         function openItemModal(id) {
             const data = document.getElementById(`data-${id}`);
@@ -324,4 +404,6 @@
     .tracking-wider { letter-spacing: 0.05em; }
     .avatar-sm { width: 40px; height: 40px; }
     tbody tr:hover { background-color: rgba(var(--bs-primary-rgb), 0.03) !important; }
+    .bg-primary .modal-title { color: #ffffff !important; }
+    .bg-white .modal-title, .modal-header:not(.bg-primary) .modal-title { color: #1a1a1a !important; }
 </style>

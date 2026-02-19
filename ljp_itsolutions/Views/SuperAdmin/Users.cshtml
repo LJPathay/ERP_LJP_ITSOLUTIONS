@@ -60,20 +60,20 @@
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table align-middle mb-0" id="usersTable">
+                <table class="table align-middle mb-0 table-hover" id="usersTable">
                     <thead class="bg-light bg-opacity-50">
                         <tr>
                             <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted">Full Name</th>
                             <th class="py-3 text-uppercase x-small fw-bold text-muted">Account Identifiers</th>
                             <th class="py-3 text-uppercase x-small fw-bold text-muted">System Role</th>
                             <th class="py-3 text-uppercase x-small fw-bold text-muted text-center">Security Status</th>
-                            <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold text-muted">Manage</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var user in Model)
                         {
-                            <tr class="user-row" data-role="@user.Role">
+                            <tr class="user-row" data-role="@user.Role" style="cursor: pointer;" 
+                                onclick="openEditUserModal('@user.UserID', '@user.FullName', '@user.Username', '@user.Email', '@user.Role', @user.IsActive.ToString().ToLower())">
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center gap-3">
                                         <div class="avatar-sm rounded-circle d-flex align-items-center justify-content-center fw-bold text-white shadow-sm" 
@@ -99,8 +99,8 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3">
-                                        @user.Role.ToUpper()
+                                    <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 caps">
+                                        @user.Role
                                     </span>
                                 </td>
                                 <td class="text-center">
@@ -113,48 +113,25 @@
                                         <span class="badge rounded-pill bg-danger px-3">ARCHIVED</span>
                                     }
                                 </td>
-                                <td class="pe-4 text-end">
-                                    <div class="d-flex gap-2 justify-content-end">
-                                        @if (user.IsActive)
-                                        {
-                                            <button class="btn btn-sm btn-light border-0 edit-user-btn rounded-pill px-3 shadow-none" 
-                                                    data-id="@user.UserID" 
-                                                    data-fullname="@user.FullName"
-                                                    data-username="@user.Username"
-                                                    data-email="@user.Email"
-                                                    data-role="@user.Role"
-                                                    data-active="@user.IsActive.ToString().ToLower()"
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#editUserModal">
-                                                <i class="fas fa-pen-nib me-1 x-small text-muted"></i> Edit
-                                            </button>
-                                            <form asp-action="ArchiveUser" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="id" value="@user.UserID" />
-                                                <button type="submit" class="btn btn-sm btn-white border rounded-pill px-3 shadow-sm text-danger hvr-danger">
-                                                    Archive
-                                                </button>
-                                            </form>
-                                        }
-                                        else
-                                        {
-                                            <form asp-action="RestoreUser" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="id" value="@user.UserID" />
-                                                <button type="submit" class="btn btn-sm btn-success rounded-pill px-4 shadow-sm">
-                                                    Restore Account
-                                                </button>
-                                            </form>
-                                        }
-                                    </div>
-                                </td>
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
         </div>
+        <!-- Pagination Controls -->
+        <div class="d-flex justify-content-between align-items-center p-3 bg-light border-top">
+            <div class="text-muted x-small">
+                Showing <span id="startRange">0</span> to <span id="endRange">0</span> of <span id="totalItems">0</span> personnel
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0" id="pagination">
+                    <!-- Pagination buttons will be injected here -->
+                </ul>
+            </nav>
+        </div>
     </div>
+</div>
 </div>
 
 <!-- Modals (Refined) -->
@@ -259,44 +236,120 @@
 
 @section Scripts {
     <script>
+        // Pagination state
+        let currentPage = 1;
+        const rowsPerPage = 10;
+        let filteredRows = [];
+
+        function initPagination() {
+            const rows = Array.from(document.querySelectorAll('#usersTable tbody tr.user-row'));
+            filteredRows = rows;
+            updatePagination();
+        }
+
+        function updatePagination() {
+            const totalItems = filteredRows.length;
+            const totalPages = Math.ceil(totalItems / rowsPerPage);
+            
+            if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+
+            // Hide all rows
+            document.querySelectorAll('#usersTable tbody tr.user-row').forEach(row => row.style.display = 'none');
+            
+            // Show filtered
+            filteredRows.slice(start, end).forEach(row => row.style.display = '');
+
+            // Update range text
+            if (totalItems > 0) {
+                document.getElementById('startRange').textContent = start + 1;
+                document.getElementById('endRange').textContent = Math.min(end, totalItems);
+                document.getElementById('totalItems').textContent = totalItems;
+            } else {
+                document.getElementById('startRange').textContent = 0;
+                document.getElementById('endRange').textContent = 0;
+                document.getElementById('totalItems').textContent = 0;
+            }
+
+            renderPaginationButtons(totalPages);
+        }
+
+        function renderPaginationButtons(totalPages) {
+            const container = document.getElementById('pagination');
+            container.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1})"><i class="fas fa-chevron-left x-small"></i></a>`;
+            container.appendChild(prevLi);
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const li = document.createElement('li');
+                    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                    li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i})">${i}</a>`;
+                    container.appendChild(li);
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    const li = document.createElement('li');
+                    li.className = 'page-item disabled';
+                    li.innerHTML = '<span class="page-link">...</span>';
+                    container.appendChild(li);
+                }
+            }
+
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1})"><i class="fas fa-chevron-right x-small"></i></a>`;
+            container.appendChild(nextLi);
+        }
+
+        window.changePage = function(page) {
+            if (page < 1 || page > Math.ceil(filteredRows.length / rowsPerPage)) return;
+            currentPage = page;
+            updatePagination();
+            event.preventDefault();
+        };
+
+        const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+
+        window.openEditUserModal = function(id, fullname, username, email, role, isActive) {
+            $('#edit-userid').val(id);
+            $('#edit-fullname').val(fullname);
+            $('#edit-username').val(username);
+            $('#edit-email').val(email);
+            $('#edit-role').val(role);
+            $('#edit-isactive').prop('checked', isActive);
+            editModal.show();
+        };
+
         $(document).ready(function() {
-            // Edit User Modal Data Binding
-            $('.edit-user-btn').click(function() {
-                $('#edit-userid').val($(this).data('id'));
-                $('#edit-fullname').val($(this).data('fullname'));
-                $('#edit-username').val($(this).data('username'));
-                $('#edit-email').val($(this).data('email'));
-                $('#edit-role').val($(this).data('role'));
-                $('#edit-isactive').prop('checked', $(this).data('active') === true);
-            });
+            initPagination();
 
             // Search and Filter Logic
             function filterUsers() {
                 var searchTerm = $('#userSearch').val().toLowerCase();
-                var roleFilter = $('#roleFilter').val();
+                var roleFilterValue = $('#roleFilter').val();
+                var allRows = Array.from(document.querySelectorAll('.user-row'));
 
-                $('.user-row').each(function() {
-                    var row = $(this);
-                    var fullName = row.find('.user-info p.fw-bold').text().toLowerCase();
-                    var username = row.find('.user-search-content').text().toLowerCase();
-                    var userRole = row.data('role');
+                filteredRows = allRows.filter(function(row) {
+                    var $row = $(row);
+                    var fullName = $row.find('.user-info p.fw-bold').text().toLowerCase();
+                    var username = $row.find('.user-search-content').text().toLowerCase();
+                    var userRole = $row.data('role');
 
                     var matchesSearch = fullName.includes(searchTerm) || username.includes(searchTerm);
-                    var matchesRole = roleFilter === "" || userRole === roleFilter;
+                    var matchesRole = roleFilterValue === "" || userRole === roleFilterValue;
 
-                    if (matchesSearch && matchesRole) {
-                        row.show();
-                    } else {
-                        row.hide();
-                    }
+                    return matchesSearch && matchesRole;
                 });
 
-                updateEmptyState();
-            }
+                currentPage = 1;
+                updatePagination();
 
-            function updateEmptyState() {
-                var visibleRows = $('.user-row:visible').length;
-                if (visibleRows === 0) {
+                if (filteredRows.length === 0) {
                     if ($('#noResultsRow').length === 0) {
                         $('#usersTable tbody').append('<tr id="noResultsRow"><td colspan="5" class="text-center py-5 text-muted"><i class="fas fa-user-slash fa-3x mb-3 opacity-25"></i><p>No personnel matching your criteria were found.</p></td></tr>');
                     }
@@ -319,4 +372,6 @@
     }
     .x-small { font-size: 0.75rem; }
     .uppercase { text-transform: uppercase; }
+    .caps { text-transform: uppercase; }
+    .modal-title { color: #1a1a1a !important; font-weight: 700; }
 </style>

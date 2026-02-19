@@ -183,7 +183,6 @@
             document.getElementById('modalCampaignId').value = id;
             document.getElementById('modalCampaignName').textContent = dataContainer.dataset.name;
             document.getElementById('modalDiscountValue').textContent = dataContainer.dataset.value;
-            // Handle potentially missing dataset values with safe defaults
             document.getElementById('modalDiscountType').textContent = dataContainer.dataset.type || 'Percentage';
             
             const start = dataContainer.dataset.start || '';
@@ -197,7 +196,6 @@
             autoText.textContent = isAuto ? 'Auto-activate upon approval' : 'Manual activation required';
             autoText.className = `small text-${isAuto ? 'info' : 'secondary'} fw-bold`;
 
-            // Reset modal state
             document.getElementById('rejectionSection').classList.add('d-none');
             document.getElementById('actionButtons').classList.remove('d-none');
             document.getElementById('confirmRejectButtons').classList.add('d-none');

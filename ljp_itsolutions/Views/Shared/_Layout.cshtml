@@ -42,6 +42,10 @@
                 {
                     @RenderSection("Navigation")
                 }
+                else if (string.Equals(userRole, "SuperAdmin", StringComparison.OrdinalIgnoreCase))
+                {
+                    <partial name="_SuperAdminNavigation" />
+                }
                 else if (string.Equals(userRole, "Cashier", StringComparison.OrdinalIgnoreCase))
                 {
                     <partial name="_CashierNavigation" />
@@ -53,10 +57,6 @@
                 else if (string.Equals(userRole, "Manager", StringComparison.OrdinalIgnoreCase) || ViewContext.RouteData.Values["controller"]?.ToString() == "Manager")
                 {
                     <partial name="_ManagerNavigation" />
-                }
-                else if (string.Equals(userRole, "SuperAdmin", StringComparison.OrdinalIgnoreCase))
-                {
-                    <partial name="_SuperAdminNavigation" />
                 }
                 else if (string.Equals(userRole, "Admin", StringComparison.OrdinalIgnoreCase) || ViewContext.RouteData.Values["controller"]?.ToString() == "Admin")
                 {

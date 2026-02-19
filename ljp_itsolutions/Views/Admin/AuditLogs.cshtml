@@ -93,11 +93,10 @@
                     <tr>
                         <th class="ps-4">Timestamp</th>
                         <th>User Account</th>
-                        <th>Action Performed</th>
-                        <th class="text-end pe-4">Details</th>
+                        <th>Activity Description</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="logsTableBody">
                     @if (Model != null && Model.Any())
                     {
                         foreach (var log in Model)
@@ -113,7 +112,7 @@
                             else if (actionType.Contains("delete") || actionType.Contains("remove") || actionType.Contains("archive")) { badgeClass = "danger"; icon = "trash"; }
                             else if (actionType.Contains("fail") || actionType.Contains("error") || actionType.Contains("unauthorized")) { badgeClass = "danger"; icon = "exclamation-triangle"; }
 
-                            <tr onclick="openLogModal(@log.AuditID)" class="cursor-pointer">
+                            <tr onclick="openLogModal(@log.AuditID)" class="cursor-pointer log-row">
                                 <td class="ps-4">
                                     <div class="d-flex flex-column">
                                         <span class="fw-bold text-dark">@log.Timestamp.ToString("HH:mm:ss")</span>
@@ -143,28 +142,23 @@
                                         <span class="text-dark fw-semibold">@log.Action</span>
                                     </div>
                                 </td>
-                                <td class="pe-4 text-end">
-                                    <button class="action-btn info">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </td>
                             </tr>
                             
                             <!-- Hidden Data Store -->
-                            <tr class="d-none" id="data-@log.AuditID"
+                            <div class="d-none log-data" id="data-@log.AuditID"
                                  data-time="@log.Timestamp.ToString("MMM dd, yyyy HH:mm:ss")"
                                  data-user="@(log.User?.FullName ?? "System")"
                                  data-username="@(log.User?.Username ?? "N/A")"
                                  data-action="@log.Action"
                                  data-icon="@icon"
                                  data-color="@badgeClass">
-                            </tr>
+                            </div>
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="4" class="text-center py-5">
+                            <td colspan="3" class="text-center py-5">
                                 <div class="py-5">
                                     <i class="fas fa-shield-alt fa-3x text-muted opacity-25 mb-3"></i>
                                     <h5 class="text-muted">No audit logs discovered yet</h5>
@@ -174,6 +168,17 @@
                     }
                 </tbody>
             </table>
+        </div>
+        <!-- Pagination Controls -->
+        <div class="d-flex justify-content-between align-items-center p-3 bg-light border-top">
+            <div class="text-muted x-small">
+                Showing <span id="startRange">0</span> to <span id="endRange">0</span> of <span id="totalItems">0</span> logs
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0" id="pagination">
+                    <!-- Pagination buttons will be injected here -->
+                </ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -219,29 +224,117 @@
     <script>
         const logModalEl = document.getElementById('logModal');
         const logModal = new bootstrap.Modal(logModalEl);
+        
+        // Pagination state
+        let currentPage = 1;
+        const rowsPerPage = 10;
+        let filteredRows = [];
 
-        // Search functionality
-        document.getElementById('logSearch').addEventListener('keyup', function() {
-            filterLogs();
-        });
+        function initPagination() {
+            const rows = Array.from(document.querySelectorAll('#logsTable tbody tr.log-row'));
+            filteredRows = rows;
+            updatePagination();
+        }
 
-        document.getElementById('typeFilter').addEventListener('change', function() {
-            filterLogs();
-        });
+        function updatePagination() {
+            const totalItems = filteredRows.length;
+            const totalPages = Math.ceil(totalItems / rowsPerPage);
+            
+            if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
 
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+
+            // Hide all rows first
+            document.querySelectorAll('#logsTable tbody tr.log-row').forEach(row => row.style.display = 'none');
+            
+            // Show only relevant rows
+            filteredRows.slice(start, end).forEach(row => row.style.display = '');
+
+            // Update range text
+            if (totalItems > 0) {
+                document.getElementById('startRange').textContent = start + 1;
+                document.getElementById('endRange').textContent = Math.min(end, totalItems);
+                document.getElementById('totalItems').textContent = totalItems;
+            } else {
+                document.getElementById('startRange').textContent = 0;
+                document.getElementById('endRange').textContent = 0;
+                document.getElementById('totalItems').textContent = 0;
+            }
+
+            renderPaginationButtons(totalPages);
+        }
+
+        function renderPaginationButtons(totalPages) {
+            const container = document.getElementById('pagination');
+            container.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            // Previous
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1})"><i class="fas fa-chevron-left x-small"></i></a>`;
+            container.appendChild(prevLi);
+
+            // Pages
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const li = document.createElement('li');
+                    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                    li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i})">${i}</a>`;
+                    container.appendChild(li);
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    const li = document.createElement('li');
+                    li.className = 'page-item disabled';
+                    li.innerHTML = '<span class="page-link">...</span>';
+                    container.appendChild(li);
+                }
+            }
+
+            // Next
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1})"><i class="fas fa-chevron-right x-small"></i></a>`;
+            container.appendChild(nextLi);
+        }
+
+        window.changePage = function(page) {
+            if (page < 1 || page > Math.ceil(filteredRows.length / rowsPerPage)) return;
+            currentPage = page;
+            updatePagination();
+            event.preventDefault();
+        };
+
+        // Search and Filter Override
         function filterLogs() {
             const searchValue = document.getElementById('logSearch').value.toLowerCase();
             const typeValue = document.getElementById('typeFilter').value.toLowerCase();
-            const rows = document.querySelectorAll('#logsTable tbody tr:not(.d-none)');
             
-            rows.forEach(row => {
+            const allRows = Array.from(document.querySelectorAll('#logsTable tbody tr.log-row'));
+            
+            filteredRows = allRows.filter(row => {
                 const text = row.textContent.toLowerCase();
                 const matchesSearch = text.includes(searchValue);
                 const matchesType = typeValue === "" || text.includes(typeValue);
-                
-                row.style.display = (matchesSearch && matchesType) ? '' : 'none';
+                return matchesSearch && matchesType;
             });
+            
+            currentPage = 1;
+            updatePagination();
+            
+            // Show no results row if needed
+            const noResults = document.querySelector('#logsTable tbody tr:not(.log-row)');
+            if (noResults) {
+                noResults.style.display = filteredRows.length === 0 ? '' : 'none';
+            }
         }
+
+        document.getElementById('logSearch').addEventListener('keyup', filterLogs);
+        document.getElementById('typeFilter').addEventListener('change', filterLogs);
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', initPagination);
 
         function openLogModal(id) {
             const data = document.getElementById(`data-${id}`);

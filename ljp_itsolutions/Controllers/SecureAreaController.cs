@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ljp_itsolutions.Controllers
 {
     
-    [Authorize(Roles = "Admin,Manager,MarketingStaff")]
+    [Authorize(Roles = "Admin,Manager,MarketingStaff,SuperAdmin")]
     public class SecureAreaController : Controller
     {
         public IActionResult Index()
@@ -12,7 +12,7 @@ namespace ljp_itsolutions.Controllers
             return View();
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,SuperAdmin")]
         public IActionResult UserManagement()
         {
             return View();

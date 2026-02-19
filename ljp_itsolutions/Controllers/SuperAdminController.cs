@@ -83,7 +83,15 @@ namespace ljp_itsolutions.Controllers
             else query = query.Where(u => u.IsActive);
 
             var users = query.OrderByDescending(u => u.CreatedAt).ToList();
-            ViewBag.Roles = new List<string> { UserRoles.SuperAdmin, UserRoles.Admin, UserRoles.Manager, UserRoles.Cashier, UserRoles.MarketingStaff };
+            
+            // Excluded Superadmin role in adding a user in superadmin as an superadmin can add another superadmin???
+            ViewBag.Roles = new List<string> { 
+                UserRoles.Admin, 
+                UserRoles.Manager, 
+                UserRoles.Cashier, 
+                UserRoles.MarketingStaff 
+            };
+            
             ViewBag.ShowArchived = showArchived;
             return View(users);
         }
@@ -99,13 +107,21 @@ namespace ljp_itsolutions.Controllers
                     TempData["Error"] = "Username already exists.";
                     return RedirectToAction("Users");
                 }
+
+                // SECURITY: Prevent creating another SuperAdmin
+                if (user.Role == UserRoles.SuperAdmin)
+                {
+                    TempData["Error"] = "Unauthorized role assignment.";
+                    return RedirectToAction("Users");
+                }
+
                 user.UserID = Guid.NewGuid();
                 user.CreatedAt = DateTime.Now;
                 user.IsActive = true;
                 user.Password = _hasher.HashPassword(user, Password);
                 _db.Users.Add(user);
                 await _db.SaveChangesAsync();
-                await LogAudit($"Created user: {user.Username}", user.UserID);
+                await LogAudit($"Created user: {user.Username} as {user.Role}", user.UserID);
                 TempData["Success"] = "User created successfully.";
             }
             return RedirectToAction("Users");
@@ -117,6 +133,14 @@ namespace ljp_itsolutions.Controllers
         {
             var user = await _db.Users.FindAsync(updatedUser.UserID);
             if (user == null) return NotFound();
+
+            // SECURITY: Prevent modifying a SuperAdmin account through this menu
+            if (user.Role == UserRoles.SuperAdmin || updatedUser.Role == UserRoles.SuperAdmin)
+            {
+                TempData["Error"] = "Restricted access: SuperAdmin accounts cannot be modified here.";
+                return RedirectToAction("Users");
+            }
+
             user.FullName = updatedUser.FullName;
             user.Username = updatedUser.Username;
             user.Email = updatedUser.Email;
@@ -184,7 +208,8 @@ namespace ljp_itsolutions.Controllers
                     "SystemName", "Timezone", "Currency", "DateFormat", 
                     "SessionTimeout", "PasswordMinLength", "RequireSpecialChars", "RequireNumbers", "TwoFactorAuth",
                     "CompanyName", "TaxRate", "LowStockThreshold", "BusinessHourStart", "BusinessHourEnd",
-                    "SmtpServer", "SmtpPort", "EmailNotifications", "LowStockAlerts", "DailyReports"
+                    "SmtpServer", "SmtpPort", "EmailNotifications", "LowStockAlerts", "DailyReports",
+                    "MaintenanceMode", "LogRetentionDays", "AllowPublicRegistration"
                 };
                 foreach (var key in keys) {
                     string value = form.ContainsKey(key) ? form[key].ToString() : "";

@@ -5,57 +5,77 @@
 
 <div class="container-fluid py-4">
 
-    <!-- Inventory Summary -->
-    <div class="row g-4 mb-4">
+    <!-- Inventory Summary (Simplified) -->
+    <div class="row g-3 mb-4">
         <div class="col-md-3">
-            <div class="kpi-card h-100 transition-hover">
-                <div class="kpi-card-icon bg-primary bg-opacity-10 text-primary">
-                    <i class="fas fa-leaf fa-lg"></i>
+            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden p-1" style="border-left: 4px solid #3b82f6 !important;">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <div>
+                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">Total Items</p>
+                        <h4 class="fw-bold mb-0">@Model.Ingredients.Count</h4>
+                    </div>
                 </div>
-                <p class="kpi-card-label">Total Ingredients</p>
-                <h3 class="kpi-card-value">@Model.Ingredients.Count</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="kpi-card h-100 transition-hover">
-                <div class="kpi-card-icon bg-warning bg-opacity-10 text-warning">
-                    <i class="fas fa-exclamation-triangle fa-lg"></i>
+            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden p-1" style="border-left: 4px solid #f59e0b !important;">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="avatar-sm bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">Low Stock</p>
+                        <h4 class="fw-bold mb-0 text-warning">@Model.LowStockCount</h4>
+                    </div>
                 </div>
-                <p class="kpi-card-label">Low Stock</p>
-                <h3 class="kpi-card-value">@Model.LowStockCount</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="kpi-card h-100 transition-hover">
-                <div class="kpi-card-icon bg-danger bg-opacity-10 text-danger">
-                    <i class="fas fa-times-circle fa-lg"></i>
+            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden p-1" style="border-left: 4px solid #ef4444 !important;">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="avatar-sm bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div>
+                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">Out of Stock</p>
+                        <h4 class="fw-bold mb-0 text-danger">@Model.OutOfStockCount</h4>
+                    </div>
                 </div>
-                <p class="kpi-card-label">Out of Stock</p>
-                <h3 class="kpi-card-value">@Model.OutOfStockCount</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="kpi-card h-100 transition-hover">
-                <div class="kpi-card-icon bg-success bg-opacity-10 text-success">
-                    <i class="fas fa-check-circle fa-lg"></i>
+            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden p-1" style="border-left: 4px solid #10b981 !important;">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="avatar-sm bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div>
+                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">Healthy</p>
+                        <h4 class="fw-bold mb-0 text-success">@Model.HealthyStockCount</h4>
+                    </div>
                 </div>
-                <p class="kpi-card-label">Healthy Stock</p>
-                <h3 class="kpi-card-value">@Model.HealthyStockCount</h3>
             </div>
         </div>
     </div>
 
     <!-- Action Bar below KPIs -->
-    <div class="d-flex justify-content-end mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="input-group" style="max-width: 300px;">
+            <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
+            <input type="text" id="inventorySearch" class="form-control border-start-0 ps-0" placeholder="Search ingredients...">
+        </div>
         <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addIngredientModal">
             <i class="fas fa-plus me-2"></i>Add New Ingredient
         </button>
     </div>
 
     <!-- Ingredients Table -->
-    <div class="modern-table">
+    <div class="modern-table shadow-sm">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" id="inventoryTable">
                 <thead>
                     <tr>
                         <th class="ps-4">Ingredient Name</th>
@@ -63,19 +83,18 @@
                         <th>Unit</th>
                         <th>Threshold</th>
                         <th>Status</th>
-                        <th class="text-end pe-4 sticky-action-col">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Model.Ingredients)
                     {
-                        <tr class="clickable-row" data-id="@item.IngredientID" style="cursor: pointer;">
+                        <tr class="clickable-row ingredient-row" data-id="@item.IngredientID" style="cursor: pointer;">
                             <td class="ps-4">
-                                <div class="fw-bold">@item.Name</div>
+                                <div class="fw-bold text-dark">@item.Name</div>
                                 <div class="text-muted text-xs">ID: #@item.IngredientID</div>
                             </td>
                             <td>
-                                <span class="fw-bold @(item.StockQuantity < item.LowStockThreshold ? "text-danger" : "")">@item.StockQuantity.ToString("N2")</span>
+                                <span class="fw-bold @(item.StockQuantity < item.LowStockThreshold ? "text-danger" : "text-dark")">@item.StockQuantity.ToString("N2")</span>
                             </td>
                             <td><span class="text-muted">@item.Unit</span></td>
                             <td><span class="text-muted">@item.LowStockThreshold.ToString("N2") @item.Unit</span></td>
@@ -93,29 +112,22 @@
                                     <span class="status-badge success">In Stock</span>
                                 }
                             </td>
-                            <td class="text-end pe-4 sticky-action-col">
-                                <div class="d-flex justify-content-end gap-2" onclick="event.stopPropagation();">
-                                    <button class="action-btn btn-edit-ingredient" 
-                                            data-id="@item.IngredientID"
-                                            data-name="@item.Name"
-                                            data-stock="@item.StockQuantity"
-                                            data-unit="@item.Unit"
-                                            data-threshold="@item.LowStockThreshold"
-                                            data-expiry="@(item.ExpiryDate?.ToString("yyyy-MM-dd"))">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <form asp-action="DeleteIngredient" method="post" class="d-inline" onsubmit="return confirm('Remove this ingredient?');">
-                                        <input type="hidden" name="id" value="@item.IngredientID" />
-                                        <button type="submit" class="action-btn danger"><i class="fas fa-trash"></i></button>
-                                    </form>
-                                </div>
+                            <!-- Hidden Data Store for Pagination/Search -->
+                            <td class="d-none">
+                                <button class="btn-edit-ingredient d-none" 
+                                        data-id="@item.IngredientID"
+                                        data-name="@item.Name"
+                                        data-stock="@item.StockQuantity"
+                                        data-unit="@item.Unit"
+                                        data-threshold="@item.LowStockThreshold"
+                                        data-expiry="@(item.ExpiryDate?.ToString("yyyy-MM-dd"))"></button>
                             </td>
                         </tr>
                     }
                     @if (!Model.Ingredients.Any())
                     {
                         <tr>
-                            <td colspan="6">
+                            <td colspan="5">
                                 <div class="empty-state">
                                     <i class="fas fa-box-open empty-state-icon"></i>
                                     <h4>No Ingredients Found</h4>
@@ -130,7 +142,19 @@
                 </tbody>
             </table>
         </div>
+        <!-- Pagination Controls -->
+        <div class="d-flex justify-content-between align-items-center p-3 bg-light border-top">
+            <div class="text-muted x-small">
+                Showing <span id="startRange">0</span> to <span id="endRange">0</span> of <span id="totalItems">0</span> items
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0" id="pagination">
+                    <!-- Pagination buttons will be injected here -->
+                </ul>
+            </nav>
+        </div>
     </div>
+</div>
 </div>
 
 <!-- Add Ingredient Modal -->
@@ -296,8 +320,102 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
-            // Edit Button Click
-            $('.btn-edit-ingredient').on('click', function() {
+            // Pagination state
+            let currentPage = 1;
+            const rowsPerPage = 10;
+            let filteredRows = [];
+
+            function initPagination() {
+                const rows = Array.from(document.querySelectorAll('#inventoryTable tbody tr.ingredient-row'));
+                filteredRows = rows;
+                updatePagination();
+            }
+
+            function updatePagination() {
+                const totalItems = filteredRows.length;
+                const totalPages = Math.ceil(totalItems / rowsPerPage);
+                
+                if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+                const start = (currentPage - 1) * rowsPerPage;
+                const end = start + rowsPerPage;
+
+                // Hide all rows
+                document.querySelectorAll('#inventoryTable tbody tr.ingredient-row').forEach(row => row.style.display = 'none');
+                
+                // Show filtered
+                filteredRows.slice(start, end).forEach(row => row.style.display = '');
+
+                // Update range text
+                if (totalItems > 0) {
+                    document.getElementById('startRange').textContent = start + 1;
+                    document.getElementById('endRange').textContent = Math.min(end, totalItems);
+                    document.getElementById('totalItems').textContent = totalItems;
+                } else {
+                    document.getElementById('startRange').textContent = 0;
+                    document.getElementById('endRange').textContent = 0;
+                    document.getElementById('totalItems').textContent = 0;
+                }
+
+                renderPaginationButtons(totalPages);
+            }
+
+            function renderPaginationButtons(totalPages) {
+                const container = document.getElementById('pagination');
+                container.innerHTML = '';
+                if (totalPages <= 1) return;
+
+                const prevLi = document.createElement('li');
+                prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+                prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1})"><i class="fas fa-chevron-left x-small"></i></a>`;
+                container.appendChild(prevLi);
+
+                for (let i = 1; i <= totalPages; i++) {
+                    if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                        const li = document.createElement('li');
+                        li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                        li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i})">${i}</a>`;
+                        container.appendChild(li);
+                    } else if (i === currentPage - 2 || i === currentPage + 2) {
+                        const li = document.createElement('li');
+                        li.className = 'page-item disabled';
+                        li.innerHTML = '<span class="page-link">...</span>';
+                        container.appendChild(li);
+                    }
+                }
+
+                const nextLi = document.createElement('li');
+                nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+                nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1})"><i class="fas fa-chevron-right x-small"></i></a>`;
+                container.appendChild(nextLi);
+            }
+
+            window.changePage = function(page) {
+                if (page < 1 || page > Math.ceil(filteredRows.length / rowsPerPage)) return;
+                currentPage = page;
+                updatePagination();
+                event.preventDefault();
+            };
+
+            // Search functionality
+            $('#inventorySearch').on('keyup', function() {
+                const searchValue = $(this).val().toLowerCase();
+                const allRows = Array.from(document.querySelectorAll('#inventoryTable tbody tr.ingredient-row'));
+                
+                filteredRows = allRows.filter(row => {
+                    const text = row.textContent.toLowerCase();
+                    return text.includes(searchValue);
+                });
+                
+                currentPage = 1;
+                updatePagination();
+            });
+
+            // Initial setup
+            initPagination();
+
+            // Edit Button Click (inside details)
+            $(document).on('click', '.btn-edit-ingredient', function() {
                 var id = $(this).data('id');
                 var name = $(this).data('name');
                 var stock = $(this).data('stock');
@@ -317,7 +435,7 @@
             });
 
             // Row Click for Details
-            $('.clickable-row').on('click', function() {
+            $(document).on('click', '.clickable-row', function() {
                 var id = $(this).data('id');
                 loadIngredientDetails(id);
             });
@@ -375,3 +493,8 @@
         });
     </script>
 }
+
+<style>
+    .x-small { font-size: 0.75rem; }
+    .modal-title { color: #1a1a1a !important; }
+</style>

@@ -23,29 +23,30 @@
         </div>
 
         <div class="row g-4">
-            <!-- Core System Settings -->
+            <!-- Infrastructure & Connectivity -->
             <div class="col-xl-4 col-md-6">
                 <div class="card-custom h-100 border-0 shadow-sm overflow-hidden">
                     <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-cogs text-primary me-2"></i>Core Identity</h6>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-network-wired text-primary me-2"></i>Infrastructure & Connectivity</h6>
                     </div>
                     <div class="card-body p-4">
                         <div class="mb-4">
-                            <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">System Name</label>
-                            <input type="text" name="SystemName" class="form-control rounded-3" value="@GetVal("SystemName")" placeholder="Coffee ERP">
+                            <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">SMTP Mail Server</label>
+                            <input type="text" name="SmtpServer" class="form-control rounded-3" value="@GetVal("SmtpServer")" placeholder="smtp.mailtrap.io">
                         </div>
                         <div class="mb-4">
-                            <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Company Registered Name</label>
-                            <input type="text" name="CompanyName" class="form-control rounded-3" value="@GetVal("CompanyName")" placeholder="LJP IT Solutions">
+                            <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">SMTP Port</label>
+                            <input type="number" name="SmtpPort" class="form-control rounded-3" value="@GetVal("SmtpPort")" placeholder="587">
                         </div>
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Currency</label>
-                                <input type="text" name="Currency" class="form-control rounded-3" value="@GetVal("Currency")" placeholder="PHP (₱)">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-4">
+                            <h6 class="x-small fw-bold text-primary uppercase tracking-wider mb-2">Connectivity Alerts</h6>
+                            <div class="form-check form-switch mb-2">
+                                <input type="checkbox" name="EmailNotifications" class="form-check-input" value="true" @(GetBool("EmailNotifications") ? "checked" : "")>
+                                <label class="form-check-label small">System Email Dispatch</label>
                             </div>
-                            <div class="col-6">
-                                <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Tax Rate (%)</label>
-                                <input type="text" name="TaxRate" class="form-control rounded-3" value="@GetVal("TaxRate")" placeholder="12">
+                            <div class="form-check form-switch">
+                                <input type="checkbox" name="DailyReports" class="form-check-input" value="true" @(GetBool("DailyReports") ? "checked" : "")>
+                                <label class="form-check-label small">Auto-generate Daily EOD</label>
                             </div>
                         </div>
                     </div>
@@ -62,7 +63,6 @@
                         <div class="mb-4">
                             <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Session Duration (Minutes)</label>
                             <input type="number" name="SessionTimeout" class="form-control rounded-3" value="@GetVal("SessionTimeout")">
-                            <div class="x-small text-muted mt-1">Users will be logged out after this period of inactivity.</div>
                         </div>
                         
                         <div class="bg-light p-3 rounded-4 mb-3">
@@ -70,13 +70,13 @@
                                 <input type="checkbox" name="TwoFactorAuth" class="form-check-input" value="true" @(GetBool("TwoFactorAuth") ? "checked" : "")>
                                 <label class="form-check-label fw-bold small">Enforce 2FA for Admins</label>
                             </div>
-                            <div class="form-check form-switch mb-2">
-                                <input type="checkbox" name="RequireSpecialChars" class="form-check-input" value="true" @(GetBool("RequireSpecialChars") ? "checked" : "")>
-                                <label class="form-check-label fw-bold small">Require Special Characters</label>
+                            <div class="form-check form-switch MB-2">
+                                <input type="checkbox" name="AllowPublicRegistration" class="form-check-input" value="true" @(GetBool("AllowPublicRegistration") ? "checked" : "")>
+                                <label class="form-check-label fw-bold small">Allow Public Registration</label>
                             </div>
                             <div class="form-check form-switch">
                                 <input type="checkbox" name="RequireNumbers" class="form-check-input" value="true" @(GetBool("RequireNumbers") ? "checked" : "")>
-                                <label class="form-check-label fw-bold small">Require Numeric Digits</label>
+                                <label class="form-check-label fw-bold small">Strong Password Policy</label>
                             </div>
                         </div>
 
@@ -88,43 +88,41 @@
                 </div>
             </div>
 
-            <!-- Operations & Alerts -->
+            <!-- Advanced System Control -->
             <div class="col-xl-4 col-md-12">
                 <div class="card-custom h-100 border-0 shadow-sm overflow-hidden">
                     <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-bell text-warning me-2"></i>Branch Operations</h6>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-microchip text-warning me-2"></i>Advanced System Control</h6>
                     </div>
                     <div class="card-body p-4">
-                        <div class="row g-3 mb-4">
-                            <div class="col-6">
-                                <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Opening Time</label>
-                                <input type="time" name="BusinessHourStart" class="form-control rounded-3" value="@GetVal("BusinessHourStart")">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Closing Time</label>
-                                <input type="time" name="BusinessHourEnd" class="form-control rounded-3" value="@GetVal("BusinessHourEnd")">
+                        <div class="mb-4">
+                            <div class="p-3 rounded-4 bg-danger bg-opacity-10 border border-danger border-opacity-25">
+                                <div class="form-check form-switch mb-1">
+                                    <input type="checkbox" name="MaintenanceMode" class="form-check-input" value="true" @(GetBool("MaintenanceMode") ? "checked" : "")>
+                                    <label class="form-check-label fw-bold text-danger">Maintenance Mode</label>
+                                </div>
+                                <div class="x-small text-danger opacity-75 pe-4">Restricts system access to SuperAdmins only while enabled.</div>
                             </div>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Low Stock Threshold</label>
-                            <input type="number" name="LowStockThreshold" class="form-control rounded-3" value="@GetVal("LowStockThreshold")">
-                            <div class="x-small text-muted mt-1">Global alert trigger value for product quantity.</div>
+                            <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Log Retention Policy (Days)</label>
+                            <div class="input-group">
+                                <input type="number" name="LogRetentionDays" class="form-control rounded-3" value="@GetVal("LogRetentionDays")" placeholder="30">
+                                <span class="input-group-text bg-light border-0 x-small">days</span>
+                            </div>
+                            <div class="x-small text-muted mt-1">Audit logs older than this will be auto-purged.</div>
                         </div>
 
                         <div class="bg-amber-light p-3 rounded-4">
-                            <h6 class="x-small fw-bold text-amber uppercase tracking-wider mb-3">Notification Dispatch</h6>
-                            <div class="form-check form-switch mb-2">
-                                <input type="checkbox" name="EmailNotifications" class="form-check-input" value="true" @(GetBool("EmailNotifications") ? "checked" : "")>
-                                <label class="form-check-label small">System Email Alerts</label>
-                            </div>
+                            <h6 class="x-small fw-bold text-amber uppercase tracking-wider mb-2">Automated Maintenance</h6>
                             <div class="form-check form-switch mb-2">
                                 <input type="checkbox" name="LowStockAlerts" class="form-check-input" value="true" @(GetBool("LowStockAlerts") ? "checked" : "")>
-                                <label class="form-check-label small">Inventory Level Alerts</label>
+                                <label class="form-check-label small">Background Inventory Scanning</label>
                             </div>
                             <div class="form-check form-switch">
-                                <input type="checkbox" name="DailyReports" class="form-check-input" value="true" @(GetBool("DailyReports") ? "checked" : "")>
-                                <label class="form-check-label small">Auto-generate Daily EOD</label>
+                                <input type="checkbox" id="backupToggle" class="form-check-input" checked disabled>
+                                <label class="form-check-label small">Automatic Security Backups</label>
                             </div>
                         </div>
                     </div>

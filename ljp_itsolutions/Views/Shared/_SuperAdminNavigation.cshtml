@@ -1,39 +1,84 @@
 <div class="nav-item">
-    <a class="nav-link d-flex align-items-center @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")" asp-controller="SuperAdmin" asp-action="Dashboard">
-        <i class="fas fa-tachometer-alt opacity-75"></i>
-        <span>System Dashboard</span>
+    <a class="nav-link d-flex align-items-center @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" && ViewContext.RouteData.Values["controller"]?.ToString() == "SuperAdmin" ? "active" : "")" asp-controller="SuperAdmin" asp-action="Dashboard">
+        <i class="fas fa-terminal opacity-75"></i>
+        <span>Root Dashboard</span>
     </a>
 </div>
+
+<div class="nav-header x-small fw-bold text-muted text-uppercase mt-3 mb-2 px-3">System Control</div>
 <div class="nav-item">
     <a class="nav-link d-flex align-items-center @(ViewContext.RouteData.Values["action"]?.ToString() == "Users" ? "active" : "")" asp-controller="SuperAdmin" asp-action="Users">
-        <i class="fas fa-users-cog opacity-75"></i>
-        <span>Role & User Management</span>
+        <i class="fas fa-user-shield opacity-75"></i>
+        <span>Security & Access</span>
     </a>
 </div>
 <div class="nav-item">
     <a class="nav-link d-flex align-items-center @(ViewContext.RouteData.Values["action"]?.ToString() == "SystemSettings" ? "active" : "")" asp-controller="SuperAdmin" asp-action="SystemSettings">
-        <i class="fas fa-cogs opacity-75"></i>
-        <span>System Configuration</span>
+        <i class="fas fa-sliders-h opacity-75"></i>
+        <span>Global Config</span>
+    </a>
+</div>
+<div class="nav-item">
+    <a class="nav-link d-flex align-items-center @(ViewContext.RouteData.Values["action"]?.ToString() == "AuditLogs" && ViewContext.RouteData.Values["controller"]?.ToString() == "SuperAdmin" ? "active" : "")" asp-controller="SuperAdmin" asp-action="AuditLogs">
+        <i class="fas fa-history opacity-75"></i>
+        <span>Audit Logs</span>
     </a>
 </div>
 <div class="nav-item">
     <a class="nav-link d-flex align-items-center @(ViewContext.RouteData.Values["action"]?.ToString() == "Backups" ? "active" : "")" asp-controller="SuperAdmin" asp-action="Backups">
         <i class="fas fa-database opacity-75"></i>
-        <span>Database Backups</span>
-    </a>
-</div>
-<div class="nav-item">
-    <a class="nav-link d-flex align-items-center @(ViewContext.RouteData.Values["action"]?.ToString() == "AuditLogs" ? "active" : "")" asp-controller="SuperAdmin" asp-action="AuditLogs">
-        <i class="fas fa-clipboard-list opacity-75"></i>
-        <span>Audit Logs</span>
+        <span>Backups & Recovery</span>
     </a>
 </div>
 
-<div class="nav-divider my-2 border-top border-white border-opacity-10"></div>
+<div class="nav-header x-small fw-bold text-muted text-uppercase mt-4 mb-2 px-3">Business Modules</div>
 
-<div class="nav-item">
-    <a class="nav-link d-flex align-items-center" asp-controller="Admin" asp-action="Dashboard">
+<!-- Admin Hub Dropdown -->
+<div class="nav-item dropdown">
+    <a class="nav-link d-flex align-items-center dropdown-toggle no-caret @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="fas fa-chart-line opacity-75"></i>
-        <span>Business Overview</span>
+        <span>Admin Dashboard</span>
+        <i class="fas fa-chevron-down ms-auto x-small opacity-50"></i>
+    </a>
+    <ul class="dropdown-menu shadow-lg border-0">
+        <li><a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Admin" asp-action="Dashboard"><i class="fas fa-th-large opacity-50"></i> Overview</a></li>
+        <li><a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Admin" asp-action="Transactions"><i class="fas fa-receipt opacity-50"></i> Transactions</a></li>
+        <li><a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Admin" asp-action="InventoryOverview"><i class="fas fa-boxes opacity-50"></i> Stock Overview</a></li>
+        <li><a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Admin" asp-action="AuditLogs"><i class="fas fa-history opacity-50"></i> Audit Logs</a></li>
+    </ul>
+</div>
+
+<!-- Inventory Dropdown -->
+<div class="nav-item dropdown">
+    <a class="nav-link d-flex align-items-center dropdown-toggle no-caret @(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-boxes opacity-75"></i>
+        <span>Inventory Hub</span>
+        <i class="fas fa-chevron-down ms-auto x-small opacity-50"></i>
+    </a>
+    <ul class="dropdown-menu shadow-lg border-0">
+        <li><a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Manager" asp-action="Inventory"><i class="fas fa-warehouse opacity-50"></i> Stock Intake</a></li>
+        <li><a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Manager" asp-action="Products"><i class="fas fa-tags opacity-50"></i> Products</a></li>
+        <li><a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Manager" asp-action="Recipes"><i class="fas fa-flask opacity-50"></i> Recipes</a></li>
+    </ul>
+</div>
+
+<!-- Marketing Hub Dropdown -->
+<div class="nav-item dropdown">
+    <a class="nav-link d-flex align-items-center dropdown-toggle no-caret @(ViewContext.RouteData.Values["controller"]?.ToString() == "Marketing" ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-ad opacity-75"></i>
+        <span>Marketing Hub</span>
+        <i class="fas fa-chevron-down ms-auto x-small opacity-50"></i>
+    </a>
+    <ul class="dropdown-menu shadow-lg border-0">
+        <li><a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Marketing" asp-action="Promotions"><i class="fas fa-ticket-alt opacity-50"></i> Campaigns</a></li>
+        <li><a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Marketing" asp-action="Customers"><i class="fas fa-users opacity-50"></i> Loyalty Program</a></li>
+        <li><a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Marketing" asp-action="SalesTrends"><i class="fas fa-chart-area opacity-50"></i> Growth Analytics</a></li>
+    </ul>
+</div>
+
+<div class="nav-item">
+    <a class="nav-link d-flex align-items-center" asp-controller="POS" asp-action="Index">
+        <i class="fas fa-cash-register opacity-75"></i>
+        <span>POS System</span>
     </a>
 </div>

@@ -49,13 +49,16 @@ builder.Services.AddAuthorization(options =>
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Data Source=.\\SQLEXPRESS;Initial Catalog=ljp_itsolutions;Integrated Security=True;Trust Server Certificate=True";
 builder.Services.AddDbContext<ljp_itsolutions.Data.ApplicationDbContext>(options =>
+{
     options.UseSqlServer(connectionString, sqlServerOptionsAction: sqlOptions =>
     {
         sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 15, // Increased to handle transient cloud DB issues
+            maxRetryCount: 15,
             maxRetryDelay: TimeSpan.FromSeconds(30),
             errorNumbersToAdd: null);
-    }));
+        sqlOptions.CommandTimeout(60); // Set command timeout to 60 seconds
+    });
+});
 
 builder.Services.AddScoped<Microsoft.AspNetCore.Identity.IPasswordHasher<ljp_itsolutions.Models.User>, Microsoft.AspNetCore.Identity.PasswordHasher<ljp_itsolutions.Models.User>>();
 

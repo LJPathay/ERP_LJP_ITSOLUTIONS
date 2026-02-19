@@ -10,7 +10,7 @@ using System.Security.Claims;
 
 namespace ljp_itsolutions.Controllers
 {
-    [Authorize(Roles = "MarketingStaff,Admin")]
+    [Authorize(Roles = "MarketingStaff,Admin,SuperAdmin")]
     public class MarketingController : Controller
     {
         private readonly ApplicationDbContext _db;
