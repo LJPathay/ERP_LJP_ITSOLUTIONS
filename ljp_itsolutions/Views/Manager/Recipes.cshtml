@@ -2,101 +2,216 @@
 @{
     ViewData["Title"] = "Recipe Management";
     var ingredients = ViewBag.Ingredients as IEnumerable<ljp_itsolutions.Models.Ingredient>;
+    var categories = Model.Select(p => p.Category?.CategoryName).Where(c => c != null).Distinct().OrderBy(c => c).ToList();
 }
-<style>
-    .recipe-entry { transition: all 0.2s ease-in-out; }
-    .recipe-entry:hover { border-color: #0d6efd !important; box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.05) !important; }
-    .x-small { font-size: 0.75rem; }
-    .hover-scale { transition: transform 0.2s; }
-    .hover-scale:hover { transform: scale(1.1); }
-</style>
 
 <div class="container-fluid py-4">
-    <!-- Recipe Cards -->
-    <div class="row g-4">
-        @foreach (var product in Model)
-        {
-            <div class="col-md-6 col-lg-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="fw-bold mb-0">@product.ProductName</h6>
-                            <small class="text-muted">@product.Category?.CategoryName</small>
-                        </div>
-                        <button class="btn btn-sm btn-primary" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#editRecipeModal"
-                                data-product-id="@product.ProductID"
-                                data-product-name="@product.ProductName">
-                            <i class="fas fa-edit"></i>
-                        </button>
+
+    <!-- Page Header + Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden p-1" style="border-left: 4px solid #3b82f6 !important;">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3 bg-primary bg-opacity-10 text-primary" style="width:40px;height:40px;">
+                        <i class="fas fa-utensils"></i>
                     </div>
-                    <div class="card-body">
-                        @if (product.ProductRecipes != null && product.ProductRecipes.Any())
-                        {
-                            <div class="list-group list-group-flush">
-                                @foreach (var recipe in product.ProductRecipes)
-                                {
-                                    <div class="list-group-item px-0 py-2 border-0">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-leaf text-success me-2"></i>
-                                                <div>
-                                                    <span class="small d-block fw-bold">@recipe.Ingredient?.Name</span>
-                                                    @{
-                                                        var stock = recipe.Ingredient?.StockQuantity ?? 0;
-                                                        var threshold = recipe.Ingredient?.LowStockThreshold ?? 0;
-                                                        var stockClass = stock <= threshold ? "text-danger" : "text-muted";
-                                                    }
-                                                    <small class="@stockClass x-small">Stock: @stock @recipe.Ingredient?.Unit</small>
-                                                </div>
-                                            </div>
-                                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill">
-                                                @recipe.QuantityRequired @recipe.Ingredient?.Unit
-                                            </span>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="text-center py-3">
-                                <i class="fas fa-exclamation-circle text-warning mb-2"></i>
-                                <p class="text-muted small mb-0">No recipe defined</p>
-                            </div>
-                        }
+                    <div>
+                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">Total Products</p>
+                        <h5 class="fw-bold mb-0">@Model.Count()</h5>
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden p-1" style="border-left: 4px solid #10b981 !important;">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3 bg-success bg-opacity-10 text-success" style="width:40px;height:40px;">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div>
+                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">With Recipe</p>
+                        <h5 class="fw-bold mb-0 text-success">@Model.Count(p => p.ProductRecipes != null && p.ProductRecipes.Any())</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden p-1" style="border-left: 4px solid #f59e0b !important;">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3 bg-warning bg-opacity-10 text-warning" style="width:40px;height:40px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">No Recipe</p>
+                        <h5 class="fw-bold mb-0 text-warning">@Model.Count(p => p.ProductRecipes == null || !p.ProductRecipes.Any())</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
+        <div class="d-flex gap-2 flex-wrap">
+            <div class="input-group" style="max-width: 280px;">
+                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                <input type="text" id="recipeSearch" class="form-control border-start-0 ps-0" placeholder="Search products...">
+            </div>
+            <select id="categoryFilter" class="form-select" style="max-width: 200px;">
+                <option value="">All Categories</option>
+                @foreach (var cat in categories)
+                {
+                    <option value="@cat">@cat</option>
+                }
+            </select>
+            <select id="statusFilter" class="form-select" style="max-width: 180px;">
+                <option value="">All Statuses</option>
+                <option value="has-recipe">Has Recipe</option>
+                <option value="no-recipe">No Recipe</option>
+            </select>
+        </div>
+        <div class="text-muted x-small" id="tableCount">Showing all products</div>
+    </div>
+
+    <!-- Recipes Table -->
+    <div class="modern-table shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="recipesTable">
+                <thead>
+                    <tr>
+                        <th class="ps-4" style="width:30%">Product</th>
+                        <th style="width:15%">Category</th>
+                        <th style="width:15%">Ingredients</th>
+                        <th style="width:25%">Recipe Preview</th>
+                        <th style="width:15%">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var product in Model)
+                    {
+                        var hasRecipe = product.ProductRecipes != null && product.ProductRecipes.Any();
+                        var ingredientNames = hasRecipe
+                            ? string.Join(", ", product.ProductRecipes!.Take(2).Select(r => r.Ingredient?.Name ?? "?"))
+                            : "";
+                        var moreCount = hasRecipe && product.ProductRecipes!.Count() > 2 ? product.ProductRecipes!.Count() - 2 : 0;
+
+                        <tr class="recipe-row clickable-row"
+                            data-product-id="@product.ProductID"
+                            data-product-name="@product.ProductName"
+                            data-category="@product.Category?.CategoryName"
+                            data-status="@(hasRecipe ? "has-recipe" : "no-recipe")"
+                            style="cursor:pointer;">
+                            <td class="ps-4">
+                                <div class="fw-bold text-dark">@product.ProductName</div>
+                                <div class="text-muted x-small">ID: #@product.ProductID &bull; ₱@product.Price.ToString("N2")</div>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-2">
+                                    @(product.Category?.CategoryName ?? "—")
+                                </span>
+                            </td>
+                            <td>
+                                <span class="fw-bold @(hasRecipe ? "text-dark" : "text-muted")">
+                                    @(hasRecipe ? product.ProductRecipes!.Count().ToString() : "0")
+                                </span>
+                                <span class="text-muted x-small"> ingredient@(hasRecipe && product.ProductRecipes!.Count() != 1 ? "s" : "")</span>
+                            </td>
+                            <td>
+                                @if (hasRecipe)
+                                {
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach (var r in product.ProductRecipes!.Take(2))
+                                        {
+                                            <span class="badge bg-light text-dark border fw-normal">
+                                                <i class="fas fa-leaf text-success me-1 x-small"></i>@r.Ingredient?.Name
+                                            </span>
+                                        }
+                                        @if (moreCount > 0)
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary">+@moreCount more</span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted x-small fst-italic">No ingredients defined</span>
+                                }
+                            </td>
+                            <td>
+                                @if (hasRecipe)
+                                {
+                                    <span class="status-badge success"><i class="fas fa-check me-1"></i>Configured</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge warning"><i class="fas fa-clock me-1"></i>Pending</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-utensils text-muted mb-3" style="font-size:2.5rem;opacity:0.3;"></i>
+                <h5 class="text-muted">No products found</h5>
+                <p class="text-muted small">Add products first to configure their recipes.</p>
+            </div>
         }
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center p-3 bg-light border-top">
+            <div class="text-muted x-small">
+                Showing <span id="startRange">0</span> to <span id="endRange">0</span> of <span id="totalItems">0</span> products
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
+            </nav>
+        </div>
     </div>
 </div>
 
 <!-- Edit Recipe Modal -->
-<div class="modal fade" id="editRecipeModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold">Edit Recipe: <span id="modal-product-name"></span></h5>
+<div class="modal fade" id="editRecipeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header border-0 pb-0 pt-4 px-4 bg-white">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary" style="width:48px;height:48px;">
+                        <i class="fas fa-flask"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bolder text-dark mb-0">Edit Recipe</h5>
+                        <p class="text-muted small mb-0 text-uppercase tracking-widest" id="modal-product-name-sub">Loading...</p>
+                    </div>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+
             <form asp-action="UpdateRecipe" method="post">
                 <input type="hidden" name="ProductID" id="modal-product-id" />
-                <div class="modal-body">
-                    <p class="text-muted small mb-3">Define which ingredients are used and how much is needed per serving.</p>
-                    
+                <div class="modal-body px-4 pb-2 bg-white">
+                    <p class="text-muted small mb-4">
+                        <i class="fas fa-info-circle me-1 text-primary"></i>
+                        Define which ingredients and quantities are consumed per serving of this product.
+                    </p>
+
                     <div id="recipe-ingredients-container">
-                        <!-- Will be populated dynamically -->
+                        <!-- Dynamically populated -->
                     </div>
 
-                    <button type="button" class="btn btn-sm btn-outline-primary mt-3" onclick="addIngredientRow()">
-                        <i class="fas fa-plus me-2"></i>Add Ingredient
+                    <button type="button" class="btn btn-outline-primary rounded-pill px-4 py-2 mt-1 w-100" onclick="addIngredientRow()">
+                        <i class="fas fa-plus me-2"></i>Add Another Ingredient
                     </button>
                 </div>
-                <div class="modal-footer bg-light border-0">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary px-4">Save Recipe</button>
+                <div class="modal-footer border-0 px-4 pb-4 bg-white">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                        <i class="fas fa-save me-2"></i>Save Recipe
+                    </button>
                 </div>
             </form>
         </div>
@@ -104,94 +219,227 @@
 </div>
 
 @section Scripts {
-    <script>
-        let ingredientsList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ingredients));
-        let currentRecipes = [];
-        let rowCounter = 0;
+<script>
+    const ingredientsList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((ingredients ?? Enumerable.Empty<ljp_itsolutions.Models.Ingredient>()).Select(i => new {
+        i.IngredientID,
+        i.Name,
+        i.StockQuantity,
+        i.Unit
+    })));
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById('editRecipeModal');
-            modal.addEventListener('show.bs.modal', async function(event) {
-                const button = event.relatedTarget;
-                const productId = button.getAttribute('data-product-id');
-                const productName = button.getAttribute('data-product-name');
-                
-                document.getElementById('modal-product-name').innerText = productName;
-                document.getElementById('modal-product-id').value = productId;
-                
-                // Fetch existing recipes
-                await loadRecipes(productId);
-            });
+    let currentRecipes = [];
+    let rowCounter = 0;
+    let currentPage = 1;
+    const rowsPerPage = 10;
+    let filteredRows = [];
+
+    // ── TABLE / FILTER LOGIC ─────────────────────────────────────────────────
+
+    function getAllRows() {
+        return Array.from(document.querySelectorAll('#recipesTable tbody tr.recipe-row'));
+    }
+
+    function applyFilters() {
+        const search = document.getElementById('recipeSearch').value.toLowerCase();
+        const category = document.getElementById('categoryFilter').value.toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+
+        filteredRows = getAllRows().filter(row => {
+            const name = row.querySelector('td:first-child').textContent.toLowerCase();
+            const cat = (row.dataset.category || '').toLowerCase();
+            const st = row.dataset.status || '';
+            return name.includes(search) &&
+                   (!category || cat === category) &&
+                   (!status || st === status);
         });
 
-        async function loadRecipes(productId) {
-            try {
-                const response = await fetch(`/Manager/GetProductRecipes?productId=${productId}`);
-                currentRecipes = await response.json();
-                renderRecipeRows();
-            } catch (error) {
-                console.error('Error loading recipes:', error);
-                currentRecipes = [];
-                renderRecipeRows();
+        currentPage = 1;
+        updatePagination();
+    }
+
+    function updatePagination() {
+        const total = filteredRows.length;
+        const totalPages = Math.max(1, Math.ceil(total / rowsPerPage));
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+
+        getAllRows().forEach(r => r.style.display = 'none');
+        filteredRows.slice(start, end).forEach(r => r.style.display = '');
+
+        document.getElementById('startRange').textContent = total ? start + 1 : 0;
+        document.getElementById('endRange').textContent = Math.min(end, total);
+        document.getElementById('totalItems').textContent = total;
+        document.getElementById('tableCount').textContent = `Showing ${total} of @Model.Count() products`;
+
+        renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+        const ul = document.getElementById('pagination');
+        ul.innerHTML = '';
+        if (totalPages <= 1) return;
+
+        const prev = document.createElement('li');
+        prev.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+        prev.innerHTML = `<a class="page-link" href="#" onclick="goPage(${currentPage - 1}); return false;"><i class="fas fa-chevron-left x-small"></i></a>`;
+        ul.appendChild(prev);
+
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                const li = document.createElement('li');
+                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="#" onclick="goPage(${i}); return false;">${i}</a>`;
+                ul.appendChild(li);
+            } else if (i === currentPage - 2 || i === currentPage + 2) {
+                const li = document.createElement('li');
+                li.className = 'page-item disabled';
+                li.innerHTML = `<span class="page-link">…</span>`;
+                ul.appendChild(li);
             }
         }
 
-        function renderRecipeRows() {
-            const container = document.getElementById('recipe-ingredients-container');
-            container.innerHTML = '';
-            rowCounter = 0;
+        const next = document.createElement('li');
+        next.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+        next.innerHTML = `<a class="page-link" href="#" onclick="goPage(${currentPage + 1}); return false;"><i class="fas fa-chevron-right x-small"></i></a>`;
+        ul.appendChild(next);
+    }
 
-            if (currentRecipes.length === 0) {
-                addIngredientRow();
-            } else {
-                currentRecipes.forEach(recipe => {
-                    addIngredientRow(recipe.ingredientID, recipe.quantityRequired);
-                });
-            }
+    function goPage(page) {
+        currentPage = page;
+        updatePagination();
+    }
+
+    // ── MODAL / RECIPE EDITOR ────────────────────────────────────────────────
+
+    async function openRecipeModal(productId, productName) {
+        document.getElementById('modal-product-name-sub').textContent = productName;
+        document.getElementById('modal-product-id').value = productId;
+        rowCounter = 0;
+        document.getElementById('recipe-ingredients-container').innerHTML = `
+            <div class="text-center py-3 text-muted">
+                <div class="spinner-border spinner-border-sm me-2"></div> Loading recipe...
+            </div>`;
+        const modal = new bootstrap.Modal(document.getElementById('editRecipeModal'));
+        modal.show();
+        await loadRecipes(productId);
+    }
+
+    async function loadRecipes(productId) {
+        try {
+            const resp = await fetch(`/Manager/GetProductRecipes?productId=${productId}`);
+            currentRecipes = await resp.json();
+            renderRecipeRows();
+        } catch (e) {
+            console.error(e);
+            currentRecipes = [];
+            renderRecipeRows();
         }
+    }
 
-        function addIngredientRow(selectedIngredientId = '', quantity = '') {
-            const container = document.getElementById('recipe-ingredients-container');
-            const rowId = rowCounter++;
-            
-            const row = document.createElement('div');
-            row.className = 'recipe-entry p-3 bg-light rounded-3 mb-3 border transition-all';
-            row.id = `recipe-row-${rowId}`;
-            
-            row.innerHTML = `
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-6">
-                        <label class="form-label x-small fw-bold text-muted mb-1">Ingredient</label>
-                        <select name="Recipes[${rowId}].IngredientID" class="form-select border-0 shadow-sm">
-                            <option value="">Select Ingredient</option>
-                            ${ingredientsList.map(ing => 
-                                `<option value="${ing.IngredientID}" ${ing.IngredientID == selectedIngredientId ? 'selected' : ''}>
-                                    ${ing.Name} (Stock: ${ing.StockQuantity} ${ing.Unit})
-                                </option>`
-                            ).join('')}
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label x-small fw-bold text-muted mb-1">Quantity</label>
-                        <div class="input-group shadow-sm">
-                            <input type="number" step="0.001" name="Recipes[${rowId}].QuantityRequired" 
-                                   class="form-control border-0" placeholder="0.00" value="${quantity}" />
-                        </div>
-                    </div>
-                    <div class="col-md-2 text-end">
-                        <button type="button" class="btn btn-outline-danger border-0 hover-scale" onclick="removeRow(${rowId})">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
+    function renderRecipeRows() {
+        const container = document.getElementById('recipe-ingredients-container');
+        container.innerHTML = '';
+        rowCounter = 0;
+
+        if (currentRecipes.length === 0) {
+            addIngredientRow();
+        } else {
+            currentRecipes.forEach(r => addIngredientRow(r.ingredientID, r.quantityRequired));
+        }
+    }
+
+    function addIngredientRow(selectedId = '', qty = '') {
+        const container = document.getElementById('recipe-ingredients-container');
+        const id = rowCounter++;
+
+        const options = ingredientsList.map(ing =>
+            `<option value="${ing.IngredientID}" ${ing.IngredientID == selectedId ? 'selected' : ''}>
+                ${ing.Name} (${ing.StockQuantity} ${ing.Unit} in stock)
+             </option>`
+        ).join('');
+
+        const div = document.createElement('div');
+        div.id = `recipe-row-${id}`;
+        div.className = 'recipe-entry border rounded-4 p-3 mb-3 bg-light';
+        div.style.transition = 'all 0.2s';
+        div.innerHTML = `
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label x-small fw-bold text-muted text-uppercase mb-1">Ingredient</label>
+                    <select name="Recipes[${id}].IngredientID" class="form-select border-0 shadow-sm rounded-3">
+                        <option value="">— Select Ingredient —</option>
+                        ${options}
+                    </select>
                 </div>
-            `;
-            
-            container.appendChild(row);
-        }
+                <div class="col-md-4">
+                    <label class="form-label x-small fw-bold text-muted text-uppercase mb-1">Qty per Serving</label>
+                    <input type="number" step="0.001" min="0"
+                           name="Recipes[${id}].QuantityRequired"
+                           class="form-control border-0 shadow-sm rounded-3"
+                           placeholder="0.000" value="${qty}" />
+                </div>
+                <div class="col-md-2 text-end">
+                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3"
+                            onclick="removeRow(${id})" title="Remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>`;
+        container.appendChild(div);
+    }
 
-        function removeRow(rowId) {
-            const row = document.getElementById(`recipe-row-${rowId}`);
-            if (row) row.remove();
-        }
-    </script>
+    function removeRow(id) {
+        document.getElementById(`recipe-row-${id}`)?.remove();
+    }
+
+    // ── INIT ─────────────────────────────────────────────────────────────────
+
+    document.addEventListener('DOMContentLoaded', () => {
+        filteredRows = getAllRows();
+        updatePagination();
+
+        document.getElementById('recipeSearch').addEventListener('input', applyFilters);
+        document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+        document.getElementById('statusFilter').addEventListener('change', applyFilters);
+
+        document.querySelectorAll('.clickable-row').forEach(row => {
+            row.addEventListener('click', () => {
+                openRecipeModal(row.dataset.productId, row.dataset.productName);
+            });
+        });
+    });
+</script>
 }
+
+<style>
+    .x-small { font-size: 0.72rem; }
+    .tracking-widest { letter-spacing: 0.1em; }
+    .rounded-4 { border-radius: 1.25rem !important; }
+    .modal-title { color: #000000 !important; font-weight: 800; }
+
+    .recipe-row:hover { background-color: #f0f5ff !important; }
+    .recipe-row:active { background-color: #e0ecff !important; }
+
+    .recipe-entry:hover { border-color: #3b82f6 !important; }
+
+    .status-badge {
+        display: inline-flex; align-items: center;
+        padding: 4px 12px; border-radius: 50px;
+        font-size: 0.72rem; font-weight: 600;
+    }
+    .status-badge.success { background: rgba(16,185,129,.12); color: #047857; }
+    .status-badge.warning { background: rgba(245,158,11,.12); color: #b45309; }
+
+    .form-select:focus, .form-control:focus {
+        box-shadow: 0 0 0 0.2rem rgba(59,130,246,0.15);
+        border-color: rgba(59,130,246,0.4);
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #006aff 0%, #004dc7 100%);
+        border: none;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,106,255,0.3); }
+    .page-link { border-radius: 8px !important; margin: 0 2px; }
+</style>

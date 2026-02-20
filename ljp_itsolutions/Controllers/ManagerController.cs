@@ -13,11 +13,13 @@ namespace ljp_itsolutions.Controllers
     public class ManagerController : BaseController
     {
         private readonly IPhotoService _photoService;
+        private readonly IRecipeService _recipeService;
 
-        public ManagerController(ApplicationDbContext db, IPhotoService photoService)
+        public ManagerController(ApplicationDbContext db, IPhotoService photoService, IRecipeService recipeService)
             : base(db)
         {
             _photoService = photoService;
+            _recipeService = recipeService;
         }
 
         public IActionResult Index()
@@ -202,8 +204,45 @@ namespace ljp_itsolutions.Controllers
             product.IsAvailable = true;
             _db.Products.Add(product);
             await _db.SaveChangesAsync();
+
+            // Automatically create a default base recipe using Actual API Data from the external RecipeService
+            bool foundRecipe = false;
+            try 
+            {
+                var apiRecipes = await _recipeService.GetDefaultRecipeFromApiAsync(product.ProductName, product.CategoryID);
+                
+                if (apiRecipes != null && apiRecipes.Any())
+                {
+                    foreach (var item in apiRecipes)
+                    {
+                        _db.ProductRecipes.Add(new ProductRecipe 
+                        { 
+                            ProductID = product.ProductID,
+                            IngredientID = item.IngredientID,
+                            QuantityRequired = item.QuantityRequired
+                        });
+                    }
+                    await _db.SaveChangesAsync();
+                    foundRecipe = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Non-critical if external API or recipe mapping fails
+                Console.WriteLine($"API-based recipe initialization failed: {ex.Message}");
+            }
+
             await LogAudit($"Created Product: {product.ProductName}");
-            TempData["SuccessMessage"] = "Product created successfully!";
+            
+            if (foundRecipe)
+            {
+                TempData["SuccessMessage"] = $"Product '{product.ProductName}' created with an automated recipe!";
+            }
+            else
+            {
+                TempData["SuccessMessage"] = $"Product '{product.ProductName}' created, but couldn't find the necessary ingredients in your inventory to build a recipe automatically.";
+            }
+
             return RedirectToAction("Products");
         }
 
@@ -538,7 +577,6 @@ namespace ljp_itsolutions.Controllers
                     {
                         product.StockQuantity += detail.Quantity;
                         
-                        // Log the product-level reversal ONLY if stock quantity was changed
                         _db.InventoryLogs.Add(new InventoryLog
                         {
                             ProductID = product.ProductID,
@@ -617,20 +655,26 @@ namespace ljp_itsolutions.Controllers
                 if (ingredient.StockQuantity > 0)
                 {
                     ingredient.LastStockedDate = DateTime.Now;
-                    
-                    // Log initial stock
+                }
+
+                // STEP 1: Save the ingredient first so it gets a valid IngredientID
+                _db.Ingredients.Add(ingredient);
+                await _db.SaveChangesAsync();
+
+                // STEP 2: Now that the ingredient has a valid ID, log the initial stock (if any)
+                if (ingredient.StockQuantity > 0)
+                {
                     _db.InventoryLogs.Add(new InventoryLog
                     {
-                        IngredientID = ingredient.IngredientID,
+                        IngredientID = ingredient.IngredientID, // Now has a valid DB-assigned ID
                         QuantityChange = ingredient.StockQuantity,
                         ChangeType = "Initial",
                         LogDate = DateTime.Now,
                         Remarks = "Initial stock upon ingredient creation"
                     });
+                    await _db.SaveChangesAsync();
                 }
-                
-                _db.Ingredients.Add(ingredient);
-                await _db.SaveChangesAsync();
+
                 await LogAudit($"Created Ingredient: {ingredient.Name}");
                 TempData["SuccessMessage"] = "Ingredient added successfully!";
             }
@@ -724,7 +768,21 @@ namespace ljp_itsolutions.Controllers
                 })
                 .ToListAsync();
 
-            return Json(new { ingredient, logs });
+            var result = new 
+            {
+                ingredient = new 
+                {
+                    name = ingredient.Name,
+                    unit = ingredient.Unit,
+                    stockQuantity = ingredient.StockQuantity,
+                    lowStockThreshold = ingredient.LowStockThreshold,
+                    expiryDate = ingredient.ExpiryDate,
+                    lastStockedDate = logs.FirstOrDefault(l => l.ChangeType == "Intake" || l.ChangeType == "Adjustment")?.LogDate ?? ingredient.LastStockedDate
+                },
+                logs = logs
+            };
+
+            return Json(result);
         }
 
         // --- CAMPAIGN APPROVAL WORKFLOW ---

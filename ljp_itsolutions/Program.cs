@@ -8,7 +8,11 @@ using Microsoft.AspNetCore.RateLimiting;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 builder.Services.AddSingleton<ljp_itsolutions.Services.InMemoryStore>();
 builder.Services.AddRazorPages();
 builder.Services.AddSession();
@@ -27,6 +31,7 @@ builder.Services.AddSingleton<ljp_itsolutions.Services.IEmailSender, ljp_itsolut
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ljp_itsolutions.Services.IPayMongoService, ljp_itsolutions.Services.PayMongoService>();
 builder.Services.AddScoped<ljp_itsolutions.Services.IPhotoService, ljp_itsolutions.Services.PhotoService>();
+builder.Services.AddHttpClient<ljp_itsolutions.Services.IRecipeService, ljp_itsolutions.Services.RecipeService>();
 builder.Services.Configure<ljp_itsolutions.Services.CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -34,8 +39,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.LoginPath = "/Account/Login";
         options.AccessDeniedPath = "/Account/AccessDenied";
-        options.Cookie.SameSite = SameSiteMode.Lax; // Better compatibility for published apps
-        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // Support HTTP if the app is not using HTTPS
+        options.Cookie.SameSite = SameSiteMode.Lax; 
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; 
         options.Cookie.IsEssential = true;
     });
 builder.Services.AddAuthorization(options =>
@@ -45,7 +50,6 @@ builder.Services.AddAuthorization(options =>
         .Build();
 });
 
-// Configure EF Core DbContext with SQL Server
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Data Source=.\\SQLEXPRESS;Initial Catalog=ljp_itsolutions;Integrated Security=True;Trust Server Certificate=True";
 builder.Services.AddDbContext<ljp_itsolutions.Data.ApplicationDbContext>(options =>
@@ -56,7 +60,7 @@ builder.Services.AddDbContext<ljp_itsolutions.Data.ApplicationDbContext>(options
             maxRetryCount: 15,
             maxRetryDelay: TimeSpan.FromSeconds(30),
             errorNumbersToAdd: null);
-        sqlOptions.CommandTimeout(60); // Set command timeout to 60 seconds
+        sqlOptions.CommandTimeout(60); 
     });
 });
 
