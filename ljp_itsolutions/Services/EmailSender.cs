@@ -14,13 +14,13 @@ namespace ljp_itsolutions.Services
             _config = config;
         }
 
-        public Task SendEmailAsync(string to, string subject, string body)
+        public async Task SendEmailAsync(string to, string subject, string body)
         {
             var smtpHost = _config["Smtp:Host"];
             if (string.IsNullOrEmpty(smtpHost))
             {
                 Console.WriteLine($"[Email] To:{to} Subject:{subject}\n{body}");
-                return Task.CompletedTask;
+                return;
             }
 
             var port = int.TryParse(_config["Smtp:Port"], out var p) ? p : 25;
@@ -36,8 +36,7 @@ namespace ljp_itsolutions.Services
             }
 
             var mail = new MailMessage(from, to, subject, body) { IsBodyHtml = false };
-            client.Send(mail);
-            return Task.CompletedTask;
+            await client.SendMailAsync(mail);
         }
     }
 }

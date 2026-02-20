@@ -10,14 +10,13 @@ using System.Text.Json;
 namespace ljp_itsolutions.Controllers
 {
     [Authorize(Roles = "Manager,Admin,SuperAdmin")]
-    public class ManagerController : Controller
+    public class ManagerController : BaseController
     {
-        private readonly ApplicationDbContext _db;
         private readonly IPhotoService _photoService;
 
         public ManagerController(ApplicationDbContext db, IPhotoService photoService)
+            : base(db)
         {
-            _db = db;
             _photoService = photoService;
         }
 
@@ -44,7 +43,7 @@ namespace ljp_itsolutions.Controllers
             {
                 var date = sevenDaysAgo.AddDays(i);
                 dailyRevenueLabels.Add(date.ToString("MMM dd"));
-                dailyRevenueData.Add(recentOrders.Where(o => o.OrderDate.Date == date.Date).Sum(o => o.FinalAmount));
+                dailyRevenueData.Add(recentOrders.Where(o => o.OrderDate.Date == date.Date && (o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)" || o.PaymentStatus == "Completed")).Sum(o => o.FinalAmount));
             }
 
             // Category Distribution
@@ -60,8 +59,8 @@ namespace ljp_itsolutions.Controllers
             // Growth Calculations (Last 30 days vs Previous 30 days)
             var sixtyDaysAgo = thirtyDaysAgo.AddDays(-30);
             
-            var currentRevenue = await _db.Orders.Where(o => o.OrderDate >= thirtyDaysAgo).SumAsync(o => o.FinalAmount);
-            var previousRevenue = await _db.Orders.Where(o => o.OrderDate >= sixtyDaysAgo && o.OrderDate < thirtyDaysAgo).SumAsync(o => o.FinalAmount);
+            var currentRevenue = await _db.Orders.Where(o => o.OrderDate >= thirtyDaysAgo && (o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)" || o.PaymentStatus == "Completed")).SumAsync(o => o.FinalAmount);
+            var previousRevenue = await _db.Orders.Where(o => o.OrderDate >= sixtyDaysAgo && o.OrderDate < thirtyDaysAgo && (o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)" || o.PaymentStatus == "Completed")).SumAsync(o => o.FinalAmount);
             double revenueGrowth = previousRevenue > 0 ? (double)((currentRevenue - previousRevenue) / previousRevenue * 100) : 0;
 
             var currentOrdersCount = await _db.Orders.Where(o => o.OrderDate >= thirtyDaysAgo).CountAsync();
@@ -73,7 +72,7 @@ namespace ljp_itsolutions.Controllers
                 TotalProducts = await _db.Products.CountAsync(),
                 TotalUsers = await _db.Users.CountAsync(),
                 TotalOrders = await _db.Orders.CountAsync(),
-                TotalRevenue = await _db.Orders.SumAsync(o => o.FinalAmount),
+                TotalRevenue = await _db.Orders.Where(o => (o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)" || o.PaymentStatus == "Completed")).SumAsync(o => o.FinalAmount),
                 
                 RevenueGrowth = revenueGrowth,
                 OrderGrowth = orderGrowth,
@@ -194,10 +193,9 @@ namespace ljp_itsolutions.Controllers
                         TempData["ErrorMessage"] = $"Photo upload failed: {errorMsg}";
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     TempData["ErrorMessage"] = "Connectivity error: Could not reach Cloudinary. Please check your internet connection.";
-                    Console.WriteLine($"Cloudinary Exception: {ex.Message}");
                 }
             }
 
@@ -259,10 +257,9 @@ namespace ljp_itsolutions.Controllers
                         TempData["ErrorMessage"] = $"Photo upload failed: {errorMsg}";
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     TempData["ErrorMessage"] = "Connectivity error: Could not reach Cloudinary. Please check your internet connection.";
-                    Console.WriteLine($"Cloudinary Exception: {ex.Message}");
                 }
             }
 
@@ -319,7 +316,7 @@ namespace ljp_itsolutions.Controllers
                 Ingredients = ingredients,
                 LowStockCount = ingredients.Count(i => i.StockQuantity > 0 && i.StockQuantity < i.LowStockThreshold),
                 OutOfStockCount = ingredients.Count(i => i.StockQuantity == 0),
-                HealthyStockCount = ingredients.Count(i => i.StockQuantity >= i.LowStockThreshold)
+                HealthyStockCount = ingredients.Count(i => i.StockQuantity >= i.LowStockThreshold),
             };
 
             return View(viewModel);
@@ -348,7 +345,7 @@ namespace ljp_itsolutions.Controllers
 
         public async Task<IActionResult> Finance()
         {
-            var revenue = await _db.Orders.SumAsync(o => o.FinalAmount);
+            var revenue = await _db.Orders.Where(o => (o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)" || o.PaymentStatus == "Completed")).SumAsync(o => o.FinalAmount);
             var expenses = await _db.Expenses.SumAsync(e => e.Amount);
             
             var last6Months = Enumerable.Range(0, 6).Select(i => DateTime.Today.AddMonths(-5 + i)).ToList();
@@ -374,8 +371,8 @@ namespace ljp_itsolutions.Controllers
             {
                 TotalRevenue = revenue,
                 TotalExpenses = expenses,
-                Expenses = await _db.Expenses.OrderByDescending(e => e.ExpenseDate).Take(10).ToListAsync(),
-                RecentTransactions = await _db.Orders.OrderByDescending(o => o.OrderDate).Take(10).ToListAsync()
+                Expenses = await _db.Expenses.Include(e => e.User).OrderByDescending(e => e.ExpenseDate).Take(50).ToListAsync(),
+                RecentTransactions = await _db.Orders.OrderByDescending(o => o.OrderDate).Take(50).ToListAsync()
             };
 
             return View(viewModel);
@@ -431,14 +428,32 @@ namespace ljp_itsolutions.Controllers
         {
             var order = await _db.Orders
                 .Include(o => o.OrderDetails)
+                    .ThenInclude(d => d.Product)
+                        .ThenInclude(p => p.Category)
+                .Include(o => o.Customer)
                 .FirstOrDefaultAsync(o => o.OrderID == id);
 
             if (order != null && order.PaymentStatus != "Voided" && order.PaymentStatus != "Refunded")
             {
                 await RevertOrderInventory(order);
+                
+                // Reverse Loyalty Points
+                if (order.CustomerID.HasValue && order.Customer != null)
+                {
+                    var coffeeCount = order.OrderDetails
+                        .Where(d => d.Product != null && d.Product.Category != null && d.Product.Category.CategoryName == "Coffee")
+                        .Sum(d => d.Quantity);
+                    
+                    if (coffeeCount >= 3)
+                    {
+                        order.Customer.Points -= (coffeeCount / 3);
+                        if (order.Customer.Points < 0) order.Customer.Points = 0;
+                    }
+                }
+
                 order.PaymentStatus = "Voided";
                 await _db.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Transaction voided successfully and inventory restored!";
+                TempData["SuccessMessage"] = "Transaction voided successfully, inventory restored, and loyalty points deducted!";
                 await LogAudit("Voided Order #" + order.OrderID);
             }
             else if (order != null)
@@ -454,14 +469,32 @@ namespace ljp_itsolutions.Controllers
         {
             var order = await _db.Orders
                 .Include(o => o.OrderDetails)
+                    .ThenInclude(d => d.Product)
+                        .ThenInclude(p => p.Category)
+                .Include(o => o.Customer)
                 .FirstOrDefaultAsync(o => o.OrderID == id);
 
             if (order != null && order.PaymentStatus != "Voided" && order.PaymentStatus != "Refunded")
             {
                 await RevertOrderInventory(order);
+
+                // Reverse Loyalty Points
+                if (order.CustomerID.HasValue && order.Customer != null)
+                {
+                    var coffeeCount = order.OrderDetails
+                        .Where(d => d.Product != null && d.Product.Category != null && d.Product.Category.CategoryName == "Coffee")
+                        .Sum(d => d.Quantity);
+                    
+                    if (coffeeCount >= 3)
+                    {
+                        order.Customer.Points -= (coffeeCount / 3);
+                        if (order.Customer.Points < 0) order.Customer.Points = 0;
+                    }
+                }
+
                 order.PaymentStatus = "Refunded";
                 await _db.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Transaction refunded successfully and inventory restored!";
+                TempData["SuccessMessage"] = "Transaction refunded successfully, inventory restored, and loyalty points deducted!";
                 await LogAudit("Refunded Order #" + order.OrderID);
             }
             else if (order != null)
@@ -504,17 +537,17 @@ namespace ljp_itsolutions.Controllers
                     else
                     {
                         product.StockQuantity += detail.Quantity;
+                        
+                        // Log the product-level reversal ONLY if stock quantity was changed
+                        _db.InventoryLogs.Add(new InventoryLog
+                        {
+                            ProductID = product.ProductID,
+                            QuantityChange = detail.Quantity,
+                            ChangeType = "Reversal",
+                            LogDate = DateTime.Now,
+                            Remarks = $"Stock restored from Order #{order.OrderID.ToString().Substring(0, 8)}"
+                        });
                     }
-
-                    // Log the product-level reversal
-                    _db.InventoryLogs.Add(new InventoryLog
-                    {
-                        ProductID = product.ProductID,
-                        QuantityChange = detail.Quantity,
-                        ChangeType = "Reversal",
-                        LogDate = DateTime.Now,
-                        Remarks = $"Stock restored from Order #{order.OrderID.ToString().Substring(0, 8)}"
-                    });
                 }
             }
         }
@@ -526,10 +559,11 @@ namespace ljp_itsolutions.Controllers
         {
             if (ModelState.IsValid)
             {
+                expense.CreatedBy = GetCurrentUserId();
                 _db.Expenses.Add(expense);
                 await _db.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Expense recorded successfully!";
-                await LogAudit("Created Expense: " + expense.Title);
+                await LogAudit("Created Expense", expense.Title);
             }
             return RedirectToAction("Finance");
         }
@@ -801,6 +835,7 @@ namespace ljp_itsolutions.Controllers
 
             campaign.ApprovalStatus = "Approved";
             campaign.ApprovedDate = DateTime.Now;
+            campaign.ApprovedBy = GetCurrentUserId();
             
             await _db.SaveChangesAsync();
             await LogAudit($"Approved Campaign: {campaign.PromotionName}");
@@ -827,36 +862,6 @@ namespace ljp_itsolutions.Controllers
             return Ok();
         }
 
-        private async Task LogAudit(string action, string? details = null)
-        {
-            try
-            {
-                var auditLog = new AuditLog
-                {
-                    Action = action,
-                    Details = details,
-                    Timestamp = DateTime.Now,
-                    UserID = GetCurrentUserId()
-                };
-                _db.AuditLogs.Add(auditLog);
-                await _db.SaveChangesAsync();
-            }
-            catch { /* Fail silently */ }
-        }
-
-        private Guid? GetCurrentUserId()
-        {
-            if (User.Identity?.IsAuthenticated != true) return null;
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (Guid.TryParse(userIdStr, out var userId)) return userId;
-
-            var username = User.Identity?.Name;
-            if (!string.IsNullOrEmpty(username))
-            {
-                return _db.Users.FirstOrDefault(u => u.Username == username)?.UserID;
-            }
-            return null;
-        }
     }
 
     public class RejectCampaignDto

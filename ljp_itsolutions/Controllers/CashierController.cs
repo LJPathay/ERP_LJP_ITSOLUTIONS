@@ -5,21 +5,23 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using ljp_itsolutions.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ljp_itsolutions.Controllers
 {
     [Authorize(Roles = "Cashier,Admin,Manager,SuperAdmin")]
-    public class CashierController : Controller
+    public class CashierController : BaseController
     {
-        private readonly ApplicationDbContext _db;
         private readonly InMemoryStore _store;
         private readonly IPayMongoService _payMongoService;
+        private readonly ILogger<CashierController> _logger;
 
-        public CashierController(ApplicationDbContext db, InMemoryStore store, IPayMongoService payMongoService)
+        public CashierController(ApplicationDbContext db, InMemoryStore store, IPayMongoService payMongoService, ILogger<CashierController> logger)
+            : base(db)
         {
-            _db = db;
             _store = store;
             _payMongoService = payMongoService;
+            _logger = logger;
         }
 
         public class OrderRequest
@@ -40,11 +42,27 @@ namespace ljp_itsolutions.Controllers
 
         public async Task<IActionResult> CreateOrder()
         {
-            var products = await _db.Products.Include(p => p.Category).Where(p => p.IsAvailable).ToListAsync();
-            return View(products);
+            var products = await _db.Products
+                .Include(p => p.Category)
+                .Include(p => p.ProductRecipes)
+                    .ThenInclude(pr => pr.Ingredient)
+                .Where(p => p.IsAvailable)
+                .ToListAsync();
+
+            // Filter out products that are truly out of stock 
+            var availableProducts = products.Where(p => {
+                if (p.ProductRecipes != null && p.ProductRecipes.Any())
+                {
+                    return p.ProductRecipes.All(pr => pr.Ingredient.StockQuantity >= pr.QuantityRequired);
+                }
+                return p.StockQuantity > 0;
+            }).ToList();
+
+            return View(availableProducts);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> PlaceOrder([FromBody] OrderRequest request)
         {
             var productIds = request.ProductIds;
@@ -74,14 +92,19 @@ namespace ljp_itsolutions.Controllers
                     CashierID = cashierId,
                     CustomerID = customerId,
                     PaymentMethod = paymentMethod,
-                    PaymentStatus = paymentMethod == "Paymongo" ? "Paid (Digital)" : "Completed"
+                    PaymentStatus = paymentMethod == "Paymongo" ? "Paid (Digital)" : "Paid"
                 };
 
-                // Basic Promotion handling
                 Promotion? promotion = null;
                 if (!string.IsNullOrEmpty(promoCode))
                 {
-                    promotion = await _db.Promotions.FirstOrDefaultAsync(p => p.PromotionName == promoCode && p.IsActive);
+                    promotion = await _db.Promotions.FirstOrDefaultAsync(p => 
+                        p.PromotionName == promoCode && 
+                        p.IsActive && 
+                        p.ApprovalStatus == "Approved" && 
+                        p.StartDate <= DateTime.Now && 
+                        p.EndDate >= DateTime.Now);
+                    
                     if (promotion != null)
                     {
                         order.PromotionID = promotion.PromotionID;
@@ -275,9 +298,8 @@ namespace ljp_itsolutions.Controllers
                 _db.Orders.Add(order);
                 await _db.SaveChangesAsync();
                 
-                // Detailed audit log with item count and total
-                var itemSummary = string.Join(", ", order.OrderDetails.Select(d => $"{d.Quantity}x {d.ProductID.ToString().Substring(0,4)}"));
-                await LogAudit($"Placed Order #{order.OrderID.ToString().Substring(0, 8)}", $"Total: ₱{order.FinalAmount:N2}, Method: {paymentMethod}, Items: {itemSummary}");
+                // Detailed audit log with total
+                await LogAudit($"Placed Order #{order.OrderID.ToString().Substring(0, 8)}", $"Total: ₱{order.FinalAmount:N2}, Method: {paymentMethod}, Items: {order.OrderDetails.Count}");
 
                 if (Request.Headers["X-Requested-With"] != "XMLHttpRequest")
                 {
@@ -293,7 +315,7 @@ namespace ljp_itsolutions.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error in PlaceOrder: " + ex.ToString());
+                _logger.LogError(ex, "PlaceOrder failed for user {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                     return Json(new { success = false, message = "Server error placing order." });
                 throw;
@@ -302,9 +324,14 @@ namespace ljp_itsolutions.Controllers
 
         public async Task<IActionResult> TransactionHistory()
         {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdStr, out var cashierId))
+                return Challenge();
+
             var orders = await _db.Orders
                 .Include(o => o.OrderDetails)
                 .Include(o => o.Cashier)
+                .Where(o => o.CashierID == cashierId)
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
             return View(orders);
@@ -473,7 +500,7 @@ namespace ljp_itsolutions.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error in GetReceiptPartial: " + ex.ToString());
+                _logger.LogError(ex, "Error in GetReceiptPartial for Order ID {OrderId}", id);
                 return StatusCode(500, ex.Message);
             }
         }
@@ -519,35 +546,5 @@ namespace ljp_itsolutions.Controllers
             return RedirectToAction("TransactionHistory");
         }
 
-        private async Task LogAudit(string action, string? details = null)
-        {
-            try
-            {
-                var auditLog = new AuditLog
-                {
-                    Action = action,
-                    Details = details,
-                    Timestamp = DateTime.Now,
-                    UserID = GetCurrentUserId()
-                };
-                _db.AuditLogs.Add(auditLog);
-                await _db.SaveChangesAsync();
-            }
-            catch { /* Fail silently */ }
-        }
-
-        private Guid? GetCurrentUserId()
-        {
-            if (User.Identity?.IsAuthenticated != true) return null;
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (Guid.TryParse(userIdStr, out var userId)) return userId;
-
-            var username = User.Identity?.Name;
-            if (!string.IsNullOrEmpty(username))
-            {
-                return _db.Users.FirstOrDefault(u => u.Username == username)?.UserID;
-            }
-            return null;
-        }
     }
 }

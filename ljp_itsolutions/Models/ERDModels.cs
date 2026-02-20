@@ -26,6 +26,11 @@ namespace ljp_itsolutions.Models
         [Required]
         [StringLength(100)]
         public string FullName { get; set; } = string.Empty;
+ 
+        [EmailAddress]
+        [StringLength(100)]
+        public string? Email { get; set; }
+
 
         [StringLength(20)]
         public string? PhoneNumber { get; set; }
@@ -59,7 +64,7 @@ namespace ljp_itsolutions.Models
         [StringLength(20)]
         public string ApprovalStatus { get; set; } = "Pending"; // Pending, Approved, Rejected
 
-        public int? ApprovedBy { get; set; } 
+        public Guid? ApprovedBy { get; set; } 
 
         public DateTime? ApprovedDate { get; set; }
 

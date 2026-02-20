@@ -9,46 +9,19 @@ using System.Text.Json;
 namespace ljp_itsolutions.Controllers
 {
     [Authorize(Roles = "Admin,SuperAdmin")] // Allow SuperAdmin to see Admin dashboard too
-    public class AdminController : Controller
+    public class AdminController : BaseController
     {
         private readonly InMemoryStore _store;
-        private readonly ljp_itsolutions.Data.ApplicationDbContext _db;
         private readonly IPasswordHasher<ljp_itsolutions.Models.User> _hasher;
 
         public AdminController(InMemoryStore store, ljp_itsolutions.Data.ApplicationDbContext db, IPasswordHasher<ljp_itsolutions.Models.User> hasher)
+            : base(db)
         {
             _store = store;
-            _db = db;
             _hasher = hasher;
         }
 
-        private async Task LogAudit(string action, string? details = null, Guid? userId = null)
-        {
-            try
-            {
-                var auditLog = new AuditLog
-                {
-                    Action = action,
-                    Details = details,
-                    Timestamp = DateTime.Now,
-                    UserID = userId ?? (User.Identity?.IsAuthenticated == true ? GetCurrentUserId() : null)
-                };
-                _db.AuditLogs.Add(auditLog);
-                await _db.SaveChangesAsync();
-            }
-            catch
-            {
-                // Fail silently
-            }
-        }
 
-        private Guid? GetCurrentUserId()
-        {
-            var username = User.Identity?.Name;
-            if (string.IsNullOrEmpty(username)) return null;
-            var user = _db.Users.FirstOrDefault(u => u.Username == username);
-            return user?.UserID;
-        }
 
         [HttpGet]
         public IActionResult Users(bool showArchived = false)
@@ -84,7 +57,7 @@ namespace ljp_itsolutions.Controllers
         public IActionResult Reports()
         {
             var totalRevenue = _db.Orders
-                .Where(o => o.PaymentStatus == "Completed" || o.PaymentStatus == "Paid")
+                .Where(o => o.PaymentStatus == "Completed" || o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)")
                 .Sum(o => (decimal?)o.FinalAmount) ?? 0;
             
             var totalOrders = _db.Orders.Count();
@@ -113,11 +86,11 @@ namespace ljp_itsolutions.Controllers
             var today = DateTime.Today;
             
             var todaysSales = _db.Orders
-                .Where(o => o.OrderDate >= today && (o.PaymentStatus == "Completed" || o.PaymentStatus == "Paid"))
+                .Where(o => o.OrderDate >= today && (o.PaymentStatus == "Completed" || o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)"))
                 .Sum(o => (decimal?)o.FinalAmount) ?? 0;
             
             var yesterdaysSales = _db.Orders
-                .Where(o => o.OrderDate >= today.AddDays(-1) && o.OrderDate < today && (o.PaymentStatus == "Completed" || o.PaymentStatus == "Paid"))
+                .Where(o => o.OrderDate >= today.AddDays(-1) && o.OrderDate < today && (o.PaymentStatus == "Completed" || o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)"))
                 .Sum(o => (decimal?)o.FinalAmount) ?? 0;
 
             var todaysTransactions = _db.Orders.Count(o => o.OrderDate >= today);
@@ -198,14 +171,14 @@ namespace ljp_itsolutions.Controllers
             var startOfMonth = new DateTime(now.Year, now.Month, 1);
             
             var monthlyRevenue = _db.Orders
-                .Where(o => o.OrderDate >= startOfMonth && (o.PaymentStatus == "Completed" || o.PaymentStatus == "Paid"))
+                .Where(o => o.OrderDate >= startOfMonth && (o.PaymentStatus == "Completed" || o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)"))
                 .Sum(o => (decimal?)o.FinalAmount) ?? 0;
                 
             var lastMonthStart = startOfMonth.AddMonths(-1);
             var lastMonthEnd = startOfMonth.AddSeconds(-1);
             
             var lastMonthRevenue = _db.Orders
-                .Where(o => o.OrderDate >= lastMonthStart && o.OrderDate <= lastMonthEnd && (o.PaymentStatus == "Completed" || o.PaymentStatus == "Paid"))
+                .Where(o => o.OrderDate >= lastMonthStart && o.OrderDate <= lastMonthEnd && (o.PaymentStatus == "Completed" || o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)"))
                 .Sum(o => (decimal?)o.FinalAmount) ?? 0;
             
             var staff = _db.Users
@@ -245,14 +218,14 @@ namespace ljp_itsolutions.Controllers
             var weekEnd = today.AddDays(1);
             
             var orders = _db.Orders
-                .Where(o => o.OrderDate >= weekStart && o.OrderDate < weekEnd && (o.PaymentStatus == "Completed" || o.PaymentStatus == "Paid"))
-                .Select(o => new { o.OrderDate, o.FinalAmount })
+                .Where(o => o.OrderDate >= weekStart && o.OrderDate < weekEnd && (o.PaymentStatus == "Completed" || o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)"))
+                .Select(o => new { o.OrderDate, o.FinalAmount, o.PaymentStatus })
                 .ToList();
 
             foreach (var day in last7Days)
             {
                 trendLabels.Add(day.ToString("MMM dd"));
-                var dailySum = orders.Where(o => o.OrderDate.Date == day).Sum(o => o.FinalAmount);
+                var dailySum = orders.Where(o => o.OrderDate.Date == day && (o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)" || o.PaymentStatus == "Completed")).Sum(o => o.FinalAmount);
                 trendData.Add(dailySum);
             }
             

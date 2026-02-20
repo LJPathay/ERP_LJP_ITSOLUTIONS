@@ -46,7 +46,7 @@
                         }
                         else
                         {
-                            @foreach (var order in orders.OrderByDescending(o => o.OrderID))
+                            @foreach (var order in orders.OrderByDescending(o => o.OrderDate))
                             {
                                 <tr>
                                     <td class="ps-4 fw-bold">#@order.OrderID.ToString().Substring(0, 8).ToUpper()</td>

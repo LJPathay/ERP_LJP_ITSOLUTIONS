@@ -11,13 +11,11 @@ using System.Security.Claims;
 namespace ljp_itsolutions.Controllers
 {
     [Authorize(Roles = "MarketingStaff,Admin,SuperAdmin")]
-    public class MarketingController : Controller
+    public class MarketingController : BaseController
     {
-        private readonly ApplicationDbContext _db;
-
         public MarketingController(ApplicationDbContext db)
+            : base(db)
         {
-            _db = db;
         }
 
         // 📊 Dashboard (Analytics Overview)
@@ -88,12 +86,14 @@ namespace ljp_itsolutions.Controllers
 
             var promotion = new Promotion
             {
-                PromotionName = $"Loyalty Reward - {customer.FullName}",
+                PromotionName = promoCode, // Use the actual code as the name for redemption
                 DiscountType = "Percentage",
                 DiscountValue = 15, // 15% off reward
                 StartDate = DateTime.Now,
                 EndDate = DateTime.Now.AddDays(30),
-                IsActive = true
+                IsActive = true,
+                ApprovalStatus = "Approved", // Auto-approve loyalty rewards
+                ApprovedDate = DateTime.Now
             };
 
             _db.Promotions.Add(promotion);
@@ -101,7 +101,8 @@ namespace ljp_itsolutions.Controllers
             // Deduct points (optional logic - let's deduct 10 points per reward)
             customer.Points -= 10;
             
-            await _db.SaveChangesAsync();
+            // Important: Log what this reward is for
+            await LogAudit("Generated Loyalty Reward", $"Customer: {customer.FullName}, Code: {promoCode}");
 
             return Json(new { success = true, promoCode = promoCode, message = $"15% Discount code generated for {customer.FullName}!" });
         }
@@ -119,6 +120,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateCampaign(Promotion promotion)
         {
             if (ModelState.IsValid)
@@ -306,34 +308,5 @@ namespace ljp_itsolutions.Controllers
             return View(campaigns);
         }
 
-        private async Task LogAudit(string action)
-        {
-            try
-            {
-                var auditLog = new AuditLog
-                {
-                    Action = action,
-                    Timestamp = DateTime.Now,
-                    UserID = GetCurrentUserId()
-                };
-                _db.AuditLogs.Add(auditLog);
-                await _db.SaveChangesAsync();
-            }
-            catch { /* Fail silently */ }
-        }
-
-        private Guid? GetCurrentUserId()
-        {
-            if (User.Identity?.IsAuthenticated != true) return null;
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (Guid.TryParse(userIdStr, out var userId)) return userId;
-
-            var username = User.Identity?.Name;
-            if (!string.IsNullOrEmpty(username))
-            {
-                return _db.Users.FirstOrDefault(u => u.Username == username)?.UserID;
-            }
-            return null;
-        }
     }
 }

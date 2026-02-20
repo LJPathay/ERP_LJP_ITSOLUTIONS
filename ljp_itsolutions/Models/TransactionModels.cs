@@ -69,7 +69,7 @@ namespace ljp_itsolutions.Models
 
         public DateTime LogDate { get; set; } = DateTime.Now;
 
-        [StringLength(255)]
+        [StringLength(1000)]
         public string? Remarks { get; set; }
     }
 

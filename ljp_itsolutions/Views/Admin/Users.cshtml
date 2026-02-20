@@ -51,8 +51,8 @@
                 <thead class="bg-light">
                     <tr>
                         <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted">User</th>
-                        <th class="py-3 text-uppercase x-small fw-bold text-muted">Role</th>
                         <th class="py-3 text-uppercase x-small fw-bold text-muted">Email</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted">Role</th>
                         <th class="py-3 text-uppercase x-small fw-bold text-muted">Status</th>
                         <th class="py-3 text-uppercase x-small fw-bold text-muted">Joined</th>
                     </tr>
@@ -81,6 +81,7 @@
                                         </div>
                                     </div>
                                 </td>
+                                <td class="text-muted small">@user.Email</td>
                                 <td>
                                     @switch (user.Role)
                                     {
@@ -91,7 +92,6 @@
                                         default: <span class="badge bg-secondary">@user.Role</span> break;
                                     }
                                 </td>
-                                <td class="text-muted small">@user.Email</td>
                                 <td>
                                     @if (user.IsActive)
                                     {
@@ -109,7 +109,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="5" class="text-center py-5">
+                            <td colspan="4" class="text-center py-5">
                                 <div class="py-5">
                                     <i class="fas fa-users fa-4x text-muted opacity-25 mb-4"></i>
                                     <h6 class="fw-bold text-dark">No Users Found</h6>
@@ -154,7 +154,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-muted">Email</label>
-                        <input type="email" class="form-control bg-light border-0" id="addEmail" placeholder="email@example.com" required>
+                        <input type="email" class="form-control bg-light border-0" id="addEmail" placeholder="user@coffee.local" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-muted">Temporary Password</label>

@@ -1,0 +1,48 @@
+using Microsoft.AspNetCore.Mvc;
+using ljp_itsolutions.Data;
+using ljp_itsolutions.Models;
+using System.Security.Claims;
+
+namespace ljp_itsolutions.Controllers
+{
+    public abstract class BaseController : Controller
+    {
+        protected readonly ApplicationDbContext _db;
+
+        protected BaseController(ApplicationDbContext db)
+        {
+            _db = db;
+        }
+
+        protected async Task LogAudit(string action, string? details = null, Guid? userId = null)
+        {
+            try
+            {
+                var auditLog = new AuditLog
+                {
+                    Action = action,
+                    Details = details,
+                    Timestamp = DateTime.Now,
+                    UserID = userId ?? GetCurrentUserId()
+                };
+                _db.AuditLogs.Add(auditLog);
+                await _db.SaveChangesAsync();
+            }
+            catch { /* Fail silently */ }
+        }
+
+        protected Guid? GetCurrentUserId()
+        {
+            if (User.Identity?.IsAuthenticated != true) return null;
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (Guid.TryParse(userIdStr, out var userId)) return userId;
+
+            var username = User.Identity?.Name;
+            if (!string.IsNullOrEmpty(username))
+            {
+                return _db.Users.FirstOrDefault(u => u.Username == username)?.UserID;
+            }
+            return null;
+        }
+    }
+}

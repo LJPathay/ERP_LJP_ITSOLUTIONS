@@ -10,48 +10,19 @@ using System.Security.Claims;
 namespace ljp_itsolutions.Controllers
 {
     [Authorize(Roles = UserRoles.SuperAdmin)]
-    public class SuperAdminController : Controller
+    public class SuperAdminController : BaseController
     {
         private readonly InMemoryStore _store;
-        private readonly ljp_itsolutions.Data.ApplicationDbContext _db;
         private readonly IPasswordHasher<ljp_itsolutions.Models.User> _hasher;
 
         public SuperAdminController(InMemoryStore store, ljp_itsolutions.Data.ApplicationDbContext db, IPasswordHasher<ljp_itsolutions.Models.User> hasher)
+            : base(db)
         {
             _store = store;
-            _db = db;
             _hasher = hasher;
         }
 
-        private async Task LogAudit(string action, Guid? userId = null)
-        {
-            try
-            {
-                var auditLog = new AuditLog
-                {
-                    Action = action,
-                    Timestamp = DateTime.Now,
-                    UserID = userId ?? GetCurrentUserId()
-                };
-                _db.AuditLogs.Add(auditLog);
-                await _db.SaveChangesAsync();
-            }
-            catch { /* Fail silently */ }
-        }
 
-        private Guid? GetCurrentUserId()
-        {
-            if (User.Identity?.IsAuthenticated != true) return null;
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (Guid.TryParse(userIdStr, out var userId)) return userId;
-
-            var username = User.Identity?.Name;
-            if (!string.IsNullOrEmpty(username))
-            {
-                return _db.Users.FirstOrDefault(u => u.Username == username)?.UserID;
-            }
-            return null;
-        }
 
         public IActionResult Dashboard()
         {
@@ -121,7 +92,7 @@ namespace ljp_itsolutions.Controllers
                 user.Password = _hasher.HashPassword(user, Password);
                 _db.Users.Add(user);
                 await _db.SaveChangesAsync();
-                await LogAudit($"Created user: {user.Username} as {user.Role}", user.UserID);
+                await LogAudit($"Created user: {user.Username} as {user.Role}", $"Target User ID: {user.UserID}");
                 TempData["Success"] = "User created successfully.";
             }
             return RedirectToAction("Users");
@@ -134,7 +105,6 @@ namespace ljp_itsolutions.Controllers
             var user = await _db.Users.FindAsync(updatedUser.UserID);
             if (user == null) return NotFound();
 
-            // SECURITY: Prevent modifying a SuperAdmin account through this menu
             if (user.Role == UserRoles.SuperAdmin || updatedUser.Role == UserRoles.SuperAdmin)
             {
                 TempData["Error"] = "Restricted access: SuperAdmin accounts cannot be modified here.";
@@ -147,7 +117,7 @@ namespace ljp_itsolutions.Controllers
             user.Role = updatedUser.Role;
             user.IsActive = updatedUser.IsActive;
             await _db.SaveChangesAsync();
-            await LogAudit($"Updated user: {user.Username}", user.UserID);
+            await LogAudit($"Updated user: {user.Username}", $"Target User ID: {user.UserID}");
             TempData["Success"] = "User updated successfully.";
             return RedirectToAction("Users");
         }
@@ -162,7 +132,7 @@ namespace ljp_itsolutions.Controllers
             {
                 user.IsActive = false;
                 await _db.SaveChangesAsync();
-                await LogAudit($"Archived user: {user.Username}", user.UserID);
+                await LogAudit($"Archived user: {user.Username}", $"Target User ID: {user.UserID}");
                 TempData["Success"] = "User archived successfully.";
             }
             return RedirectToAction("Users");
@@ -178,7 +148,7 @@ namespace ljp_itsolutions.Controllers
             {
                 user.IsActive = true;
                 await _db.SaveChangesAsync();
-                await LogAudit($"Restored user: {user.Username}", user.UserID);
+                await LogAudit($"Restored user: {user.Username}", $"Target User ID: {user.UserID}");
                 TempData["Success"] = "User restored successfully.";
             }
             return RedirectToAction("Users", new { showArchived = true });

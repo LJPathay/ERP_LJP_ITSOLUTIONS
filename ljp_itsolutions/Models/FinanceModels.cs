@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ljp_itsolutions.Models
 {
@@ -22,5 +23,10 @@ namespace ljp_itsolutions.Models
         public string Category { get; set; } = "General"; // Supplies, Utilities, Salary, etc.
 
         public string? ReferenceNumber { get; set; }
+ 
+        public Guid? CreatedBy { get; set; }
+        [ForeignKey("CreatedBy")]
+        public virtual User? User { get; set; }
+
     }
 }

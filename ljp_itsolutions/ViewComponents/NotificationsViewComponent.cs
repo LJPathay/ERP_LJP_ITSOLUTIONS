@@ -44,9 +44,9 @@ namespace ljp_itsolutions.ViewComponents
                     });
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine($"Notification Error: {ex.Message}");
+                // Fail silently or log to a real logger if available
             }
 
             return View(notifications);
