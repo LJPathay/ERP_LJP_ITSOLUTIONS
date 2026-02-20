@@ -122,8 +122,15 @@
                     <div>
                         <h1 class="h4 mb-0 fw-bold text-dark tracking-tight">@ViewData["Title"]</h1>
                         <div class="text-muted x-small d-flex align-items-center gap-2 mt-1">
-                            <i class="far fa-calendar-alt opacity-50"></i>
-                            <span>@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
+                            @if (ViewData["Subtitle"] != null)
+                            {
+                                <span>@ViewData["Subtitle"]</span>
+                            }
+                            else
+                            {
+                                <i class="far fa-calendar-alt opacity-50"></i>
+                                <span>@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
+                            }
                         </div>
                     </div>
                 </div>

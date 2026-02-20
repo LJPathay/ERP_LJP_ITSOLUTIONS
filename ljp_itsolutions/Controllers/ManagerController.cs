@@ -122,6 +122,52 @@ namespace ljp_itsolutions.Controllers
             return View(viewModel);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> IntakeStock(int IngredientID, decimal Quantity, string Remarks, DateTime? IntakeDate, DateTime? ExpiryDate)
+        {
+            var ingredient = await _db.Ingredients.FindAsync(IngredientID);
+            if (ingredient == null) return NotFound();
+
+            if (Quantity <= 0)
+            {
+                TempData["ErrorMessage"] = "Intake quantity must be greater than zero.";
+                return RedirectToAction("Inventory");
+            }
+
+            var actualDate = IntakeDate ?? DateTime.Now;
+
+            ingredient.StockQuantity += Quantity;
+            ingredient.LastStockedDate = actualDate;
+            
+            if (ExpiryDate.HasValue)
+            {
+                ingredient.ExpiryDate = ExpiryDate.Value;
+            }
+
+            // Log to InventoryLogs
+            string logRemarks = string.IsNullOrEmpty(Remarks) ? "Manual stock intake" : Remarks;
+            if (ExpiryDate.HasValue)
+            {
+                logRemarks += $" (Expiry: {ExpiryDate.Value:yyyy-MM-dd})";
+            }
+
+            _db.InventoryLogs.Add(new InventoryLog
+            {
+                IngredientID = IngredientID,
+                QuantityChange = Quantity,
+                ChangeType = "Intake",
+                LogDate = actualDate,
+                Remarks = logRemarks
+            });
+
+            await _db.SaveChangesAsync();
+            await LogAudit($"Stock Intake: Added {Quantity} {ingredient.Unit} to {ingredient.Name} on {actualDate:yyyy-MM-dd}");
+            
+            TempData["SuccessMessage"] = $"Stock updated! Added {Quantity} {ingredient.Unit} to {ingredient.Name}.";
+            return RedirectToAction("Inventory");
+        }
+
         public async Task<IActionResult> Products()
         {
             var products = await _db.Products.Include(p => p.Category).ToListAsync();
@@ -170,6 +216,19 @@ namespace ljp_itsolutions.Controllers
             var product = await _db.Products.FindAsync(id);
             if (product != null)
             {
+                var diff = stock - product.StockQuantity;
+                if (Math.Abs(diff) > 0)
+                {
+                    _db.InventoryLogs.Add(new InventoryLog
+                    {
+                        ProductID = product.ProductID,
+                        QuantityChange = (decimal)diff,
+                        ChangeType = "Correction",
+                        LogDate = DateTime.Now,
+                        Remarks = "Direct stock update from Product list"
+                    });
+                }
+
                 product.StockQuantity = stock;
                 await _db.SaveChangesAsync();
                 await LogAudit($"Updated Stock for {product.ProductName} to {stock}");
@@ -205,6 +264,20 @@ namespace ljp_itsolutions.Controllers
                     TempData["ErrorMessage"] = "Connectivity error: Could not reach Cloudinary. Please check your internet connection.";
                     Console.WriteLine($"Cloudinary Exception: {ex.Message}");
                 }
+            }
+
+            // Log stock change if manually adjusted
+            var stockDiff = product.StockQuantity - existingProduct.StockQuantity;
+            if (Math.Abs(stockDiff) > 0)
+            {
+                _db.InventoryLogs.Add(new InventoryLog
+                {
+                    ProductID = existingProduct.ProductID,
+                    QuantityChange = (decimal)stockDiff,
+                    ChangeType = "Correction",
+                    LogDate = DateTime.Now,
+                    Remarks = "Manual adjustment from Edit Product menu"
+                });
             }
 
             existingProduct.ProductName = product.ProductName;
@@ -510,6 +583,16 @@ namespace ljp_itsolutions.Controllers
                 if (ingredient.StockQuantity > 0)
                 {
                     ingredient.LastStockedDate = DateTime.Now;
+                    
+                    // Log initial stock
+                    _db.InventoryLogs.Add(new InventoryLog
+                    {
+                        IngredientID = ingredient.IngredientID,
+                        QuantityChange = ingredient.StockQuantity,
+                        ChangeType = "Initial",
+                        LogDate = DateTime.Now,
+                        Remarks = "Initial stock upon ingredient creation"
+                    });
                 }
                 
                 _db.Ingredients.Add(ingredient);
@@ -527,10 +610,20 @@ namespace ljp_itsolutions.Controllers
             var existing = await _db.Ingredients.FindAsync(ingredient.IngredientID);
             if (existing != null)
             {
-                // If stock is being increased, update LastStockedDate
-                if (ingredient.StockQuantity > existing.StockQuantity)
+                // If stock is being adjusted manually, log the change
+                if (Math.Abs(ingredient.StockQuantity - existing.StockQuantity) > 0.0001m)
                 {
-                    existing.LastStockedDate = DateTime.Now;
+                    bool isIncrease = ingredient.StockQuantity > existing.StockQuantity;
+                    if (isIncrease) existing.LastStockedDate = DateTime.Now;
+
+                    _db.InventoryLogs.Add(new InventoryLog
+                    {
+                        IngredientID = existing.IngredientID,
+                        QuantityChange = ingredient.StockQuantity - existing.StockQuantity,
+                        ChangeType = "Correction",
+                        LogDate = DateTime.Now,
+                        Remarks = "Manual adjustment from Edit menu"
+                    });
                 }
 
                 existing.Name = ingredient.Name;

@@ -35,13 +35,12 @@ namespace ljp_itsolutions.Data
 
                     // Normalize roles
                     var usersToFix = db.Users.ToList();
-                    bool fixedAny = false;
                     foreach (var u in usersToFix)
                     {
                         var normalizedRole = u.Role?.Trim();
                         if (string.IsNullOrEmpty(normalizedRole)) continue;
 
-                        string targetRole = null;
+                        string? targetRole = null;
                         if (string.Equals(normalizedRole, UserRoles.Admin, StringComparison.OrdinalIgnoreCase)) targetRole = UserRoles.Admin;
                         else if (string.Equals(normalizedRole, UserRoles.SuperAdmin, StringComparison.OrdinalIgnoreCase)) targetRole = UserRoles.SuperAdmin;
                         else if (string.Equals(normalizedRole, UserRoles.Manager, StringComparison.OrdinalIgnoreCase)) targetRole = UserRoles.Manager;
@@ -51,7 +50,6 @@ namespace ljp_itsolutions.Data
                         if (targetRole != null && u.Role != targetRole)
                         {
                             u.Role = targetRole;
-                            fixedAny = true;
                         }
                     }
 

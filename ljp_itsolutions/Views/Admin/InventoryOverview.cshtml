@@ -3,6 +3,23 @@
     ViewData["Title"] = "Inventory Control";
 }
 
+@section Styles {
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        .select2-container .select2-selection--single {
+            height: 38px !important;
+            border: 1px solid #dee2e6 !important;
+            border-radius: 0.375rem !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 36px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px !important;
+        }
+    </style>
+}
+
 <div class="container-fluid py-2">
     <!-- Controls -->
     <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white">
@@ -14,6 +31,9 @@
             <div class="d-flex gap-2">
                 <button class="btn btn-light shadow-sm" onclick="location.reload()">
                     <i class="fas fa-sync-alt text-primary"></i>
+                </button>
+                <button class="btn btn-outline-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#stockIntakeModal">
+                    <i class="fas fa-truck-loading me-2"></i>Stock Intake
                 </button>
                 <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addIngredientModal">
                     <i class="fas fa-plus me-2"></i>Add Ingredient
@@ -126,7 +146,10 @@
                                  data-stock="@item.StockQuantity"
                                  data-threshold="@item.LowStockThreshold"
                                  data-status="@statusText"
-                                 data-color="@colorClass">
+                                 data-color="@colorClass"
+                                 data-laststocked="@(item.LastStockedDate?.ToString("MMM dd, yyyy") ?? "Never")"
+                                 data-expiry="@(item.ExpiryDate?.ToString("MMM dd, yyyy") ?? "N/A")"
+                                 data-expiry-raw="@(item.ExpiryDate?.ToString("yyyy-MM-dd") ?? "")">
                             </div>
                         }
                     }
@@ -159,40 +182,117 @@
     </div>
 </div>
 
-<!-- Add Ingredient Modal -->
-<div class="modal fade" id="addIngredientModal" tabindex="-1" aria-hidden="true">
+<!-- Stock Intake Modal -->
+<div class="modal fade" id="stockIntakeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header bg-primary text-white border-bottom-0">
-                <h5 class="modal-title fw-bold">Add Ingredient</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body pt-4">
-                <form id="addIngredientForm">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Item Name</label>
-                        <input type="text" class="form-control bg-light border-0" id="addName" required placeholder="e.g. Arabica Beans">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar-sm bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-success">
+                        <i class="fas fa-plus fw-bold"></i>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Unit</label>
-                        <select class="form-select bg-light border-0" id="addUnit" required>
-                            <option value="pcs">pcs</option>
-                            <option value="g">g (Grams)</option>
-                            <option value="kg">kg (Kilograms)</option>
-                            <option value="ml">ml (Milliliters)</option>
-                            <option value="L">L (Liters)</option>
+                    <div>
+                        <h5 class="modal-title fw-bolder text-dark mb-0">Stock Intake</h5>
+                        <p class="text-muted small mb-0 uppercase tracking-widest">Restock Inventory</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 pt-2">
+                <form asp-action="IntakeStock" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted uppercase">Select Ingredient</label>
+                        <select name="IngredientID" class="form-select select2 bg-light border-0" required style="width: 100%; padding: 0.75rem;">
+                            <option value="">Choose item...</option>
+                            @foreach (var item in Model)
+                            {
+                                <option value="@item.IngredientID" data-unit="@item.Unit">@item.Name (@item.StockQuantity @item.Unit)</option>
+                            }
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Initial Stock</label>
-                        <input type="number" step="0.01" class="form-control bg-light border-0" id="addStock" value="0" required>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold text-muted uppercase">Quantity to Add</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0 text-muted ps-3"><i class="fas fa-balance-scale"></i></span>
+                                <input type="number" step="0.01" name="Quantity" class="form-control bg-light border-0 py-2" required placeholder="0.00">
+                                <span class="input-group-text bg-light border-0 text-muted pe-3 fw-bold" id="intakeUnitBadge">-</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="mb-4">
-                        <label class="form-label small fw-bold text-muted">Low Stock Threshold</label>
-                        <input type="number" step="0.01" class="form-control bg-light border-0" id="addThreshold" value="10" required>
+                        <label class="form-label small fw-bold text-muted uppercase">Intake Date</label>
+                        <input type="date" name="IntakeDate" class="intake-date-input form-control bg-light border-0 py-2" required />
+                        <div class="form-text x-small text-muted mt-1"><i class="fas fa-clock me-1"></i>Date of physical stocking</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted uppercase">Expiry Date (Optional)</label>
+                        <input type="date" name="ExpiryDate" class="form-control bg-light border-0 py-2" />
+                        <div class="form-text x-small text-muted mt-1"><i class="fas fa-calendar-times me-1"></i>New expiry date for this batch</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted uppercase">Remarks (Optional)</label>
+                        <textarea name="Remarks" class="form-control bg-light border-0 py-2" rows="3" placeholder="e.g. Supplier Batch #101, Weekly Restock"></textarea>
                     </div>
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary rounded-pill fw-bold py-2">Save Ingredient</button>
+                        <button type="submit" class="btn btn-primary rounded-pill fw-bold py-3 shadow-sm">
+                            <i class="fas fa-check me-2"></i>Confirm Stock Intake
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Ingredient Modal -->
+<div class="modal fade" id="addIngredientModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header border-0 pb-0 pt-4 px-4 bg-white">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar-sm bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary">
+                        <i class="fas fa-box-open fw-bold"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bolder text-dark mb-0">New Item</h5>
+                        <p class="text-muted small mb-0 uppercase tracking-widest">Create Ingredient</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 pt-3">
+                <form id="addIngredientForm">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted uppercase">Item Name</label>
+                        <input type="text" class="form-control bg-light border-0 py-2" id="addName" required placeholder="e.g. Arabica Beans">
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-muted uppercase">Unit</label>
+                            <select class="form-select bg-light border-0 py-2" id="addUnit" required>
+                                <option value="pcs">pcs</option>
+                                <option value="g">g (Grams)</option>
+                                <option value="kg">kg (Kilograms)</option>
+                                <option value="ml">ml (Milliliters)</option>
+                                <option value="L">L (Liters)</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-muted uppercase">Initial Stock</label>
+                            <input type="number" step="0.01" class="form-control bg-light border-0 py-2" id="addStock" value="0" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted uppercase">Low Stock Threshold</label>
+                        <input type="number" step="0.01" class="form-control bg-light border-0 py-2" id="addThreshold" value="10" required>
+                        <div class="form-text x-small text-muted mt-1"><i class="fas fa-info-circle me-1"></i>You'll be notified when stock drops below this.</div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary rounded-pill fw-bold py-3 shadow-sm">
+                            <i class="fas fa-plus me-2"></i>Create Ingredient
+                        </button>
                     </div>
                 </form>
             </div>
@@ -202,43 +302,109 @@
 
 <!-- Item Details Modal -->
 <div class="modal fade" id="itemModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header bg-primary text-white border-0">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header border-0 pb-0 pt-4 px-4 bg-white">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="avatar-sm bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                        <i class="fas fa-box"></i>
+                    <div class="avatar-sm bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 48px; height: 48px;">
+                        <i class="fas fa-cubes fa-lg"></i>
                     </div>
                     <div>
-                        <h6 class="modal-title fw-bold mb-0">Item Details</h6>
-                        <p class="mb-0 x-small text-white text-opacity-75 uppercase tracking-wider" id="modalItemName">Item Name</p>
+                        <h4 class="modal-title fw-bolder text-dark mb-0" id="modalItemName">Item Name</h4>
+                        <p class="text-muted small mb-0 uppercase tracking-widest">Inventory Control</p>
                     </div>
                 </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4 text-center">
+            
+            <div class="modal-body p-4 bg-white">
                 <input type="hidden" id="modalItemId">
-                <div class="mb-4">
-                    <div class="d-flex justify-content-center align-items-baseline gap-2 mb-2">
-                        <input type="number" step="0.01" class="form-control form-control-lg text-center fw-bold border-0 bg-light rounded-3" id="editStock" style="width: 150px; font-size: 2.5rem;">
-                        <span class="text-muted text-uppercase x-small fw-bold" id="modalUnit">Units</span>
+                
+                <!-- Quick Stats -->
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-3">
+                        <div class="p-3 bg-light rounded-4 text-center h-100">
+                            <small class="text-muted d-block mb-1 uppercase fw-bold x-small">Current Stock</small>
+                            <div class="h5 fw-bold text-dark mb-0"><span id="displayStock">0</span> <small class="text-muted" id="modalUnitStat">unit</small></div>
+                        </div>
                     </div>
-                    <span class="badge bg-success rounded-pill px-3 py-2 mb-3" id="modalStatusBadge">In Stock</span>
+                    <div class="col-6 col-md-3">
+                        <div class="p-3 bg-light rounded-4 text-center h-100">
+                            <small class="text-muted d-block mb-1 uppercase fw-bold x-small">Threshold</small>
+                            <div class="h5 fw-bold text-dark mb-0" id="displayThreshold">0</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-3 bg-light rounded-4 text-center h-100">
+                            <small class="text-muted d-block mb-1 uppercase fw-bold x-small">Last Stocked</small>
+                            <div class="h6 fw-bold text-dark mb-0" id="modalLastStocked">Never</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-3 bg-light rounded-4 text-center h-100">
+                            <small class="text-muted d-block mb-1 uppercase fw-bold x-small">Expiry</small>
+                            <div class="h6 fw-bold text-dark mb-0" id="modalExpiry">N/A</div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="row g-3">
-                    <div class="col-12">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <small class="text-muted d-block uppercase x-small fw-bold mb-1">Restock Threshold</small>
-                            <div class="fw-medium text-dark" id="modalThreshold">0</div>
+                <div class="row g-4">
+                    <!-- Update Panel -->
+                    <div class="col-lg-6">
+                        <div class="pe-lg-3">
+                            <h6 class="fw-bold text-dark mb-3 d-flex align-items-center">
+                                <span class="bg-primary bg-opacity-10 p-2 rounded-3 me-2" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-edit text-primary small"></i>
+                                </span>
+                                Update Information
+                            </h6>
+                            
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">Set New Stock Level</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" class="form-control bg-light border-0" id="editStock" placeholder="Enter new quantity">
+                                    <span class="input-group-text bg-light border-0 text-muted" id="modalUnitEntry">unit</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">Update Threshold</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" class="form-control bg-light border-0" id="editThreshold" placeholder="Alert level">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">Update Expiry Date</label>
+                                <input type="date" class="form-control bg-light border-0" id="editExpiry">
+                            </div>
+
+                            <div class="mb-0">
+                                <label class="form-label small fw-bold text-muted">Reason / Adjust Remarks</label>
+                                <textarea class="form-control bg-light border-0" id="editRemarks" rows="2" placeholder="e.g. Supplier delivery, manual count fix..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Panel -->
+                    <div class="col-lg-6 border-start-lg">
+                        <h6 class="fw-bold text-dark mb-3 d-flex align-items-center">
+                            <span class="bg-primary bg-opacity-10 p-2 rounded-3 me-2" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-history text-primary small"></i>
+                            </span>
+                            Recent Activity
+                        </h6>
+                        <div id="activityLogContainer" class="rounded-0 overflow-auto" style="max-height: 250px;">
+                            <p class="text-muted small p-3 text-center mb-0">No recent activity</p>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer border-0 p-3">
-                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold flex-fill" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold flex-fill" onclick="updateStock()">
-                    Update Stock
+
+            <div class="modal-footer border-0 px-4 pb-4 pt-0 bg-white d-flex gap-2">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold flex-fill py-2" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary rounded-pill px-5 fw-bold flex-fill py-2 shadow-sm" onclick="updateStock()">
+                    Apply Updates
                 </button>
             </div>
         </div>
@@ -246,8 +412,30 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         const itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
+
+        $(document).ready(function() {
+            // Initialize Select2
+            $('.select2').select2({
+                dropdownParent: $('#stockIntakeModal')
+            });
+
+            // Update unit badge when ingredient selected
+            $('select[name="IngredientID"]').on('change', function() {
+                const unit = $(this).find(':selected').data('unit');
+                $('#intakeUnitBadge').text(unit || '-');
+            });
+
+            // Set Date Defaults & Constraints for Intake Modal
+            const today = new Date().toISOString().split('T')[0];
+            const intakeDateInputs = document.querySelectorAll('.intake-date-input');
+            intakeDateInputs.forEach(input => {
+                input.value = today;
+                input.min = today; // Prevent backtracking
+            });
+        });
 
         // Pagination state
         let currentPage = 1;
@@ -342,29 +530,67 @@
 
         document.addEventListener('DOMContentLoaded', initPagination);
 
-        function openItemModal(id) {
+        async function openItemModal(id) {
             const data = document.getElementById(`data-${id}`);
             if (!data) return;
 
             document.getElementById('modalItemId').value = id;
             document.getElementById('modalItemName').textContent = data.dataset.name;
+            
+            // Stats
+            document.getElementById('displayStock').textContent = data.dataset.stock;
+            document.getElementById('displayThreshold').textContent = data.dataset.threshold + " " + data.dataset.unit;
+            document.getElementById('modalUnitStat').textContent = data.dataset.unit;
+            document.getElementById('modalLastStocked').textContent = data.dataset.laststocked;
+            document.getElementById('modalExpiry').textContent = data.dataset.expiry;
+
+            // Form Fields
             document.getElementById('editStock').value = data.dataset.stock;
-            document.getElementById('modalUnit').textContent = data.dataset.unit;
-            document.getElementById('modalThreshold').textContent = data.dataset.threshold;
+            document.getElementById('editThreshold').value = data.dataset.threshold;
+            document.getElementById('editExpiry').value = data.dataset.expiryRaw;
+            document.getElementById('editRemarks').value = "";
+            document.getElementById('modalUnitEntry').textContent = data.dataset.unit;
             
-            const badge = document.getElementById('modalStatusBadge');
-            badge.textContent = data.dataset.status;
-            badge.className = `badge bg-${data.dataset.color} rounded-pill px-3 py-2 mb-3`;
+            // Load activity logs
+            const container = document.getElementById('activityLogContainer');
+            container.innerHTML = '<p class="text-muted small p-3 text-center">Loading activity...</p>';
             
+            try {
+                const res = await fetch(`@Url.Action("GetIngredientDetails", "Manager")?id=${id}`);
+                const result = await res.json();
+                
+                if (result.logs && result.logs.length > 0) {
+                    container.innerHTML = result.logs.map(log => `
+                        <div class="p-3 mb-2 bg-light border-0 rounded-3 x-small">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge ${log.quantityChange > 0 ? 'bg-success' : 'bg-danger'} bg-opacity-10 ${log.quantityChange > 0 ? 'text-success' : 'text-danger'} rounded-pill px-2">
+                                    ${log.quantityChange > 0 ? '+' : ''}${log.quantityChange.toFixed(2)} ${data.dataset.unit}
+                                </span>
+                                <span class="text-muted opacity-75">${new Date(log.logDate).toLocaleDateString()}</span>
+                            </div>
+                            <div class="text-dark fw-bold mb-1">${log.changeType}</div>
+                            <div class="text-muted mb-0 italic" style="font-size: 0.7rem;">${log.remarks || 'No remarks provided'}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p class="text-muted small p-3 text-center">No recent activity</p>';
+                }
+            } catch (err) {
+                container.innerHTML = '<p class="text-danger small p-3 text-center">Failed to load logs</p>';
+            }
+
             itemModal.show();
         }
 
         async function updateStock() {
             const id = document.getElementById('modalItemId').value;
             const quantity = document.getElementById('editStock').value;
+            const threshold = document.getElementById('editThreshold').value;
+            const expiry = document.getElementById('editExpiry').value;
+            const remarks = document.getElementById('editRemarks').value;
 
             try {
-                const res = await fetch(`@Url.Action("UpdateStock", "Admin")?id=${id}&quantity=${quantity}`, {
+                const res = await fetch(`@Url.Action("UpdateStock", "Admin")?id=${id}&quantity=${quantity}&threshold=${threshold}&expiryDate=${expiry}&remarks=${encodeURIComponent(remarks)}`, {
                     method: 'POST'
                 });
                 if (res.ok) location.reload();
@@ -405,5 +631,44 @@
     .avatar-sm { width: 40px; height: 40px; }
     tbody tr:hover { background-color: rgba(var(--bs-primary-rgb), 0.03) !important; }
     .bg-primary .modal-title { color: #ffffff !important; }
-    .bg-white .modal-title, .modal-header:not(.bg-primary) .modal-title { color: #1a1a1a !important; }
+    .modal-title { color: #000000 !important; font-weight: 800; letter-spacing: -0.02em; }
+    #modalItemName { font-weight: 800; color: var(--bs-primary); }
+    
+    .rounded-4 { border-radius: 1.25rem !important; }
+    .avatar-sm { width: 48px; height: 48px; }
+    
+    .bg-light { background-color: #f8f9fa !important; border: 1px solid rgba(0,0,0,0.03); }
+    
+    .form-control:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.1);
+        border-color: rgba(var(--bs-primary-rgb), 0.2);
+    }
+    
+    #activityLogContainer::-webkit-scrollbar {
+        width: 4px;
+    }
+    #activityLogContainer::-webkit-scrollbar-thumb {
+        background: #e9ecef;
+        border-radius: 10px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #006aff 0%, #004dc7 100%);
+        border: none;
+        transition: all 0.2s ease;
+    }
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 106, 255, 0.3);
+    }
+    
+    .tracking-widest { letter-spacing: 0.1em; }
+    
+    @@media (min-width: 992px) {
+        .border-start-lg { 
+            border-left: 1px solid #eee !important; 
+            padding-left: 2rem !important; 
+        }
+    }
 </style>

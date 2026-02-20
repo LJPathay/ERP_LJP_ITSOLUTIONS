@@ -1,8 +1,257 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    Layout = null; // We'll use a custom standalone layout for the landing page for maximum impact
+    ViewData["Title"] = "LJP Coffee ERP - Unified Operations";
 }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" />
+    <style>
+        :root {
+            --primary-coffee: #2d1b0d;
+            --accent-amber: #d97706;
+            --soft-cream: #fbfbf9;
+            --text-dark: #1e293b;
+        }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--soft-cream);
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-coffee) 0%, #4e342e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            color: white;
+            position: relative;
+            padding: 80px 0;
+        }
+
+        .hero-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(circle at 20% 30%, rgba(217, 119, 6, 0.15) 0%, transparent 50%),
+                              radial-gradient(circle at 80% 70%, rgba(217, 119, 6, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .nav-glass {
+            background: rgba(45, 27, 13, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 0;
+        }
+
+        .btn-premium {
+            background: var(--accent-amber);
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-premium:hover {
+            background: #b45309;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            color: white;
+        }
+
+        .btn-outline-white {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-outline-white:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+            color: white;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            height: 100%;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            background: rgba(217, 119, 6, 0.1);
+            color: var(--accent-amber);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 24px;
+        }
+
+        .stat-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 24px;
+            display: inline-block;
+        }
+
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @@keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .section-title {
+            font-weight: 800;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg nav-glass fixed-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                <img src="~/images/logo.png" alt="LJP" height="40" onerror="this.src='https://cdn-icons-png.flaticon.com/512/924/924514.png'">
+                <span class="fw-bold text-white tracking-widest">COFFEE ERP</span>
+            </a>
+            <div class="ms-auto">
+                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-white me-2">Log In</a>
+                <a href="#features" class="btn btn-premium d-none d-md-inline-block">Explore Features</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div class="hero-pattern"></div>
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <div class="stat-badge">
+                        <i class="fas fa-sparkles text-amber me-2"></i> Version 2.0 Now Live
+                    </div>
+                    <h1 class="display-3 fw-bold mb-4">Master Your Coffee Operations with <span style="color: var(--accent-amber)">Precision.</span></h1>
+                    <p class="lead opacity-75 mb-5 pe-lg-5">A unified ERP solution crafted for modern coffee retailers. Streamline inventory, automate marketing, and gain real-time insights from a single, beautiful dashboard.</p>
+                    <div class="d-flex gap-3">
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-premium btn-lg">Get Started Now</a>
+                        <a href="#features" class="btn btn-outline-white btn-lg">See All Modules</a>
+                    </div>
+                </div>
+                <div class="col-lg-6 d-none d-lg-block text-center position-relative">
+                    <div class="floating">
+                        <div class="bg-white p-2 rounded-4 shadow-lg d-inline-block" style="transform: rotate(-3deg);">
+                            <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80" alt="Dashboard" class="rounded-3" width="500">
+                        </div>
+                        <div class="position-absolute bg-white p-3 rounded-4 shadow-lg" style="bottom: 0; right: 0; transform: rotate(5deg);">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-success bg-opacity-10 p-2 rounded-circle text-success">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="text-start">
+                                    <p class="text-muted x-small mb-0">Daily Revenue</p>
+                                    <h4 class="fw-bold mb-0 text-dark">₱45,280</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="py-5" style="background: white;">
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <h2 class="section-title">Enterprise-Grade <span style="color: var(--accent-amber)">Modules</span></h2>
+                <p class="text-muted lead">Everything you need to manage your coffee business from one secure platform.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-terminal"></i></div>
+                        <h4>Root Dashboard</h4>
+                        <p class="text-muted">Total system oversight with security auditing, backup management, and global configurations for enterprise-wide control.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-boxes"></i></div>
+                        <h4>Inventory Hub</h4>
+                        <p class="text-muted">Advanced recipe-based stock tracking. Monitor ingredients levels, manage intake, and prevent shortages before they happen.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-chart-area"></i></div>
+                        <h4>Growth Analytics</h4>
+                        <p class="text-muted">Deep-dive into sales trends, customer loyalty metrics, and promotion performance to make data-driven decisions.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-cash-register"></i></div>
+                        <h4>POS System</h4>
+                        <p class="text-muted">Intuitive point-of-sale interface with integrated payment processing and instant digital receipt generation.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-user-shield"></i></div>
+                        <h4>Role-Based Access</h4>
+                        <p class="text-muted">Granular permissions for Super Admins, Managers, and Staff to ensure everyone has exactly tools they need.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-cloud"></i></div>
+                        <h4>Cloud Sync</h4>
+                        <p class="text-muted">Seamlessly sync data across multiple shop locations with automated backups and real-time state management.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-5" style="background: var(--primary-coffee); color: rgba(255,255,255,0.6)">
+        <div class="container text-center">
+            <p class="mb-0">&copy; @DateTime.Now.Year LJP IT Solutions. Integrated Coffee ERP System.</p>
+        </div>
+    </footer>
+</body>
+</html>

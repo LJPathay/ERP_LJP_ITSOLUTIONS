@@ -450,20 +450,114 @@ namespace ljp_itsolutions.Controllers
 
             _db.Ingredients.Add(ingredient);
             await _db.SaveChangesAsync();
+
+            if (ingredient.StockQuantity > 0)
+            {
+                ingredient.LastStockedDate = DateTime.Now;
+                _db.InventoryLogs.Add(new InventoryLog
+                {
+                    IngredientID = ingredient.IngredientID,
+                    QuantityChange = ingredient.StockQuantity,
+                    ChangeType = "Initial",
+                    LogDate = DateTime.Now,
+                    Remarks = "Initial stock upon ingredient creation"
+                });
+                await _db.SaveChangesAsync();
+            }
+
             await LogAudit("Added Ingredient: " + ingredient.Name);
             return Ok();
         }
 
         [HttpPost]
-        public async Task<IActionResult> UpdateStock(int id, decimal quantity)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> IntakeStock(int IngredientID, decimal Quantity, string Remarks, DateTime? IntakeDate, DateTime? ExpiryDate)
+        {
+            var ingredient = await _db.Ingredients.FindAsync(IngredientID);
+            if (ingredient == null) return NotFound();
+
+            if (Quantity <= 0)
+            {
+                TempData["ErrorMessage"] = "Intake quantity must be greater than zero.";
+                return RedirectToAction("InventoryOverview");
+            }
+
+            var actualDate = IntakeDate ?? DateTime.Now;
+
+            ingredient.StockQuantity += Quantity;
+            ingredient.LastStockedDate = actualDate;
+
+            if (ExpiryDate.HasValue)
+            {
+                ingredient.ExpiryDate = ExpiryDate.Value;
+            }
+
+            string logRemarks = string.IsNullOrEmpty(Remarks) ? "Manual stock intake (Admin)" : Remarks;
+            if (ExpiryDate.HasValue)
+            {
+                logRemarks += $" (Expiry: {ExpiryDate.Value:yyyy-MM-dd})";
+            }
+
+            _db.InventoryLogs.Add(new InventoryLog
+            {
+                IngredientID = IngredientID,
+                QuantityChange = Quantity,
+                ChangeType = "Intake",
+                LogDate = actualDate,
+                Remarks = logRemarks
+            });
+
+            await _db.SaveChangesAsync();
+            await LogAudit($"Stock Intake (Admin): Added {Quantity} {ingredient.Unit} to {ingredient.Name} on {actualDate:yyyy-MM-dd}");
+            
+            TempData["SuccessMessage"] = $"Stock updated! Added {Quantity} {ingredient.Unit} to {ingredient.Name}.";
+            return RedirectToAction("InventoryOverview");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateStock(int id, decimal quantity, decimal? threshold, DateTime? expiryDate, string remarks)
         {
             var ingredient = await _db.Ingredients.FindAsync(id);
             if (ingredient == null) return NotFound();
 
-            ingredient.StockQuantity = quantity;
-            _db.Ingredients.Update(ingredient);
-            await _db.SaveChangesAsync();
-            await LogAudit("Updated Stock for " + ingredient.Name + " to " + quantity);
+            var diff = quantity - ingredient.StockQuantity;
+            bool changed = false;
+
+            if (Math.Abs(diff) > 0.0001m)
+            {
+                if (diff > 0) ingredient.LastStockedDate = DateTime.Now;
+
+                _db.InventoryLogs.Add(new InventoryLog
+                {
+                    IngredientID = ingredient.IngredientID,
+                    QuantityChange = diff,
+                    ChangeType = diff > 0 ? "Adjustment (Add)" : "Adjustment (Remove)",
+                    LogDate = DateTime.Now,
+                    Remarks = string.IsNullOrEmpty(remarks) ? "Manual adjustment via Admin" : remarks
+                });
+                ingredient.StockQuantity = quantity;
+                changed = true;
+            }
+
+            if (threshold.HasValue && ingredient.LowStockThreshold != threshold.Value)
+            {
+                ingredient.LowStockThreshold = threshold.Value;
+                changed = true;
+            }
+
+            if (expiryDate != ingredient.ExpiryDate)
+            {
+                ingredient.ExpiryDate = expiryDate;
+                changed = true;
+            }
+
+            if (changed)
+            {
+                _db.Ingredients.Update(ingredient);
+                await _db.SaveChangesAsync();
+                await LogAudit($"Stock Update (Admin): {ingredient.Name} updated. Qty: {quantity}, Threshold: {threshold}, Expiry: {expiryDate:yyyy-MM-dd}");
+            }
+
             return Ok();
         }
     }
