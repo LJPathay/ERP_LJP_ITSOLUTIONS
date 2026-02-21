@@ -29,6 +29,8 @@ namespace ljp_itsolutions.Models
         public decimal DiscountAmount { get; set; }
 
         public decimal FinalAmount { get; set; }
+        
+        public decimal RefundedAmount { get; set; }
 
         [StringLength(20)]
         public string PaymentStatus { get; set; } = "Pending";

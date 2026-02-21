@@ -33,6 +33,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<ljp_itsolutions.Services.IPayMongoService, ljp_itsolutions.Services.PayMongoService>();
 builder.Services.AddScoped<ljp_itsolutions.Services.IPhotoService, ljp_itsolutions.Services.PhotoService>();
 builder.Services.AddHttpClient<ljp_itsolutions.Services.IRecipeService, ljp_itsolutions.Services.RecipeService>();
+builder.Services.AddScoped<ljp_itsolutions.Services.IReceiptService, ljp_itsolutions.Services.ReceiptService>();
 builder.Services.Configure<ljp_itsolutions.Services.CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

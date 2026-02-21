@@ -24,6 +24,7 @@ namespace ljp_itsolutions.Data
         public DbSet<ProductRecipe> ProductRecipes { get; set; }
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<RewardRedemption> RewardRedemptions { get; set; }
+        public DbSet<CashShift> CashShifts { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<RecipeTemplate> RecipeTemplates { get; set; }
         public DbSet<RecipeTemplateIngredient> RecipeTemplateIngredients { get; set; }
@@ -67,6 +68,7 @@ namespace ljp_itsolutions.Data
                 b.Property(o => o.TotalAmount).HasPrecision(18, 2);
                 b.Property(o => o.DiscountAmount).HasPrecision(18, 2);
                 b.Property(o => o.FinalAmount).HasPrecision(18, 2);
+                b.Property(o => o.RefundedAmount).HasPrecision(18, 2);
             });
 
             builder.Entity<Payment>(b =>

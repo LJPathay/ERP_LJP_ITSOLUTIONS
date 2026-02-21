@@ -14,12 +14,14 @@ namespace ljp_itsolutions.Controllers
     {
         private readonly InMemoryStore _store;
         private readonly IPasswordHasher<ljp_itsolutions.Models.User> _hasher;
+        private readonly IReceiptService _receiptService;
 
-        public SuperAdminController(InMemoryStore store, ljp_itsolutions.Data.ApplicationDbContext db, IPasswordHasher<ljp_itsolutions.Models.User> hasher)
+        public SuperAdminController(InMemoryStore store, ljp_itsolutions.Data.ApplicationDbContext db, IPasswordHasher<ljp_itsolutions.Models.User> hasher, IReceiptService receiptService)
             : base(db)
         {
             _store = store;
             _hasher = hasher;
+            _receiptService = receiptService;
         }
 
 
@@ -92,8 +94,15 @@ namespace ljp_itsolutions.Controllers
                 user.Password = _hasher.HashPassword(user, Password);
                 _db.Users.Add(user);
                 await _db.SaveChangesAsync();
+
+                // Send Welcome Email
+                if (!string.IsNullOrEmpty(user.Email))
+                {
+                    await _receiptService.SendWelcomeEmailAsync(user, Password);
+                }
+
                 await LogAudit($"Created user: {user.Username} as {user.Role}", $"Target User ID: {user.UserID}");
-                TempData["Success"] = "User created successfully.";
+                TempData["Success"] = "User created successfully. Welcome email sent.";
             }
             return RedirectToAction("Users");
         }

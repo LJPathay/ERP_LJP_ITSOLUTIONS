@@ -23,6 +23,8 @@ namespace ljp_itsolutions.Models
         public decimal UnitPrice { get; set; }
 
         public decimal Subtotal { get; set; }
+        
+        public int RefundedQuantity { get; set; }
     }
 
     public class Payment

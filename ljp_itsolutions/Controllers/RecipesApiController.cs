@@ -34,7 +34,7 @@ namespace ljp_itsolutions.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    [AllowAnonymous] // Secured at the app level; internal service-to-service calls only
+    [Authorize] // Secured at the app level; internal service-to-service calls only
     public class RecipesController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
@@ -58,7 +58,6 @@ namespace ljp_itsolutions.Controllers
         }
 
         // ── GET /api/recipes/{id} ─────────────────────────────────────────────
-        /// <summary>Returns a single recipe template by its database ID.</summary>
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -73,11 +72,6 @@ namespace ljp_itsolutions.Controllers
         }
 
         // ── GET /api/recipes/lookup?name=Vanilla+Latte ────────────────────────
-        /// <summary>
-        /// Finds the best-matching recipe template for a given product name.
-        /// Matching is longest-name-first so "Vanilla Latte" beats "Latte".
-        /// Returns 404 if no match is found.
-        /// </summary>
         [HttpGet("lookup")]
         public async Task<IActionResult> Lookup([FromQuery] string name)
         {
@@ -88,7 +82,6 @@ namespace ljp_itsolutions.Controllers
                 .Include(t => t.Ingredients)
                 .ToListAsync();
 
-            // Longest ProductName first → more specific names match before generic ones
             var match = all
                 .OrderByDescending(t => t.ProductName.Length)
                 .FirstOrDefault(t =>

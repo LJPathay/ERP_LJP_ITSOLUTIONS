@@ -1,0 +1,62 @@
+@model ljp_itsolutions.Models.CashShift
+@{
+    ViewData["Title"] = "Shift Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white text-center py-4 border-0">
+                    <h4 class="mb-0 fw-bold">Cash Drawer Float</h4>
+                    <p class="text-muted small mb-0">Manage your shift starting and ending cash.</p>
+                </div>
+                <div class="card-body p-5 pt-0">
+                    @if (Model == null)
+                    {
+                        <!-- Start Shift -->
+                        <form asp-action="StartShift" method="post">
+                            <div class="mb-4 text-center">
+                                <i class="fas fa-cash-register fa-3x text-primary mb-3"></i>
+                                <h5>Open Register</h5>
+                                <p class="text-muted small">Enter the starting amount in your cash drawer.</p>
+                            </div>
+                            <div class="form-floating mb-4">
+                                <input type="number" step="0.01" class="form-control" id="startingCash" name="startingCash" placeholder="Starting Cash" required min="0">
+                                <label for="startingCash">Starting Cash (₱)</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill">Start Shift</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <!-- Close Shift -->
+                        <div class="text-center mb-4">
+                            <i class="fas fa-lock fa-3x text-success mb-3"></i>
+                            <h5>Close Register</h5>
+                            <p class="text-muted small">Shift started at: <strong>@Model.StartTime.ToString("hh:mm tt")</strong></p>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Starting Cash:</span>
+                            <span class="fw-bold">₱@Model.StartingCash.ToString("N2")</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="text-muted">Expected Cash (From Cash Orders):</span>
+                            <span class="fw-bold text-success">₱@Convert.ToDecimal(ViewBag.ExpectedCash).ToString("N2")</span>
+                        </div>
+
+                        <form asp-action="CloseShift" method="post">
+                            <div class="form-floating mb-4">
+                                <input type="number" step="0.01" class="form-control form-control-lg" id="actualEndingCash" name="actualEndingCash" placeholder="Actual Ending Cash" required min="0">
+                                <label for="actualEndingCash">Actual Cash in Drawer (₱)</label>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100 py-3 fw-bold rounded-pill">Close Shift & Print Z-Report</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

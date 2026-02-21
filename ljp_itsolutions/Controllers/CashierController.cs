@@ -15,13 +15,15 @@ namespace ljp_itsolutions.Controllers
         private readonly InMemoryStore _store;
         private readonly IPayMongoService _payMongoService;
         private readonly ILogger<CashierController> _logger;
+        private readonly IReceiptService _receiptService;
 
-        public CashierController(ApplicationDbContext db, InMemoryStore store, IPayMongoService payMongoService, ILogger<CashierController> logger)
+        public CashierController(ApplicationDbContext db, InMemoryStore store, IPayMongoService payMongoService, ILogger<CashierController> logger, IReceiptService receiptService)
             : base(db)
         {
             _store = store;
             _payMongoService = payMongoService;
             _logger = logger;
+            _receiptService = receiptService;
         }
 
         public class OrderRequest
@@ -38,6 +40,7 @@ namespace ljp_itsolutions.Controllers
         {
             public string FullName { get; set; } = string.Empty;
             public string? PhoneNumber { get; set; }
+            public string? Email { get; set; }
         }
 
         public async Task<IActionResult> CreateOrder()
@@ -152,6 +155,7 @@ namespace ljp_itsolutions.Controllers
                 foreach (var group in productGroups)
                 {
                     var product = await _db.Products
+                        .Include(p => p.Category)
                         .Include(p => p.ProductRecipes)
                         .ThenInclude(pr => pr.Ingredient)
                         .FirstOrDefaultAsync(p => p.ProductID == group.Key);
@@ -163,6 +167,7 @@ namespace ljp_itsolutions.Controllers
                         {
                             OrderID = order.OrderID,
                             ProductID = product.ProductID,
+                            Product = product,
                             Quantity = qty,
                             UnitPrice = product.Price,
                             Subtotal = product.Price * qty
@@ -188,6 +193,9 @@ namespace ljp_itsolutions.Controllers
                                         IconClass = "fas fa-cube",
                                         CreatedAt = DateTime.Now
                                     });
+
+                                    // Email Alert
+                                    await _receiptService.SendLowStockAlertAsync(recipe.IngredientID);
                                 }
                                 
                                 // Log ingredient usage
@@ -297,6 +305,12 @@ namespace ljp_itsolutions.Controllers
 
                 _db.Orders.Add(order);
                 await _db.SaveChangesAsync();
+
+                // Auto-send e-receipt if customer has an email
+                if (order.CustomerID.HasValue)
+                {
+                    await _receiptService.SendOrderReceiptAsync(order.OrderID);
+                }
                 
                 // Detailed audit log with total
                 await LogAudit($"Placed Order #{order.OrderID.ToString().Substring(0, 8)}", $"Total: ₱{order.FinalAmount:N2}, Method: {paymentMethod}, Items: {order.OrderDetails.Count}");
@@ -338,6 +352,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [HttpPost]
         public async Task<IActionResult> CreatePayMongoOrder([FromBody] PayMongoOrderRequest request)
         {
             if (request.ProductIds == null || !request.ProductIds.Any())
@@ -354,9 +369,26 @@ namespace ljp_itsolutions.Controllers
                 OrderID = Guid.NewGuid(),
                 OrderDate = DateTime.Now,
                 CashierID = cashierId,
+                CustomerID = request.CustomerId,
                 PaymentMethod = "E-Wallet (Paymongo)",
                 PaymentStatus = "Pending"
             };
+
+            Promotion? promotion = null;
+            if (!string.IsNullOrEmpty(request.PromoCode))
+            {
+                promotion = await _db.Promotions.FirstOrDefaultAsync(p => 
+                    p.PromotionName == request.PromoCode && 
+                    p.IsActive && 
+                    p.ApprovalStatus == "Approved" && 
+                    p.StartDate <= DateTime.Now && 
+                    p.EndDate >= DateTime.Now);
+                
+                if (promotion != null)
+                {
+                    order.PromotionID = promotion.PromotionID;
+                }
+            }
 
             // Process products and recipes
             var productGroups = request.ProductIds.GroupBy(id => id);
@@ -404,6 +436,7 @@ namespace ljp_itsolutions.Controllers
                     {
                         OrderID = order.OrderID,
                         ProductID = product.ProductID,
+                        Product = product,
                         Quantity = qty,
                         UnitPrice = product.Price,
                         Subtotal = product.Price * qty
@@ -417,22 +450,73 @@ namespace ljp_itsolutions.Controllers
                         foreach (var recipe in product.ProductRecipes)
                         {
                             recipe.Ingredient.StockQuantity -= (recipe.QuantityRequired * qty);
-                                _db.InventoryLogs.Add(new InventoryLog
+                            
+                            // Trigger Low Stock Notification
+                            if (recipe.Ingredient.StockQuantity <= recipe.Ingredient.LowStockThreshold)
+                            {
+                                _db.Notifications.Add(new Notification
                                 {
-                                    IngredientID = recipe.IngredientID,
-                                    ProductID = product.ProductID,
-                                    QuantityChange = -(recipe.QuantityRequired * qty),
-                                    ChangeType = "Recipe Deduction",
-                                    LogDate = DateTime.Now,
-                                    Remarks = $"Used for {product.ProductName} (Order #{order.OrderID.ToString().Substring(0, 8)})"
+                                    Title = "Low Ingredient Stock",
+                                    Message = $"{recipe.Ingredient.Name} needs restocking ({recipe.Ingredient.StockQuantity:0.##} {recipe.Ingredient.Unit}).",
+                                    Type = "danger",
+                                    IconClass = "fas fa-cube",
+                                    CreatedAt = DateTime.Now
                                 });
+
+                                // Email Alert
+                                await _receiptService.SendLowStockAlertAsync(recipe.IngredientID);
+                            }
+                            
+                            _db.InventoryLogs.Add(new InventoryLog
+                            {
+                                IngredientID = recipe.IngredientID,
+                                ProductID = product.ProductID,
+                                QuantityChange = -(recipe.QuantityRequired * qty),
+                                ChangeType = "Recipe Deduction",
+                                LogDate = DateTime.Now,
+                                Remarks = $"Used for {product.ProductName} (Order #{order.OrderID.ToString().Substring(0, 8)})"
+                            });
                         }
+                    }
+                    else
+                    {
+                        product.StockQuantity -= qty;
                     }
                 }
             }
 
+            // Calculate Promotion Discount
+            decimal discount = 0;
+            if (promotion != null)
+            {
+                if (string.Equals(promotion.DiscountType, "Percentage", StringComparison.OrdinalIgnoreCase))
+                {
+                    discount = total * (promotion.DiscountValue / 100);
+                }
+                else // Fixed
+                {
+                    discount = promotion.DiscountValue;
+                }
+                if (discount > total) discount = total;
+            }
+
+            // Reward Point Redemption (5 pts = ₱50 discount)
+            if (request.RedeemPoints && order.CustomerID.HasValue)
+            {
+                var customer = await _db.Customers.FindAsync(order.CustomerID.Value);
+                if (customer != null && customer.Points >= 5)
+                {
+                    customer.Points -= 5;
+                    discount += 50;
+                    await LogAudit($"Redeemed 5 Points", $"Customer: {customer.FullName}, Discount: ₱50.00");
+                }
+            }
+
+            if (discount > total) discount = total;
+
             order.TotalAmount = total;
-            order.FinalAmount = total;
+            order.DiscountAmount = discount;
+            order.FinalAmount = total - discount;
 
             // Trigger Notification for Price Order (Digital)
             if (order.FinalAmount >= 500)
@@ -440,15 +524,45 @@ namespace ljp_itsolutions.Controllers
                 _db.Notifications.Add(new Notification
                 {
                     Title = "High Value Order (Digital)",
-                    Message = $"Online Order #{order.OrderID.ToString().Substring(0, 8)} for {order.FinalAmount:C} pending payment.",
+                    Message = $"Online Order #{order.OrderID.ToString().Substring(0, 8)} for ₱{order.FinalAmount:N2} pending payment.",
                     Type = "info",
                     IconClass = "fas fa-star",
                     CreatedAt = DateTime.Now
                 });
             }
 
+            // Create Inventory Log for Sold Products
+            foreach (var detail in order.OrderDetails)
+            {
+                _db.InventoryLogs.Add(new InventoryLog
+                {
+                    ProductID = detail.ProductID,
+                    QuantityChange = -detail.Quantity,
+                    ChangeType = "Sale",
+                    LogDate = DateTime.Now,
+                    Remarks = $"Order #{order.OrderID.ToString().Substring(0, 8)} (Pending Digital)"
+                });
+            }
+
+            // Customer Loyalty Points EARNING (1 pt per 3 coffees)
+            if (order.CustomerID.HasValue)
+            {
+                var customer = await _db.Customers.FindAsync(order.CustomerID.Value);
+                if (customer != null)
+                {
+                    var coffeeCount = order.OrderDetails
+                        .Where(d => d.Product != null && d.Product.Category != null && d.Product.Category.CategoryName == "Coffee")
+                        .Sum(d => d.Quantity);
+                    
+                    if (coffeeCount >= 3)
+                    {
+                        customer.Points += (coffeeCount / 3);
+                    }
+                }
+            }
+
             // 4. Create real PayMongo QR Ph code
-            var qrCodeUrl = await _payMongoService.CreateQrPhPaymentAsync(total, $"Order #{order.OrderID.ToString().Substring(0, 8)}", order.OrderID.ToString());
+            var qrCodeUrl = await _payMongoService.CreateQrPhPaymentAsync(order.FinalAmount, $"Order #{order.OrderID.ToString().Substring(0, 8)}", order.OrderID.ToString());
 
             if (string.IsNullOrEmpty(qrCodeUrl))
             {
@@ -465,6 +579,8 @@ namespace ljp_itsolutions.Controllers
         {
             public List<int> ProductIds { get; set; } = new();
             public string? PromoCode { get; set; }
+            public int? CustomerId { get; set; }
+            public bool RedeemPoints { get; set; }
         }
 
         public async Task<IActionResult> Receipt(Guid id)
@@ -514,7 +630,7 @@ namespace ljp_itsolutions.Controllers
             var customers = await _db.Customers
                 .Where(c => c.FullName.Contains(query) || (c.PhoneNumber != null && c.PhoneNumber.Contains(query)))
                 .Take(5)
-                .Select(c => new { c.CustomerID, c.FullName, c.PhoneNumber, c.Points })
+                .Select(c => new { c.CustomerID, c.FullName, c.PhoneNumber, c.Points, c.Email })
                 .ToListAsync();
 
             return Json(customers);
@@ -530,6 +646,7 @@ namespace ljp_itsolutions.Controllers
             {
                 FullName = request.FullName,
                 PhoneNumber = request.PhoneNumber,
+                Email = request.Email,
                 Points = 0
             };
 
@@ -546,5 +663,110 @@ namespace ljp_itsolutions.Controllers
             return RedirectToAction("TransactionHistory");
         }
 
+        [HttpPost]
+        public async Task<IActionResult> SendReceipt(Guid orderId, string email)
+        {
+            if (string.IsNullOrEmpty(email)) return Json(new { success = false, message = "Email is required." });
+
+            bool sent = await _receiptService.SendOrderReceiptAsync(orderId, email);
+            
+            if (sent) 
+                return Json(new { success = true });
+            else
+                return Json(new { success = false, message = "Failed to send email. Ensure the order exists and email is valid." });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ShiftManagement()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out var cashierId))
+                return Challenge();
+
+            var currentShift = await _db.CashShifts.FirstOrDefaultAsync(s => s.CashierID == cashierId && !s.IsClosed);
+            
+            if (currentShift != null)
+            {
+                var cashOrders = await _db.Orders
+                    .Where(o => o.CashierID == cashierId && o.OrderDate >= currentShift.StartTime && o.PaymentMethod == "Cash" && (o.PaymentStatus == "Paid" || o.PaymentStatus == "Completed" || o.PaymentStatus == "Partially Refunded"))
+                    .ToListAsync();
+                
+                decimal expected = currentShift.StartingCash;
+                foreach(var o in cashOrders)
+                    expected += (o.FinalAmount - o.RefundedAmount);
+                
+                ViewBag.ExpectedCash = expected;
+            }
+            
+            return View(currentShift);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> StartShift(decimal startingCash)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out var cashierId))
+                return Challenge();
+
+            var existing = await _db.CashShifts.FirstOrDefaultAsync(s => s.CashierID == cashierId && !s.IsClosed);
+            if(existing != null)
+            {
+                TempData["ErrorMessage"] = "You already have an open shift.";
+                return RedirectToAction("ShiftManagement");
+            }
+
+            var shift = new CashShift
+            {
+                CashierID = cashierId,
+                StartTime = DateTime.Now,
+                StartingCash = startingCash,
+                IsClosed = false
+            };
+
+            _db.CashShifts.Add(shift);
+            await _db.SaveChangesAsync();
+            await LogAudit($"Started Shift", $"Float: ₱{startingCash:N2}");
+
+            TempData["SuccessMessage"] = "Shift started successfully! Register is Open.";
+            return RedirectToAction("Index", "POS");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CloseShift(decimal actualEndingCash)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out var cashierId))
+                return Challenge();
+
+            var shift = await _db.CashShifts.FirstOrDefaultAsync(s => s.CashierID == cashierId && !s.IsClosed);
+            if(shift == null)
+            {
+                TempData["ErrorMessage"] = "No open shift found.";
+                return RedirectToAction("ShiftManagement");
+            }
+
+            var cashOrders = await _db.Orders
+                .Where(o => o.CashierID == cashierId && o.OrderDate >= shift.StartTime && o.PaymentMethod == "Cash" && (o.PaymentStatus == "Paid" || o.PaymentStatus == "Completed" || o.PaymentStatus == "Partially Refunded"))
+                .ToListAsync();
+
+            decimal expected = shift.StartingCash;
+            foreach(var o in cashOrders)
+                expected += (o.FinalAmount - o.RefundedAmount);
+
+            shift.ExpectedEndingCash = expected;
+            shift.ActualEndingCash = actualEndingCash;
+            shift.Difference = actualEndingCash - expected;
+            shift.EndTime = DateTime.Now;
+            shift.IsClosed = true;
+
+            await _db.SaveChangesAsync();
+            await _receiptService.SendShiftReportAsync(shift.CashShiftID);
+            await LogAudit($"Closed Shift", $"Expected: ₱{expected:N2}, Actual: ₱{actualEndingCash:N2}, Difference: ₱{shift.Difference:N2}");
+
+            TempData["SuccessMessage"] = $"Shift closed successfully. Difference: ₱{shift.Difference:N2}";
+            return RedirectToAction("ShiftManagement");
+        }
     }
 }

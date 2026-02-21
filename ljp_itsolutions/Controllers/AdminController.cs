@@ -13,12 +13,14 @@ namespace ljp_itsolutions.Controllers
     {
         private readonly InMemoryStore _store;
         private readonly IPasswordHasher<ljp_itsolutions.Models.User> _hasher;
+        private readonly IReceiptService _receiptService;
 
-        public AdminController(InMemoryStore store, ljp_itsolutions.Data.ApplicationDbContext db, IPasswordHasher<ljp_itsolutions.Models.User> hasher)
+        public AdminController(InMemoryStore store, ljp_itsolutions.Data.ApplicationDbContext db, IPasswordHasher<ljp_itsolutions.Models.User> hasher, IReceiptService receiptService)
             : base(db)
         {
             _store = store;
             _hasher = hasher;
+            _receiptService = receiptService;
         }
 
 
@@ -360,12 +362,20 @@ namespace ljp_itsolutions.Controllers
                 return BadRequest("Username already exists.");
 
             user.UserID = Guid.NewGuid();
+            var plainPassword = user.Password; // Capture plain password before hashing
             user.Password = _hasher.HashPassword(user, user.Password);
             user.CreatedAt = DateTime.Now;
             user.IsActive = true;
 
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
+
+            // Send Welcome Email
+            if (!string.IsNullOrEmpty(user.Email))
+            {
+                await _receiptService.SendWelcomeEmailAsync(user, plainPassword);
+            }
+
             await LogAudit("Created User: " + user.Username, null, user.UserID);
 
             return Ok();

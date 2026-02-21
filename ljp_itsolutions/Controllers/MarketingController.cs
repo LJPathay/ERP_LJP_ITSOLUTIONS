@@ -226,6 +226,7 @@ namespace ljp_itsolutions.Controllers
 
             existing.FullName = customer.FullName;
             existing.PhoneNumber = customer.PhoneNumber;
+            existing.Email = customer.Email;
             existing.Points = customer.Points;
 
             await _db.SaveChangesAsync();

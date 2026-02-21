@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ljp_itsolutions.Data;
 using ljp_itsolutions.Models;
+using ljp_itsolutions.Services;
 using System.Text.Json;
 using System.Security.Cryptography;
 using System.Text;
@@ -16,12 +17,14 @@ namespace ljp_itsolutions.Controllers
         private readonly ApplicationDbContext _db;
         private readonly ILogger<PayMongoWebhookController> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IReceiptService _receiptService;
 
-        public PayMongoWebhookController(ApplicationDbContext db, ILogger<PayMongoWebhookController> logger, IConfiguration configuration)
+        public PayMongoWebhookController(ApplicationDbContext db, ILogger<PayMongoWebhookController> logger, IConfiguration configuration, IReceiptService receiptService)
         {
             _db = db;
             _logger = logger;
             _configuration = configuration;
+            _receiptService = receiptService;
         }
 
         [HttpPost("webhook")]
@@ -107,6 +110,12 @@ namespace ljp_itsolutions.Controllers
                             await _db.SaveChangesAsync();
                             await LogAudit($"PayMongo: Order #{orderId.ToString().Substring(0, 8)} confirmed paid.");
                             _logger.LogInformation("Order {OrderId} marked as paid via webhook.", orderId);
+
+                            // Auto-send e-receipt if customer has an email
+                            if (order.CustomerID.HasValue)
+                            {
+                                await _receiptService.SendOrderReceiptAsync(order.OrderID);
+                            }
                         }
                     }
                 }

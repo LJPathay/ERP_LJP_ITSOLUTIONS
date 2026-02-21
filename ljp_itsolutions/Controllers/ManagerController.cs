@@ -14,12 +14,14 @@ namespace ljp_itsolutions.Controllers
     {
         private readonly IPhotoService _photoService;
         private readonly IRecipeService _recipeService;
+        private readonly IReceiptService _receiptService;
 
-        public ManagerController(ApplicationDbContext db, IPhotoService photoService, IRecipeService recipeService)
+        public ManagerController(ApplicationDbContext db, IPhotoService photoService, IRecipeService recipeService, IReceiptService receiptService)
             : base(db)
         {
             _photoService = photoService;
             _recipeService = recipeService;
+            _receiptService = receiptService;
         }
 
         public IActionResult Index()
@@ -382,6 +384,81 @@ namespace ljp_itsolutions.Controllers
             return View(topProducts);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> EmailSalesReport(DateTime? startDate, DateTime? endDate)
+        {
+            DateTime start = startDate ?? DateTime.Today.AddDays(-30);
+            DateTime end = endDate ?? DateTime.Now;
+
+            bool success = await _receiptService.SendSalesReportAsync(start, end);
+            
+            if (success)
+                return Json(new { success = true, message = "Executive summary has been sent to your email." });
+            else
+                return Json(new { success = false, message = "Failed to generate or send the report. Please check SMTP settings." });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportSalesCSV(DateTime? startDate, DateTime? endDate)
+        {
+            DateTime start = startDate ?? DateTime.Today.AddDays(-30);
+            DateTime end = endDate ?? DateTime.Now;
+
+            var data = await _db.OrderDetails
+                .Include(od => od.Order)
+                .Include(od => od.Product)
+                    .ThenInclude(p => p.Category)
+                .Where(od => od.Order.OrderDate >= start && od.Order.OrderDate <= end && 
+                            (od.Order.PaymentStatus == "Paid" || od.Order.PaymentStatus == "Paid (Digital)" || od.Order.PaymentStatus == "Completed"))
+                .GroupBy(od => new { od.Product.ProductName, Category = od.Product.Category != null ? od.Product.Category.CategoryName : "Uncategorized" })
+                .Select(g => new
+                {
+                    Product = g.Key.ProductName,
+                    Category = g.Key.Category,
+                    TotalSold = g.Sum(od => od.Quantity),
+                    Revenue = g.Sum(od => od.Subtotal)
+                })
+                .OrderByDescending(s => s.TotalSold)
+                .ToListAsync();
+
+            var totalRevenue = data.Sum(x => x.Revenue);
+            var totalUnits = data.Sum(x => x.TotalSold);
+
+            var csv = new System.Text.StringBuilder();
+            // Add UTF-8 BOM for Excel compatibility
+            csv.Append('\uFEFF');
+
+            // Business Header
+            csv.AppendLine("LJP IT SOLUTIONS - COFFEE ERP");
+            csv.AppendLine("SALES PERFORMANCE REPORT");
+            csv.AppendLine($"Period: {start:yyyy-MM-dd} to {end:yyyy-MM-dd}");
+            csv.AppendLine($"Generated: {DateTime.Now:f}");
+            csv.AppendLine();
+
+            // Executive Summary Stats
+            csv.AppendLine("EXECUTIVE SUMMARY");
+            csv.AppendLine($"Total Gross Revenue,\"₱{totalRevenue:N2}\"");
+            csv.AppendLine($"Total Inventory Units Sold,{totalUnits:N0}");
+            csv.AppendLine($"Average Sale Value Per Product,\"₱{(totalUnits > 0 ? (totalRevenue / totalUnits) : 0):N2}\"");
+            csv.AppendLine();
+
+            // Detailed Data Table
+            csv.AppendLine("ITEMIZED PERFORMANCE");
+            csv.AppendLine("Product Name,Category,Units Sold,Sales Mix %,Revenue (PHP)");
+
+            foreach (var item in data)
+            {
+                var salesMix = totalUnits > 0 ? (decimal)item.TotalSold / totalUnits : 0;
+                csv.AppendLine($"\"{item.Product}\",\"{item.Category}\",{item.TotalSold},{salesMix:P2},\"{item.Revenue:N2}\"");
+            }
+
+            csv.AppendLine();
+            csv.AppendLine("--- END OF REPORT ---");
+
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+            return File(buffer, "text/csv", $"LJP_Sales_Report_{start:yyyyMMdd}.csv");
+        }
+
         public async Task<IActionResult> Finance()
         {
             var revenue = await _db.Orders.Where(o => (o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)" || o.PaymentStatus == "Completed")).SumAsync(o => o.FinalAmount);
@@ -722,6 +799,9 @@ namespace ljp_itsolutions.Controllers
                         CreatedAt = DateTime.Now
                     };
                     _db.Notifications.Add(notification);
+
+                    // Email Alert
+                    await _receiptService.SendLowStockAlertAsync(existing.IngredientID);
                 }
 
                 await _db.SaveChangesAsync();
@@ -898,6 +978,9 @@ namespace ljp_itsolutions.Controllers
             await _db.SaveChangesAsync();
             await LogAudit($"Approved Campaign: {campaign.PromotionName}");
             
+            // Email Notification to Marketing/Admins
+            await _receiptService.SendPromotionStatusAlertAsync(campaign);
+            
             TempData["SuccessMessage"] = $"Campaign '{campaign.PromotionName}' approved successfully!";
             return Ok();
         }
@@ -915,6 +998,9 @@ namespace ljp_itsolutions.Controllers
             
             await _db.SaveChangesAsync();
             await LogAudit($"Rejected Campaign: {campaign.PromotionName} (Reason: {dto.Reason})");
+
+            // Email Notification to Marketing/Admins
+            await _receiptService.SendPromotionStatusAlertAsync(campaign);
             
             TempData["SuccessMessage"] = $"Campaign '{campaign.PromotionName}' rejected.";
             return Ok();

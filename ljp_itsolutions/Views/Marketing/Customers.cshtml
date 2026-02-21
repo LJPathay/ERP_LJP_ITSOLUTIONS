@@ -94,6 +94,7 @@
                                                 data-id="@customer.CustomerID"
                                                 data-name="@customer.FullName"
                                                 data-phone="@customer.PhoneNumber"
+                                                data-email="@customer.Email"
                                                 data-points="@customer.Points">
                                             Edit
                                         </button>
@@ -119,20 +120,24 @@
 <div class="modal fade" id="addCustomerModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header bg-primary text-white border-0 py-3">
-                <h5 class="modal-title fw-bold">New Customer Enrollment</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-dark">Add New Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form asp-action="CreateCustomer" method="post">
                 @Html.AntiForgeryToken()
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Full Name</label>
+                        <label class="form-label small fw-bold text-muted">Full Name</label>
                         <input type="text" name="FullName" class="form-control rounded-3" required placeholder="e.g. John Doe" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Phone Number</label>
+                        <label class="form-label small fw-bold text-muted">Phone Number</label>
                         <input type="text" name="PhoneNumber" class="form-control rounded-3" required placeholder="e.g. 09123456789" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Email (Optional)</label>
+                        <input type="email" name="Email" class="form-control rounded-3" placeholder="e.g. user@domain.com" />
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-0">
@@ -148,24 +153,28 @@
 <div class="modal fade" id="editCustomerModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header bg-primary text-white border-0 py-3">
-                <h5 class="modal-title fw-bold">Update Customer Profile</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-dark">Update Customer Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form asp-action="EditCustomer" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="CustomerID" id="edit-id" />
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Full Name</label>
+                        <label class="form-label small fw-bold text-muted">Full Name</label>
                         <input type="text" name="FullName" id="edit-name" class="form-control rounded-3" required />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Phone Number</label>
+                        <label class="form-label small fw-bold text-muted">Phone Number</label>
                         <input type="text" name="PhoneNumber" id="edit-phone" class="form-control rounded-3" required />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label x-small fw-bold text-muted uppercase tracking-wider">Points</label>
+                        <label class="form-label small fw-bold text-muted">Email (Optional)</label>
+                        <input type="email" name="Email" id="edit-email" class="form-control rounded-3" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Points</label>
                         <input type="number" name="Points" id="edit-points" class="form-control rounded-3" required />
                     </div>
                 </div>
@@ -217,11 +226,13 @@
                 const id = $(this).data('id');
                 const name = $(this).data('name');
                 const phone = $(this).data('phone');
+                const email = $(this).data('email');
                 const points = $(this).data('points');
 
                 $('#edit-id').val(id);
                 $('#edit-name').val(name);
                 $('#edit-phone').val(phone);
+                $('#edit-email').val(email);
                 $('#edit-points').val(points);
 
                 new bootstrap.Modal(document.getElementById('editCustomerModal')).show();

@@ -199,6 +199,12 @@
                 </div>
             </div>
             <div class="modal-footer border-0 pt-0 flex-column gap-2">
+                <div class="input-group w-100 mb-2">
+                    <input type="email" id="receiptEmail" class="form-control" placeholder="customer@email.com">
+                    <button class="btn btn-outline-primary" type="button" onclick="sendEReceipt()" id="sendReceiptBtn">
+                        <i class="fas fa-paper-plane me-1"></i>Email
+                    </button>
+                </div>
                 <button type="button" class="btn btn-primary w-100 py-2 fw-bold" onclick="printReceipt()">
                     <i class="fas fa-print me-2"></i>Print Receipt
                 </button>
@@ -227,6 +233,10 @@
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-muted">Phone Number</label>
                         <input type="tel" id="regPhone" class="form-control py-2 shadow-sm" placeholder="09xxxxxxxxx">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Email (Optional)</label>
+                        <input type="email" id="regEmail" class="form-control py-2 shadow-sm" placeholder="user@gmail.com">
                     </div>
                 </form>
             </div>
@@ -608,7 +618,17 @@
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success) {
+                        currentOrderId = data.orderId; // Store it globally for email sending
                         loadReceipt(data.orderId);
+                        
+                        // Notify if auto-sent
+                        if (selectedCustomerEmail) {
+                            const btn = document.getElementById('sendReceiptBtn');
+                            btn.innerHTML = '<i class="fas fa-check"></i> Auto-Sent';
+                            btn.classList.replace('btn-outline-primary', 'btn-success');
+                            btn.disabled = true;
+                            document.getElementById('receiptEmail').value = selectedCustomerEmail;
+                        }
                     } else {
                         alert('Order failed: ' + (data.message || 'Unknown error'));
                         receiptModal.hide();
@@ -640,6 +660,58 @@
                 }
             } catch (err) {
                 content.innerHTML = '<div class="text-danger text-center">Error loading receipt.</div>';
+            }
+        }
+
+        let currentOrderId = null;
+        let selectedCustomerEmail = null;
+
+        async function sendEReceipt() {
+            if (!currentOrderId) {
+                alert('No active order context. Please try again.');
+                return;
+            }
+
+            const emailInput = document.getElementById('receiptEmail');
+            const btn = document.getElementById('sendReceiptBtn');
+            const email = emailInput.value.trim();
+
+            if (!email || !email.includes('@@')) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+
+            const originalBtnHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('@Url.Action("SendReceipt", "Cashier")?orderId=' + currentOrderId + '&email=' + encodeURIComponent(email), {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    btn.innerHTML = '<i class="fas fa-check text-success"></i> Sent!';
+                    btn.classList.replace('btn-outline-primary', 'btn-outline-success');
+                    setTimeout(() => {
+                        emailInput.value = '';
+                        btn.innerHTML = originalBtnHtml;
+                        btn.classList.replace('btn-outline-success', 'btn-outline-primary');
+                        btn.disabled = false;
+                    }, 3000);
+                } else {
+                    alert(data.message || 'Failed to send receipt');
+                    btn.innerHTML = originalBtnHtml;
+                    btn.disabled = false;
+                }
+            } catch(e) {
+                alert('Network error while sending receipt.');
+                btn.innerHTML = originalBtnHtml;
+                btn.disabled = false;
             }
         }
 
@@ -687,6 +759,7 @@
             document.getElementById('scName').innerText = customer.fullName;
             document.getElementById('scPoints').innerText = `${customer.points} pts`;
             customerPoints = customer.points;
+            selectedCustomerEmail = customer.email;
             
             document.getElementById('customerSearch').style.display = 'none';
             document.getElementById('selectedCustomerDisplay').style.display = 'block';
@@ -705,6 +778,7 @@
             document.getElementById('clearCustomerBtn').style.display = 'none';
             isRedeeming = false;
             customerPoints = 0;
+            selectedCustomerEmail = null;
             renderCart();
         }
 
@@ -716,6 +790,7 @@
         async function registerCustomer() {
             const fullName = document.getElementById('regName').value;
             const phoneNumber = document.getElementById('regPhone').value;
+            const email = document.getElementById('regEmail').value;
 
             if (!fullName) {
                 alert('Please enter a name.');
@@ -728,7 +803,7 @@
                     'Content-Type': 'application/json',
                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
                 },
-                body: JSON.stringify({ fullName, phoneNumber })
+                body: JSON.stringify({ fullName, phoneNumber, email })
             });
 
             const data = await response.json();
@@ -738,7 +813,8 @@
                     customerID: data.customerId, 
                     fullName: data.fullName, 
                     phoneNumber: phoneNumber, 
-                    points: 0 
+                    points: 0,
+                    email: email
                 });
                 document.getElementById('registerCustomerForm').reset();
             } else {
