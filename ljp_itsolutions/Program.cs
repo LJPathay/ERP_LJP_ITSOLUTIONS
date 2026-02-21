@@ -15,6 +15,7 @@ builder.Services.AddControllersWithViews()
     });
 builder.Services.AddSingleton<ljp_itsolutions.Services.InMemoryStore>();
 builder.Services.AddRazorPages();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSession();
 builder.Services.AddRateLimiter(options =>
 {
@@ -91,6 +92,7 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
+app.MapControllers(); // maps [ApiController] routes (e.g. /api/recipes)
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")

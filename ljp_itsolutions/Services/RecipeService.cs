@@ -12,141 +12,125 @@ namespace ljp_itsolutions.Services
 
     public class RecipeItemDto
     {
-        public int IngredientID { get; set; }
+        public int     IngredientID     { get; set; }
         public decimal QuantityRequired { get; set; }
-        public string? IngredientName { get; set; }
+        public string? IngredientName   { get; set; }
     }
 
     public class RecipeService : IRecipeService
     {
-        private readonly HttpClient _httpClient;
-        private readonly ApplicationDbContext _db;
+        private readonly HttpClient              _httpClient;
+        private readonly ApplicationDbContext    _db;
+        private readonly IHttpContextAccessor    _httpContextAccessor;
 
-        public RecipeService(HttpClient httpClient, ApplicationDbContext db)
+        public RecipeService(HttpClient httpClient, ApplicationDbContext db, IHttpContextAccessor httpContextAccessor)
         {
-            _httpClient = httpClient;
-            _db = db;
+            _httpClient          = httpClient;
+            _db                  = db;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<List<RecipeItemDto>> GetDefaultRecipeFromApiAsync(string productName, int categoryId)
         {
             var results = new List<RecipeItemDto>();
-            Console.WriteLine($"[RecipeService] Starting fetch for: {productName} (Cat: {categoryId})");
+            Console.WriteLine($"[RecipeService] Calling internal recipe API for: '{productName}' (Cat: {categoryId})");
 
-            // Step 1: Try External API
             try
             {
-                if (categoryId == 1) // Coffee
+                // Build the base URL from the current request so the service works in
+                // both dev (http://localhost:xxxx) and production (https://...) without
+                // any hard-coded URLs.
+                var request    = _httpContextAccessor.HttpContext?.Request;
+                var baseUrl    = request != null
+                    ? $"{request.Scheme}://{request.Host}"
+                    : "http://localhost:5000";
+
+                var encodedName = Uri.EscapeDataString(productName);
+                var apiUrl      = $"{baseUrl}/api/recipes/lookup?name={encodedName}";
+
+                Console.WriteLine($"[RecipeService] GET {apiUrl}");
+
+                var response = await _httpClient.GetAsync(apiUrl);
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    var response = await _httpClient.GetAsync("https://api.sampleapis.com/coffee/hot");
-                    if (response.IsSuccessStatusCode)
+                    Console.WriteLine($"[RecipeService] API returned {response.StatusCode} for '{productName}'. No recipe assigned.");
+                    return results;
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+
+                // Deserialise the RecipeDto returned by RecipesController
+                var apiRecipe = JsonSerializer.Deserialize<ApiRecipeResponse>(json,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (apiRecipe?.Ingredients == null || !apiRecipe.Ingredients.Any())
+                    return results;
+
+                Console.WriteLine($"[RecipeService] Matched recipe '{apiRecipe.ProductName}' with {apiRecipe.Ingredients.Count} ingredient(s).");
+
+                // Resolve / create each ingredient in the DB
+                foreach (var ing in apiRecipe.Ingredients)
+                {
+                    var dbIngredient = await _db.Ingredients
+                        .FirstOrDefaultAsync(i =>
+                            i.Name.ToLower() == ing.Name.ToLower() ||
+                            i.Name.ToLower().Contains(ing.Name.ToLower()) ||
+                            ing.Name.ToLower().Contains(i.Name.ToLower()));
+
+                    if (dbIngredient == null)
                     {
-                        var json = await response.Content.ReadAsStringAsync();
-                        var coffeeData = JsonSerializer.Deserialize<List<CoffeeApiItem>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                        
-                        // Use a more flexible name matching
-                        var match = coffeeData?.FirstOrDefault(c => 
-                            productName.Contains(c.Title, StringComparison.OrdinalIgnoreCase) || 
-                            c.Title.Contains(productName, StringComparison.OrdinalIgnoreCase) ||
-                            (productName.ToLower().Contains("cap") && c.Title.Contains("Cappuccino")));
-
-                        if (match != null && match.Ingredients != null)
+                        dbIngredient = new Ingredient
                         {
-                            foreach (var ingName in match.Ingredients)
-                            {
-                                // Simplify DB matching to be SQL-translation friendly
-                                var dbIngredient = await _db.Ingredients
-                                    .FirstOrDefaultAsync(i => i.Name.Contains(ingName) || ingName.Contains(i.Name));
-
-                                if (dbIngredient == null)
-                                {
-                                    dbIngredient = new Ingredient 
-                                    { 
-                                        Name = ingName, 
-                                        Unit = GetDefaultUnit(ingName),
-                                        StockQuantity = 0,
-                                        LowStockThreshold = 1
-                                    };
-                                    _db.Ingredients.Add(dbIngredient);
-                                    await _db.SaveChangesAsync();
-                                }
-
-                                results.Add(new RecipeItemDto 
-                                { 
-                                    IngredientID = dbIngredient.IngredientID,
-                                    IngredientName = dbIngredient.Name,
-                                    QuantityRequired = GetDefaultQuantity(dbIngredient.Unit) 
-                                });
-                            }
-                        }
+                            Name              = ing.Name,
+                            Unit              = ing.Unit,
+                            StockQuantity     = 0,
+                            LowStockThreshold = GetDefaultThreshold(ing.Unit)
+                        };
+                        _db.Ingredients.Add(dbIngredient);
+                        await _db.SaveChangesAsync();
+                        Console.WriteLine($"[RecipeService] Auto-created ingredient: {dbIngredient.Name} ({ing.Unit})");
                     }
+
+                    results.Add(new RecipeItemDto
+                    {
+                        IngredientID     = dbIngredient.IngredientID,
+                        IngredientName   = dbIngredient.Name,
+                        QuantityRequired = ing.Quantity
+                    });
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[RecipeService] API Fetch Failed: {ex.Message}");
-            }
-
-            // Step 2: Fallback Logic (Mandatory if results still empty)
-            if (results.Count == 0)
-            {
-                try 
-                {
-                    if (categoryId == 1) // Coffee
-                    {
-                        var beans = await _db.Ingredients.FirstOrDefaultAsync(i => i.Name.Contains("Beans") || i.Name.Contains("Coffee"));
-                        if (beans == null)
-                        {
-                            beans = new Ingredient { Name = "Espresso Beans", Unit = "kg", StockQuantity = 0, LowStockThreshold = 2 };
-                            _db.Ingredients.Add(beans);
-                            await _db.SaveChangesAsync();
-                        }
-                        results.Add(new RecipeItemDto { IngredientID = beans.IngredientID, QuantityRequired = 0.018m, IngredientName = beans.Name });
-                    }
-                    else if (categoryId == 3) // Pastries
-                    {
-                        var flour = await _db.Ingredients.FirstOrDefaultAsync(i => i.Name.Contains("Flour"));
-                        if (flour == null)
-                        {
-                            flour = new Ingredient { Name = "Baking Flour", Unit = "kg", StockQuantity = 0, LowStockThreshold = 5 };
-                            _db.Ingredients.Add(flour);
-                            await _db.SaveChangesAsync();
-                        }
-                        results.Add(new RecipeItemDto { IngredientID = flour.IngredientID, QuantityRequired = 0.100m, IngredientName = flour.Name });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[RecipeService] Fallback Failed: {ex.Message}");
-                }
+                Console.WriteLine($"[RecipeService] Failed to fetch or process recipe: {ex.Message}");
             }
 
             return results;
         }
 
-        private string GetDefaultUnit(string ingredientName)
+        private static decimal GetDefaultThreshold(string unit) => unit.ToLower() switch
         {
-            var name = ingredientName.ToLower();
-            if (name.Contains("milk") || name.Contains("water") || name.Contains("syrup") || name.Contains("liquid")) return "ml";
-            if (name.Contains("beans") || name.Contains("flour") || name.Contains("powder") || name.Contains("sugar")) return "kg";
-            return "pcs";
+            "g"     => 500m,
+            "ml"    => 500m,
+            "kg"    => 1m,
+            "l"     => 1m,
+            "scoop" => 5m,
+            _       => 10m
+        };
+
+        // ── Internal DTOs matching RecipesApiController response ──────────────
+
+        private class ApiRecipeResponse
+        {
+            public string                    ProductName { get; set; } = string.Empty;
+            public List<ApiIngredientItem>   Ingredients { get; set; } = new();
         }
 
-        private decimal GetDefaultQuantity(string unit)
+        private class ApiIngredientItem
         {
-            return unit.ToLower() switch
-            {
-                "kg" => 0.018m,
-                "l" => 0.250m,
-                "ml" => 30m,
-                _ => 1m
-            };
-        }
-
-        private class CoffeeApiItem
-        {
-            public string Title { get; set; } = string.Empty;
-            public List<string> Ingredients { get; set; } = new();
+            public string  Name     { get; set; } = string.Empty;
+            public decimal Quantity { get; set; }
+            public string  Unit     { get; set; } = string.Empty;
         }
     }
 }

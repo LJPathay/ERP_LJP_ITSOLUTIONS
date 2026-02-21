@@ -123,7 +123,146 @@ namespace ljp_itsolutions.Data
                         }
                     }
 
+                    // Seed Recipe Templates (only once)
+                    if (!db.RecipeTemplates.Any())
+                    {
+                        Console.WriteLine("Seeding recipe templates...");
+
+                        var templates = new List<RecipeTemplate>
+                        {
+                            // ── COFFEE DRINKS ─────────────────────────────────
+                            new() { ProductName = "Espresso", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Coffee Beans", Quantity = 18m,  Unit = "g" }
+                            }},
+                            new() { ProductName = "Americano", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Coffee Beans", Quantity = 18m,  Unit = "g"  },
+                                new() { IngredientName = "Hot Water",    Quantity = 150m, Unit = "ml" }
+                            }},
+                            new() { ProductName = "Cappuccino", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Coffee Beans", Quantity = 18m,  Unit = "g"  },
+                                new() { IngredientName = "Fresh Milk",   Quantity = 150m, Unit = "ml" },
+                                new() { IngredientName = "Milk Foam",    Quantity = 30m,  Unit = "ml" }
+                            }},
+                            new() { ProductName = "Latte", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Coffee Beans", Quantity = 18m,  Unit = "g"  },
+                                new() { IngredientName = "Fresh Milk",   Quantity = 200m, Unit = "ml" },
+                                new() { IngredientName = "Milk Foam",    Quantity = 20m,  Unit = "ml" }
+                            }},
+                            new() { ProductName = "Caramel Macchiato", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Coffee Beans",  Quantity = 18m,  Unit = "g"  },
+                                new() { IngredientName = "Fresh Milk",    Quantity = 200m, Unit = "ml" },
+                                new() { IngredientName = "Caramel Syrup", Quantity = 20m,  Unit = "ml" },
+                                new() { IngredientName = "Vanilla Syrup", Quantity = 10m,  Unit = "ml" }
+                            }},
+                            new() { ProductName = "Mocha", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Coffee Beans",    Quantity = 18m,  Unit = "g"  },
+                                new() { IngredientName = "Fresh Milk",      Quantity = 180m, Unit = "ml" },
+                                new() { IngredientName = "Chocolate Syrup", Quantity = 25m,  Unit = "ml" }
+                            }},
+                            new() { ProductName = "Flat White", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Coffee Beans", Quantity = 18m,  Unit = "g"  },
+                                new() { IngredientName = "Fresh Milk",   Quantity = 160m, Unit = "ml" }
+                            }},
+                            new() { ProductName = "Vanilla Latte", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Coffee Beans",  Quantity = 18m,  Unit = "g"  },
+                                new() { IngredientName = "Fresh Milk",    Quantity = 200m, Unit = "ml" },
+                                new() { IngredientName = "Vanilla Syrup", Quantity = 20m,  Unit = "ml" }
+                            }},
+                            new() { ProductName = "Hazelnut Latte", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Coffee Beans",   Quantity = 18m,  Unit = "g"  },
+                                new() { IngredientName = "Fresh Milk",     Quantity = 200m, Unit = "ml" },
+                                new() { IngredientName = "Hazelnut Syrup", Quantity = 20m,  Unit = "ml" }
+                            }},
+                            new() { ProductName = "Spanish Latte", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Coffee Beans",   Quantity = 18m,  Unit = "g"  },
+                                new() { IngredientName = "Fresh Milk",     Quantity = 180m, Unit = "ml" },
+                                new() { IngredientName = "Condensed Milk", Quantity = 30m,  Unit = "ml" }
+                            }},
+                            new() { ProductName = "Iced Americano", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Coffee Beans", Quantity = 18m,  Unit = "g"  },
+                                new() { IngredientName = "Water",        Quantity = 120m, Unit = "ml" },
+                                new() { IngredientName = "Ice",          Quantity = 100m, Unit = "g"  }
+                            }},
+                            new() { ProductName = "Iced Latte", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Coffee Beans", Quantity = 18m,  Unit = "g"  },
+                                new() { IngredientName = "Fresh Milk",   Quantity = 200m, Unit = "ml" },
+                                new() { IngredientName = "Ice",          Quantity = 120m, Unit = "g"  }
+                            }},
+                            new() { ProductName = "Iced Caramel Macchiato", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Coffee Beans",  Quantity = 18m,  Unit = "g"  },
+                                new() { IngredientName = "Fresh Milk",    Quantity = 200m, Unit = "ml" },
+                                new() { IngredientName = "Caramel Syrup", Quantity = 20m,  Unit = "ml" },
+                                new() { IngredientName = "Ice",           Quantity = 120m, Unit = "g"  }
+                            }},
+                            new() { ProductName = "Iced Mocha", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Coffee Beans",    Quantity = 18m,  Unit = "g"  },
+                                new() { IngredientName = "Fresh Milk",      Quantity = 180m, Unit = "ml" },
+                                new() { IngredientName = "Chocolate Syrup", Quantity = 25m,  Unit = "ml" },
+                                new() { IngredientName = "Ice",             Quantity = 120m, Unit = "g"  }
+                            }},
+                            new() { ProductName = "Cold Brew Coffee", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Coffee Beans", Quantity = 25m,  Unit = "g"  },
+                                new() { IngredientName = "Water",        Quantity = 250m, Unit = "ml" }
+                            }},
+                            // ── NON-COFFEE DRINKS ─────────────────────────────
+                            new() { ProductName = "Hot Chocolate", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Cocoa Powder", Quantity = 25m,  Unit = "g"  },
+                                new() { IngredientName = "Fresh Milk",   Quantity = 200m, Unit = "ml" },
+                                new() { IngredientName = "Sugar",        Quantity = 15m,  Unit = "g"  }
+                            }},
+                            new() { ProductName = "Matcha Latte", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Matcha Powder", Quantity = 15m,  Unit = "g"  },
+                                new() { IngredientName = "Fresh Milk",    Quantity = 200m, Unit = "ml" },
+                                new() { IngredientName = "Sugar",         Quantity = 10m,  Unit = "g"  }
+                            }},
+                            new() { ProductName = "Iced Matcha Latte", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Matcha Powder", Quantity = 15m,  Unit = "g"  },
+                                new() { IngredientName = "Fresh Milk",    Quantity = 200m, Unit = "ml" },
+                                new() { IngredientName = "Ice",           Quantity = 120m, Unit = "g"  },
+                                new() { IngredientName = "Sugar",         Quantity = 10m,  Unit = "g"  }
+                            }},
+                            new() { ProductName = "Chai Latte", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Chai Powder", Quantity = 20m,  Unit = "g"  },
+                                new() { IngredientName = "Fresh Milk",  Quantity = 200m, Unit = "ml" }
+                            }},
+                            new() { ProductName = "Iced Chocolate", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Cocoa Powder", Quantity = 25m,  Unit = "g"  },
+                                new() { IngredientName = "Fresh Milk",   Quantity = 200m, Unit = "ml" },
+                                new() { IngredientName = "Ice",          Quantity = 120m, Unit = "g"  }
+                            }},
+                            new() { ProductName = "Strawberry Milk", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Strawberry Syrup", Quantity = 30m,  Unit = "ml" },
+                                new() { IngredientName = "Fresh Milk",       Quantity = 200m, Unit = "ml" }
+                            }},
+                            new() { ProductName = "Vanilla Milkshake", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Fresh Milk",    Quantity = 200m, Unit = "ml"    },
+                                new() { IngredientName = "Vanilla Syrup", Quantity = 20m,  Unit = "ml"    },
+                                new() { IngredientName = "Ice Cream",     Quantity = 1m,   Unit = "scoop" }
+                            }},
+                            new() { ProductName = "Cookies and Cream Milkshake", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Fresh Milk",      Quantity = 200m, Unit = "ml"    },
+                                new() { IngredientName = "Ice Cream",       Quantity = 1m,   Unit = "scoop" },
+                                new() { IngredientName = "Crushed Cookies", Quantity = 30m,  Unit = "g"     }
+                            }},
+                            new() { ProductName = "Mango Smoothie", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Mango Puree",  Quantity = 150m, Unit = "ml" },
+                                new() { IngredientName = "Ice",          Quantity = 120m, Unit = "g"  },
+                                new() { IngredientName = "Sugar Syrup",  Quantity = 15m,  Unit = "ml" }
+                            }},
+                            new() { ProductName = "Strawberry Smoothie", Ingredients = new List<RecipeTemplateIngredient> {
+                                new() { IngredientName = "Strawberry Puree", Quantity = 150m, Unit = "ml" },
+                                new() { IngredientName = "Ice",              Quantity = 120m, Unit = "g"  },
+                                new() { IngredientName = "Sugar Syrup",      Quantity = 15m,  Unit = "ml" }
+                            }},
+                        };
+
+                        db.RecipeTemplates.AddRange(templates);
+                        db.SaveChanges();
+                        Console.WriteLine($"Seeded {templates.Count} recipe templates.");
+                    }
+
                     Console.WriteLine("Database initialization completed.");
+
                 }
                 catch (Exception ex)
                 {

@@ -25,6 +25,8 @@ namespace ljp_itsolutions.Data
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<RewardRedemption> RewardRedemptions { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<RecipeTemplate> RecipeTemplates { get; set; }
+        public DbSet<RecipeTemplateIngredient> RecipeTemplateIngredients { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -98,6 +100,10 @@ namespace ljp_itsolutions.Data
                 b.Property(l => l.QuantityChange).HasPrecision(18, 3);
             });
 
+            builder.Entity<RecipeTemplateIngredient>(b =>
+            {
+                b.Property(r => r.Quantity).HasPrecision(18, 3);
+            });
 
             // Seed Categories
             builder.Entity<Category>().HasData(
