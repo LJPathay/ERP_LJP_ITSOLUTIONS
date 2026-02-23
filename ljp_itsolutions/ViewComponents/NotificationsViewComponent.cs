@@ -35,12 +35,16 @@ namespace ljp_itsolutions.ViewComponents
                 {
                     notifications.Add(new NotificationItem
                     {
+                        Id = n.NotificationID,
                         Title = n.Title,
                         Message = n.Message,
                         Time = n.CreatedAt == DateTime.MinValue ? "Just now" : GetTimeAgo(n.CreatedAt),
                         Type = n.Type,
                         IconClass = n.IconClass,
-                        IsRead = n.IsRead
+                        IsRead = n.IsRead,
+                        TargetUrl = string.IsNullOrEmpty(n.TargetUrl) 
+                            ? (n.Title.Contains("Stock") ? "/Manager/Inventory" : (n.Title.Contains("Order") ? "/Manager/Transactions" : "#"))
+                            : n.TargetUrl
                     });
                 }
             }
@@ -64,11 +68,13 @@ namespace ljp_itsolutions.ViewComponents
 
     public class NotificationItem
     {
+        public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Message { get; set; } = string.Empty;
         public string Time { get; set; } = string.Empty;
         public string Type { get; set; } = "info";
         public string IconClass { get; set; } = "fas fa-bell";
         public bool IsRead { get; set; }
+        public string? TargetUrl { get; set; }
     }
 }

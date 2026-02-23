@@ -118,7 +118,10 @@ namespace ljp_itsolutions.Controllers
                 var productGroups = productIds.GroupBy(id => id);
                 decimal total = 0;
 
-                // FIRST PASS: Validate Stock for EVERYTHING in the cart
+                // FIRST PASS: Aggregate and Validate Stock for EVERYTHING in the cart
+                var requiredIngredients = new Dictionary<int, (string Name, decimal Quantity, string Unit, decimal CurrentStock)>();
+                var standaloneProducts = new Dictionary<int, (string Name, int Quantity, int CurrentStock)>();
+
                 foreach (var group in productGroups)
                 {
                     var product = await _db.Products
@@ -133,18 +136,49 @@ namespace ljp_itsolutions.Controllers
                     {
                         foreach (var recipe in product.ProductRecipes)
                         {
-                            if (recipe.Ingredient.StockQuantity < (recipe.QuantityRequired * qty))
+                            if (requiredIngredients.ContainsKey(recipe.IngredientID))
                             {
-                                var msg = $"Insufficient {recipe.Ingredient.Name}. Need {recipe.QuantityRequired * qty}{recipe.Ingredient.Unit}, only {recipe.Ingredient.StockQuantity:0.##} left.";
-                                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Json(new { success = false, message = msg });
-                                TempData["ErrorMessage"] = msg;
-                                return RedirectToAction("CreateOrder");
+                                var existing = requiredIngredients[recipe.IngredientID];
+                                requiredIngredients[recipe.IngredientID] = (existing.Name, existing.Quantity + (recipe.QuantityRequired * qty), existing.Unit, existing.CurrentStock);
+                            }
+                            else
+                            {
+                                requiredIngredients[recipe.IngredientID] = (recipe.Ingredient.Name, (recipe.QuantityRequired * qty), recipe.Ingredient.Unit, recipe.Ingredient.StockQuantity);
                             }
                         }
                     }
-                    else if (product.StockQuantity < qty)
+                    else
                     {
-                        var msg = $"Insufficient {product.ProductName}. Need {qty}, only {product.StockQuantity} left.";
+                        if (standaloneProducts.ContainsKey(product.ProductID))
+                        {
+                            var existing = standaloneProducts[product.ProductID];
+                            standaloneProducts[product.ProductID] = (existing.Name, existing.Quantity + qty, existing.CurrentStock);
+                        }
+                        else
+                        {
+                            standaloneProducts[product.ProductID] = (product.ProductName, qty, product.StockQuantity);
+                        }
+                    }
+                }
+
+                // VALIDATE INGREDIENTS
+                foreach (var entry in requiredIngredients)
+                {
+                    if (entry.Value.CurrentStock < entry.Value.Quantity)
+                    {
+                        var msg = $"Insufficient {entry.Value.Name}. Need {entry.Value.Quantity}{entry.Value.Unit}, only {entry.Value.CurrentStock:0.##} left.";
+                        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Json(new { success = false, message = msg });
+                        TempData["ErrorMessage"] = msg;
+                        return RedirectToAction("CreateOrder");
+                    }
+                }
+
+                // VALIDATE STANDALONE PRODUCTS
+                foreach (var entry in standaloneProducts)
+                {
+                    if (entry.Value.CurrentStock < entry.Value.Quantity)
+                    {
+                        var msg = $"Insufficient {entry.Value.Name}. Need {entry.Value.Quantity}, only {entry.Value.CurrentStock} left.";
                         if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Json(new { success = false, message = msg });
                         TempData["ErrorMessage"] = msg;
                         return RedirectToAction("CreateOrder");
@@ -191,7 +225,8 @@ namespace ljp_itsolutions.Controllers
                                         Message = $"{recipe.Ingredient.Name} needs restocking ({recipe.Ingredient.StockQuantity:0.##} {recipe.Ingredient.Unit}).",
                                         Type = "danger",
                                         IconClass = "fas fa-cube",
-                                        CreatedAt = DateTime.Now
+                                        CreatedAt = DateTime.Now,
+                                        TargetUrl = "/Manager/Inventory"
                                     });
 
                                     // Email Alert
@@ -259,7 +294,8 @@ namespace ljp_itsolutions.Controllers
                         Message = $"Order #{order.OrderID.ToString().Substring(0, 8)} for ₱{order.FinalAmount:N2} received!",
                         Type = "success",
                         IconClass = "fas fa-star",
-                        CreatedAt = DateTime.Now
+                        CreatedAt = DateTime.Now,
+                        TargetUrl = "/Manager/Transactions"
                     });
                 }
 
@@ -394,7 +430,10 @@ namespace ljp_itsolutions.Controllers
             var productGroups = request.ProductIds.GroupBy(id => id);
             decimal total = 0;
 
-            // Perform Stock Validation BEFORE processing
+            // Perform Stock Validation BEFORE processing (Aggregated)
+            var requiredIngredients = new Dictionary<int, (string Name, decimal Quantity, string Unit, decimal CurrentStock)>();
+            var standaloneProducts = new Dictionary<int, (string Name, int Quantity, int CurrentStock)>();
+
             foreach (var group in productGroups)
             {
                 var product = await _db.Products
@@ -409,15 +448,46 @@ namespace ljp_itsolutions.Controllers
                 {
                     foreach (var recipe in product.ProductRecipes)
                     {
-                        if (recipe.Ingredient.StockQuantity < (recipe.QuantityRequired * qty))
+                        if (requiredIngredients.ContainsKey(recipe.IngredientID))
                         {
-                            return BadRequest($"Insufficient {recipe.Ingredient.Name} for one or more items.");
+                            var existing = requiredIngredients[recipe.IngredientID];
+                            requiredIngredients[recipe.IngredientID] = (existing.Name, existing.Quantity + (recipe.QuantityRequired * qty), existing.Unit, existing.CurrentStock);
+                        }
+                        else
+                        {
+                            requiredIngredients[recipe.IngredientID] = (recipe.Ingredient.Name, (recipe.QuantityRequired * qty), recipe.Ingredient.Unit, recipe.Ingredient.StockQuantity);
                         }
                     }
                 }
-                else if (product.StockQuantity < qty)
+                else
                 {
-                    return BadRequest($"Insufficient stock for {product.ProductName}.");
+                    if (standaloneProducts.ContainsKey(product.ProductID))
+                    {
+                        var existing = standaloneProducts[product.ProductID];
+                        standaloneProducts[product.ProductID] = (existing.Name, existing.Quantity + qty, existing.CurrentStock);
+                    }
+                    else
+                    {
+                        standaloneProducts[product.ProductID] = (product.ProductName, qty, product.StockQuantity);
+                    }
+                }
+            }
+
+            // VALIDATE INGREDIENTS
+            foreach (var entry in requiredIngredients)
+            {
+                if (entry.Value.CurrentStock < entry.Value.Quantity)
+                {
+                    return BadRequest($"Insufficient {entry.Value.Name}. Need {entry.Value.Quantity}{entry.Value.Unit}, only {entry.Value.CurrentStock:0.##} left.");
+                }
+            }
+
+            // VALIDATE STANDALONE PRODUCTS
+            foreach (var entry in standaloneProducts)
+            {
+                if (entry.Value.CurrentStock < entry.Value.Quantity)
+                {
+                    return BadRequest($"Insufficient {entry.Value.Name}. Need {entry.Value.Quantity}, only {entry.Value.CurrentStock} left.");
                 }
             }
 
@@ -460,7 +530,8 @@ namespace ljp_itsolutions.Controllers
                                     Message = $"{recipe.Ingredient.Name} needs restocking ({recipe.Ingredient.StockQuantity:0.##} {recipe.Ingredient.Unit}).",
                                     Type = "danger",
                                     IconClass = "fas fa-cube",
-                                    CreatedAt = DateTime.Now
+                                    CreatedAt = DateTime.Now,
+                                    TargetUrl = "/Manager/Inventory"
                                 });
 
                                 // Email Alert
@@ -527,7 +598,8 @@ namespace ljp_itsolutions.Controllers
                     Message = $"Online Order #{order.OrderID.ToString().Substring(0, 8)} for ₱{order.FinalAmount:N2} pending payment.",
                     Type = "info",
                     IconClass = "fas fa-star",
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.Now,
+                    TargetUrl = "/Manager/Transactions"
                 });
             }
 

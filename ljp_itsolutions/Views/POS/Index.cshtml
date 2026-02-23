@@ -32,10 +32,7 @@
         <div class="products-grid" id="productsGrid">
             @foreach (var product in products)
             {
-                var isStocked = product.StockQuantity > 0;
-                // If it has a recipe, checking ingredient stock here would be expensive, 
-                // but at least we check direct product stock.
-                
+                var isStocked = product.StockQuantity > 0; // kung naay recipe , dapat i-check pud ang stock sa mga ingredients, pero for simplicity, we just check the product stock here.
                 <div class="product-card @(isStocked ? "" : "out-of-stock")" 
                      data-category="@product.Category?.CategoryName" 
                      onclick="@(isStocked ? $"addToCart('{product.ProductID}', '{product.ProductName}', {product.Price})" : "")">
@@ -75,7 +72,6 @@
             <button class="btn btn-sm btn-outline-danger" onclick="clearCart()">Clear</button>
         </div>
 
-        <!-- Customer Loyalty Section -->
         <div class="customer-loyalty-section px-3 py-2 bg-light border-bottom">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="small fw-bold text-muted">Customer Loyalty</span>
@@ -92,7 +88,7 @@
                     </button>
                 </div>
                 <div id="customerSearchResults" class="dropdown-menu w-100 shadow-sm border-0 mt-1" style="display:none; max-height: 200px; overflow-y: auto;">
-                    <!-- Results will be injected here -->
+
                 </div>
             </div>
             <div id="selectedCustomerDisplay" class="mt-2" style="display:none">
@@ -181,7 +177,7 @@
     </div>
 </div>
 
-<!-- Order Receipt Modal -->
+
 <div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 1.5rem;">
@@ -381,7 +377,6 @@
 
             document.getElementById('subtotal').innerText = `₱${subtotal.toFixed(2)}`;
             
-            // Show point discount in UI if applied
             const promoArea = document.querySelector('.promotion-area');
             let pointsLabel = document.getElementById('pointsDiscountRow');
             if (isRedeeming) {
@@ -440,7 +435,6 @@
                 status.innerText = 'Promo applied: 10% Off';
                 status.style.display = 'block';
                 status.classList.replace('text-danger', 'text-success');
-                // In a real app, this would recalculate totals
             } else {
                 status.innerText = 'Invalid code';
                 status.style.display = 'block';
@@ -461,7 +455,6 @@
                     card.style.display = 'none';
                 }
             });
-            // Clear search when switching categories
             document.getElementById('productSearch').value = '';
         }
 
@@ -573,7 +566,6 @@
                     btn.disabled = false;
                     btn.onclick = () => window.location.href = '@Url.Action("TransactionHistory", "Cashier")';
                     
-                    // Optional: start polling for status if webhook is test-only
                 } else {
                     const error = await response.text();
                     alert('Error: ' + error);
@@ -618,10 +610,9 @@
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success) {
-                        currentOrderId = data.orderId; // Store it globally for email sending
+                        currentOrderId = data.orderId; 
                         loadReceipt(data.orderId);
                         
-                        // Notify if auto-sent
                         if (selectedCustomerEmail) {
                             const btn = document.getElementById('sendReceiptBtn');
                             btn.innerHTML = '<i class="fas fa-check"></i> Auto-Sent';
@@ -719,7 +710,6 @@
             const printContent = document.getElementById('receiptModalContent').innerHTML;
             const originalContent = document.body.innerHTML;
             
-            // For simple web printing, window.print handles @@media print defined in the partial
             window.print();
         }
 
@@ -767,7 +757,6 @@
             document.getElementById('customerSearchResults').style.display = 'none';
             document.getElementById('customerSearch').value = '';
             
-            // Show/Hide redeem button based on points
             document.getElementById('redeemBtn').style.display = customerPoints >= 5 ? 'block' : 'none';
         }
 

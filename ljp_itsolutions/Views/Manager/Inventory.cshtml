@@ -79,18 +79,26 @@
     </div>
 
     <!-- Action Bar below KPIs -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="input-group" style="max-width: 300px;">
-            <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
-            <input type="text" id="inventorySearch" class="form-control border-start-0 ps-0" placeholder="Search ingredients...">
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#stockIntakeModal">
-                <i class="fas fa-truck-loading me-2"></i>Stock Intake
-            </button>
-            <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addIngredientModal">
-                <i class="fas fa-plus me-2"></i>Add New Ingredient
-            </button>
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-3">
+            <div class="row g-3 align-items-center">
+                <div class="col-lg-4 col-md-12">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0 text-muted"><i class="fas fa-search"></i></span>
+                        <input type="text" id="inventorySearch" class="form-control bg-light border-0 ps-0" placeholder="Search ingredients by name or unit...">
+                    </div>
+                </div>
+                <div class="col-lg-8 col-md-12 text-md-end text-center">
+                    <div class="d-flex flex-wrap gap-2 justify-content-md-end justify-content-center">
+                        <button class="btn btn-outline-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#stockIntakeModal">
+                            <i class="fas fa-truck-loading me-2"></i>Stock Intake
+                        </button>
+                        <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addIngredientModal">
+                            <i class="fas fa-plus me-2"></i>Add New Ingredient
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -121,7 +129,11 @@
                             <td><span class="text-muted">@item.Unit</span></td>
                             <td><span class="text-muted">@item.LowStockThreshold.ToString("N2") @item.Unit</span></td>
                             <td>
-                                @if (item.StockQuantity == 0)
+                                @if (item.StockQuantity < 0)
+                                {
+                                    <span class="status-badge danger bg-danger text-white"><i class="fas fa-exclamation-circle me-1"></i>Critical</span>
+                                }
+                                else if (item.StockQuantity == 0)
                                 {
                                     <span class="status-badge danger">Out of Stock</span>
                                 }
@@ -615,8 +627,10 @@
                         const threshold = ing.lowStockThreshold || ing.LowStockThreshold || 0;
                         const statusContainer = $('#detail-status-badge');
                         
-                        if (stock <= 0) {
-                            statusContainer.html('<span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2"><i class="fas fa-exclamation-circle me-2"></i>Out of Stock</span>');
+                        if (stock < 0) {
+                            statusContainer.html('<span class="badge bg-danger rounded-pill px-3 py-2 text-white"><i class="fas fa-exclamation-circle me-2"></i>Critical Stock</span>');
+                        } else if (stock == 0) {
+                            statusContainer.html('<span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2"><i class="fas fa-times-circle me-2"></i>Out of Stock</span>');
                         } else if (stock <= threshold) {
                             statusContainer.html('<span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2"><i class="fas fa-exclamation-triangle me-2"></i>Low Stock</span>');
                         } else {

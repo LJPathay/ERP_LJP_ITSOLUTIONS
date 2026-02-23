@@ -18,7 +18,7 @@ namespace ljp_itsolutions.Controllers
         {
         }
 
-        // 📊 Dashboard (Analytics Overview)
+        //  Dashboard (Analytics Overview)
         public async Task<IActionResult> Dashboard()
         {
             var totalCustomers = await _db.Customers.CountAsync();
@@ -86,28 +86,27 @@ namespace ljp_itsolutions.Controllers
 
             var promotion = new Promotion
             {
-                PromotionName = promoCode, // Use the actual code as the name for redemption
+                PromotionName = promoCode, 
                 DiscountType = "Percentage",
-                DiscountValue = 15, // 15% off reward
+                DiscountValue = 15, 
                 StartDate = DateTime.Now,
                 EndDate = DateTime.Now.AddDays(30),
                 IsActive = true,
-                ApprovalStatus = "Approved", // Auto-approve loyalty rewards
+                ApprovalStatus = "Approved",
                 ApprovedDate = DateTime.Now
             };
 
             _db.Promotions.Add(promotion);
             
-            // Deduct points (optional logic - let's deduct 10 points per reward)
+        
             customer.Points -= 10;
             
-            // Important: Log what this reward is for
             await LogAudit("Generated Loyalty Reward", $"Customer: {customer.FullName}, Code: {promoCode}");
 
             return Json(new { success = true, promoCode = promoCode, message = $"15% Discount code generated for {customer.FullName}!" });
         }
 
-        // 🎯 Promotions
+        //  Promotions
         public async Task<IActionResult> Promotions()
         {
             var promotions = await _db.Promotions.ToListAsync();
@@ -125,7 +124,6 @@ namespace ljp_itsolutions.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Set approval workflow defaults
                 promotion.ApprovalStatus = "Pending";
                 promotion.ApprovedBy = null;
                 promotion.ApprovedDate = null;
@@ -154,7 +152,7 @@ namespace ljp_itsolutions.Controllers
             existing.EndDate = promotion.EndDate;
             existing.IsActive = promotion.IsActive;
             
-            // If edited, reset approval status to pending
+          
             existing.ApprovalStatus = "Pending";
             existing.ApprovedBy = null;
             existing.ApprovedDate = null;
@@ -195,7 +193,7 @@ namespace ljp_itsolutions.Controllers
             return View(performance);
         }
 
-        // 👥 Customer Engagement
+        //  Customer Engagement
         public async Task<IActionResult> Customers()
         {
             var customers = await _db.Customers.ToListAsync();
@@ -280,7 +278,7 @@ namespace ljp_itsolutions.Controllers
             return View(logs);
         }
 
-        // 📈 Reports
+        //  Reports
         public async Task<IActionResult> SalesTrends()
         {
             var salesData = await _db.Orders

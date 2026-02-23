@@ -15,90 +15,228 @@
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm" style="border-radius: 20px; overflow: hidden;">
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px; overflow: hidden;">
+        <div class="card-header bg-white py-3 border-0">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="input-group" style="max-width: 350px;">
+                        <span class="input-group-text bg-light border-0 text-muted"><i class="fas fa-search"></i></span>
+                        <input type="text" id="transactionSearch" class="form-control bg-light border-0 ps-0" placeholder="Search by Order ID or Date...">
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <span class="text-muted x-small" id="tableCount">Showing transactions</span>
+                </div>
+            </div>
+        </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" id="transactionsTable">
                     <thead class="bg-light">
                         <tr>
-                            <th class="ps-4 py-3 border-0">Order ID</th>
-                            <th class="py-3 border-0">Date & Time</th>
-                            <th class="py-3 border-0">Items Count</th>
-                            <th class="py-3 border-0">Total Amount</th>
-                            <th class="py-3 border-0">Status</th>
-                            <th class="py-3 border-0 text-end pe-4">Actions</th>
+                            <th class="ps-4 py-3 border-0 text-xs text-muted text-uppercase fw-bold">Order ID</th>
+                            <th class="py-3 border-0 text-xs text-muted text-uppercase fw-bold">Date & Time</th>
+                            <th class="py-3 border-0 text-xs text-muted text-uppercase fw-bold text-center">Items</th>
+                            <th class="py-3 border-0 text-xs text-muted text-uppercase fw-bold">Total Amount</th>
+                            <th class="py-3 border-0 text-xs text-muted text-uppercase fw-bold">Status</th>
+                            <th class="py-3 border-0 text-xs text-muted text-uppercase fw-bold text-end pe-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @{
                             var orders = Model ?? Enumerable.Empty<ljp_itsolutions.Models.Order>();
                         }
+                        @foreach (var order in orders.OrderByDescending(o => o.OrderDate))
+                        {
+                            <tr class="transaction-row">
+                                <td class="ps-4 fw-bold">#@order.OrderID.ToString().Substring(0, 8).ToUpper()</td>
+                                <td>
+                                    <div class="fw-medium text-dark">@order.OrderDate.ToString("MMM dd, yyyy")</div>
+                                    <div class="text-muted text-xs">@order.OrderDate.ToString("hh:mm tt")</div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark rounded-pill px-3">@order.OrderDetails.Count</span>
+                                </td>
+                                <td class="fw-bold text-dark">₱@order.FinalAmount.ToString("N2")</td>
+                                <td>
+                                    @if(order.PaymentStatus == "Paid" || order.PaymentStatus == "Paid (Digital)") {
+                                        <span class="badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-2">@order.PaymentStatus</span>
+                                    } else if(order.PaymentStatus == "Voided") {
+                                        <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger px-3 py-2">@order.PaymentStatus</span>
+                                    } else {
+                                        <span class="badge rounded-pill bg-warning bg-opacity-10 text-warning px-3 py-2">@order.PaymentStatus</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button class="btn btn-icon btn-light" title="View Details" onclick="location.href='@Url.Action("Receipt", new { id = order.OrderID })'"><i class="fas fa-eye text-primary"></i></button>
+                                        <button class="btn btn-icon btn-light" title="Print Receipt"><i class="fas fa-print text-muted"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
                         @if (!orders.Any())
                         {
-                            <tr>
+                            <tr id="noRowsFound">
                                 <td colspan="6" class="text-center py-5">
                                     <div class="opacity-50">
-                                        <i class="fas fa-receipt fa-3x mb-3"></i>
+                                        <i class="fas fa-receipt fa-3x mb-3 text-muted"></i>
                                         <p>No transactions found</p>
                                     </div>
                                 </td>
                             </tr>
                         }
-                        else
-                        {
-                            @foreach (var order in orders.OrderByDescending(o => o.OrderDate))
-                            {
-                                <tr>
-                                    <td class="ps-4 fw-bold">#@order.OrderID.ToString().Substring(0, 8).ToUpper()</td>
-                                    <td>@order.OrderDate.ToString("MMM dd, yyyy HH:mm")</td>
-                                    <td>@order.OrderDetails.Count</td>
-                                    <td class="fw-bold text-dark">₱@order.FinalAmount.ToString("F2")</td>
-                                    <td>
-                                        <span class="badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-2">@order.PaymentStatus</span>
-                                    </td>
-                                    <td class="text-end pe-4">
-                                        <button class="btn btn-icon btn-light" title="View Details"><i class="fas fa-eye text-primary"></i></button>
-                                        <button class="btn btn-icon btn-light" title="Print Receipt"><i class="fas fa-print text-muted"></i></button>
-                                    </td>
-                                </tr>
-                            }
-                        }
                     </tbody>
                 </table>
+            </div>
+        </div>
+        <!-- Pagination Controls -->
+        <div class="card-footer bg-white border-top p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted x-small">
+                    Showing <span id="startRange">0</span> to <span id="endRange">0</span> of <span id="totalItems">0</span> transactions
+                </div>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0" id="pagination">
+                        <!-- Pagination buttons injected by JS -->
+                    </ul>
+                </nav>
             </div>
         </div>
     </div>
 </div>
 
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let currentPage = 1;
+            const rowsPerPage = 10;
+            let filteredRows = [];
+
+            const table = document.getElementById('transactionsTable');
+            const tbody = table.querySelector('tbody');
+            const allRows = Array.from(tbody.querySelectorAll('tr.transaction-row'));
+            const searchInput = document.getElementById('transactionSearch');
+
+            function applyFilters() {
+                const search = searchInput.value.toLowerCase();
+                
+                filteredRows = allRows.filter(row => {
+                    const text = row.textContent.toLowerCase();
+                    return text.includes(search);
+                });
+
+                const noRowsMsg = document.getElementById('noRowsFound');
+                if (filteredRows.length === 0) {
+                    if (!noRowsMsg) {
+                        tbody.innerHTML += `<tr id="noRowsFound"><td colspan="6" class="text-center py-5"><div class="opacity-50"><i class="fas fa-search fa-3x mb-3 text-muted"></i><p>No results found for "${search}"</p></div></td></tr>`;
+                    }
+                } else if (noRowsMsg) {
+                    noRowsMsg.remove();
+                }
+
+                currentPage = 1;
+                updatePagination();
+            }
+
+            function updatePagination() {
+                const total = filteredRows.length;
+                const totalPages = Math.max(1, Math.ceil(total / rowsPerPage));
+                
+                if (currentPage > totalPages) currentPage = totalPages;
+
+                const start = (currentPage - 1) * rowsPerPage;
+                const end = start + rowsPerPage;
+
+                allRows.forEach(row => row.style.display = 'none');
+                filteredRows.slice(start, end).forEach(row => row.style.display = '');
+
+                document.getElementById('startRange').textContent = total ? start + 1 : 0;
+                document.getElementById('endRange').textContent = Math.min(end, total);
+                document.getElementById('totalItems').textContent = total;
+                document.getElementById('tableCount').textContent = `Showing ${total} transactions`;
+
+                renderPaginationButtons(totalPages);
+            }
+
+            function renderPaginationButtons(totalPages) {
+                const container = document.getElementById('pagination');
+                container.innerHTML = '';
+                if (totalPages <= 1) return;
+
+                const createLi = (page, content, disabled = false, active = false) => {
+                    const li = document.createElement('li');
+                    li.className = `page-item ${disabled ? 'disabled' : ''} ${active ? 'active' : ''}`;
+                    const a = document.createElement('a');
+                    a.className = 'page-link';
+                    a.href = '#';
+                    a.innerHTML = content;
+                    a.onclick = (e) => {
+                        e.preventDefault();
+                        if (!disabled && !active) {
+                            currentPage = page;
+                            updatePagination();
+                        }
+                    };
+                    li.appendChild(a);
+                    return li;
+                };
+
+                container.appendChild(createLi(currentPage - 1, '<i class="fas fa-chevron-left x-small"></i>', currentPage === 1));
+
+                for (let i = 1; i <= totalPages; i++) {
+                    if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                        container.appendChild(createLi(i, i, false, i === currentPage));
+                    } else if (i === currentPage - 2 || i === currentPage + 2) {
+                        const li = document.createElement('li');
+                        li.className = 'page-item disabled';
+                        li.innerHTML = '<span class="page-link">...</span>';
+                        container.appendChild(li);
+                    }
+                }
+
+                container.appendChild(createLi(currentPage + 1, '<i class="fas fa-chevron-right x-small"></i>', currentPage === totalPages));
+            }
+
+            searchInput.addEventListener('input', applyFilters);
+
+            // Initial load
+            filteredRows = allRows;
+            updatePagination();
+        });
+    </script>
+}
+
 <style>
+    .x-small { font-size: 0.75rem; }
+    .text-xs { font-size: 0.7rem; }
     .btn-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
         padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         transition: all 0.2s;
-        border: none;
+        border: 1px solid #f1f5f9;
+        background: white;
     }
     .btn-icon:hover {
-        background: #eef2f7;
+        background: #f8fafc;
         transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
-    .btn-white {
-        background: white;
-        color: #2d3436;
-        font-weight: 600;
+    .badge { font-weight: 600; }
+    .pagination .page-link {
+        border: none;
+        background: transparent;
+        color: #64748b;
+        margin: 0 2px;
+        border-radius: 6px !important;
     }
-    .table thead th {
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #636e72;
-    }
-    .table tbody td {
-        padding-top: 20px;
-        padding-bottom: 20px;
+    .pagination .page-item.active .page-link {
+        background: #3b82f6;
+        color: white;
     }
 </style>

@@ -87,7 +87,7 @@ namespace ljp_itsolutions.Controllers
                 CategoryData = categoryData.Select(c => c.Count).ToList(),
 
                 LowStockIngredients = await _db.Ingredients
-                    .Where(i => i.StockQuantity < i.LowStockThreshold)
+                    .Where(i => i.StockQuantity > 0 && i.StockQuantity < i.LowStockThreshold)
                     .OrderBy(i => i.StockQuantity)
                     .Take(5)
                     .ToListAsync(),
@@ -349,15 +349,15 @@ namespace ljp_itsolutions.Controllers
         public async Task<IActionResult> Inventory()
         {
             var products = await _db.Products.Include(p => p.Category).ToListAsync();
-            var ingredients = await _db.Ingredients.ToListAsync();
+            var ingredients = await _db.Ingredients.OrderBy(i => i.Name).ToListAsync();
 
             var viewModel = new InventoryViewModel
             {
                 Products = products,
                 Ingredients = ingredients,
                 LowStockCount = ingredients.Count(i => i.StockQuantity > 0 && i.StockQuantity < i.LowStockThreshold),
-                OutOfStockCount = ingredients.Count(i => i.StockQuantity == 0),
-                HealthyStockCount = ingredients.Count(i => i.StockQuantity >= i.LowStockThreshold),
+                OutOfStockCount = ingredients.Count(i => i.StockQuantity <= 0),
+                HealthyStockCount = ingredients.Count(i => i.StockQuantity >= i.LowStockThreshold && i.StockQuantity > 0),
             };
 
             return View(viewModel);
@@ -796,7 +796,8 @@ namespace ljp_itsolutions.Controllers
                         Message = $"{existing.Name} needs restocking ({existing.StockQuantity:0.##} {existing.Unit}).",
                         Type = "danger",
                         IconClass = "fas fa-cube",
-                        CreatedAt = DateTime.Now
+                        CreatedAt = DateTime.Now,
+                        TargetUrl = "/Manager/Inventory"
                     };
                     _db.Notifications.Add(notification);
 

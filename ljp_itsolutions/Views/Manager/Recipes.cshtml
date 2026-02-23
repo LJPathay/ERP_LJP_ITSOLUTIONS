@@ -51,26 +51,42 @@
     </div>
 
     <!-- Action Bar -->
-    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
-        <div class="d-flex gap-2 flex-wrap">
-            <div class="input-group" style="max-width: 280px;">
-                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
-                <input type="text" id="recipeSearch" class="form-control border-start-0 ps-0" placeholder="Search products...">
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-3">
+            <div class="row g-3 align-items-center">
+                <div class="col-lg-4 col-md-12">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0 text-muted"><i class="fas fa-search"></i></span>
+                        <input type="text" id="recipeSearch" class="form-control bg-light border-0 ps-0" placeholder="Search products...">
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0 text-muted x-small fw-bold">CATEGORY</span>
+                        <select id="categoryFilter" class="form-select bg-light border-0">
+                            <option value="">All Categories</option>
+                            @foreach (var cat in categories)
+                            {
+                                <option value="@cat">@cat</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0 text-muted x-small fw-bold">STATUS</span>
+                        <select id="statusFilter" class="form-select bg-light border-0">
+                            <option value="">All Statuses</option>
+                            <option value="has-recipe">Has Recipe</option>
+                            <option value="no-recipe">No Recipe</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-12 text-lg-end text-center">
+                    <div class="text-muted x-small" id="tableCount">Showing all products</div>
+                </div>
             </div>
-            <select id="categoryFilter" class="form-select" style="max-width: 200px;">
-                <option value="">All Categories</option>
-                @foreach (var cat in categories)
-                {
-                    <option value="@cat">@cat</option>
-                }
-            </select>
-            <select id="statusFilter" class="form-select" style="max-width: 180px;">
-                <option value="">All Statuses</option>
-                <option value="has-recipe">Has Recipe</option>
-                <option value="no-recipe">No Recipe</option>
-            </select>
         </div>
-        <div class="text-muted x-small" id="tableCount">Showing all products</div>
     </div>
 
     <!-- Recipes Table -->

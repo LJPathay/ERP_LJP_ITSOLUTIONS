@@ -26,6 +26,9 @@ namespace ljp_itsolutions.Models
 
         public bool IsRead { get; set; } = false;
 
+        [StringLength(255)]
+        public string? TargetUrl { get; set; }
+
         public Guid? UserID { get; set; }
         [ForeignKey("UserID")]
         public virtual User? User { get; set; }

@@ -1,6 +1,5 @@
 @* Marketing Side Navigation with Dropdowns *@
 <div class="nav flex-column gap-1 marketing-nav">
-    <!-- Dashboard always visible -->
     <div class="nav-item">
         <a class="nav-link d-flex align-items-center gap-3 @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")" asp-controller="Marketing" asp-action="Dashboard">
             <i class="fas fa-th-large opacity-75"></i>
@@ -8,7 +7,6 @@
         </a>
     </div>
 
-    <!-- Promotions Dropdown -->
     <div class="nav-item dropdown">
         <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="fas fa-tags opacity-75"></i>
@@ -31,7 +29,6 @@
         </ul>
     </div>
 
-    <!-- Customer Engagement Dropdown -->
     <div class="nav-item dropdown">
         <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="fas fa-user-friends opacity-75"></i>
@@ -60,7 +57,6 @@
         </ul>
     </div>
 
-    <!-- Reports Dropdown -->
     <div class="nav-item dropdown">
         <a class="nav-link d-flex align-items-center gap-3 dropdown-toggle no-caret" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="fas fa-file-invoice-dollar opacity-75"></i>

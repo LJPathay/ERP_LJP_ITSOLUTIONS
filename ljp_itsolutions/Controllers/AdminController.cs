@@ -8,7 +8,7 @@ using System.Text.Json;
 
 namespace ljp_itsolutions.Controllers
 {
-    [Authorize(Roles = "Admin,SuperAdmin")] // Allow SuperAdmin to see Admin dashboard too
+    [Authorize(Roles = "Admin,SuperAdmin")] 
     public class AdminController : BaseController
     {
         private readonly InMemoryStore _store;
@@ -210,8 +210,7 @@ namespace ljp_itsolutions.Controllers
             
             var totalAuditLogs = _db.AuditLogs.Count();
             var failedLogins = _db.AuditLogs.Count(a => a.Action.Contains("Failed") || a.Action.Contains("failed"));
-            
-            // Sales Trend Logic
+            // Sales trend logic
             var last7Days = Enumerable.Range(0, 7).Select(i => today.AddDays(-6 + i)).ToList();
             var trendLabels = new List<string>();
             var trendData = new List<decimal>();
@@ -271,13 +270,12 @@ namespace ljp_itsolutions.Controllers
         public IActionResult InventoryOverview()
         {
             var ingredients = _db.Ingredients
-                .OrderBy(i => i.StockQuantity)
+                .OrderBy(i => i.Name)
                 .ToList();
 
-            var lowStockCount = ingredients.Count(i => i.StockQuantity < i.LowStockThreshold);
-            var outOfStockCount = ingredients.Count(i => i.StockQuantity == 0);
-            
-            // Note: Ingredients don't have a 'Price' in the current model, so we'll show counts instead of value
+            var lowStockCount = ingredients.Count(i => i.StockQuantity < i.LowStockThreshold && i.StockQuantity > 0);
+            var outOfStockCount = ingredients.Count(i => i.StockQuantity <= 0);
+    
             ViewBag.LowStockCount = lowStockCount;
             ViewBag.OutOfStockCount = outOfStockCount;
             ViewBag.TotalCount = ingredients.Count;
@@ -362,7 +360,7 @@ namespace ljp_itsolutions.Controllers
                 return BadRequest("Username already exists.");
 
             user.UserID = Guid.NewGuid();
-            var plainPassword = user.Password; // Capture plain password before hashing
+            var plainPassword = user.Password; 
             user.Password = _hasher.HashPassword(user, user.Password);
             user.CreatedAt = DateTime.Now;
             user.IsActive = true;

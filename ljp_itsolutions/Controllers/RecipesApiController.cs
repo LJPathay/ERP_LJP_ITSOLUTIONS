@@ -22,19 +22,10 @@ namespace ljp_itsolutions.Controllers
         public List<RecipeIngredientDto> Ingredients { get; set; } = new();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// REST API that exposes the recipe template catalogue stored in the database.
-    ///
-    /// Endpoints:
-    ///   GET  /api/recipes           → all templates
-    ///   GET  /api/recipes/{id}      → single template by ID
-    ///   GET  /api/recipes/lookup?name=Cappuccino → best-matching template
-    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Secured at the app level; internal service-to-service calls only
+    [Authorize] 
     public class RecipesController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
@@ -44,8 +35,8 @@ namespace ljp_itsolutions.Controllers
             _db = db;
         }
 
-        // ── GET /api/recipes ──────────────────────────────────────────────────
-        /// <summary>Returns the full recipe template catalogue from the database.</summary>
+
+        /// Returns the full recipe template catalogue from the database.
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -57,7 +48,6 @@ namespace ljp_itsolutions.Controllers
             return Ok(templates.Select(ToDto));
         }
 
-        // ── GET /api/recipes/{id} ─────────────────────────────────────────────
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -71,7 +61,6 @@ namespace ljp_itsolutions.Controllers
             return Ok(ToDto(template));
         }
 
-        // ── GET /api/recipes/lookup?name=Vanilla+Latte ────────────────────────
         [HttpGet("lookup")]
         public async Task<IActionResult> Lookup([FromQuery] string name)
         {
@@ -94,8 +83,8 @@ namespace ljp_itsolutions.Controllers
             return Ok(ToDto(match));
         }
 
-        // ── Helpers ───────────────────────────────────────────────────────────
 
+        // helpers that when a new product is added , we don't have to update the API code to include it in the response
         private static RecipeDto ToDto(RecipeTemplate t) => new()
         {
             RecipeTemplateID = t.RecipeTemplateID,

@@ -106,7 +106,12 @@
                             string colorClass = "success";
                             string statusText = "In Stock";
                             
-                            if (item.StockQuantity == 0)
+                            if (item.StockQuantity < 0)
+                            {
+                                colorClass = "danger";
+                                statusText = "Critical";
+                            }
+                            else if (item.StockQuantity == 0)
                             {
                                 colorClass = "danger";
                                 statusText = "Out of Stock";

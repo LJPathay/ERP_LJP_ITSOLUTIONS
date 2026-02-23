@@ -29,7 +29,7 @@
                 foreach (var item in Model)
                 {
                     <li class="border-bottom">
-                        <a class="dropdown-item p-3 d-flex gap-3 text-wrap" href="#">
+                        <a class="dropdown-item p-3 d-flex gap-3 text-wrap" href="@(string.IsNullOrEmpty(item.TargetUrl) ? "#" : item.TargetUrl)" onclick="handleNotificationClick(event, @item.Id, this.href)">
                             <div class="flex-shrink-0">
                                 <div class="rounded-circle bg-@item.Type bg-opacity-10 text-@item.Type d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
                                     <i class="@item.IconClass small"></i>
@@ -61,12 +61,24 @@
 <script>
     function markAllNotificationsAsRead() {
         $.post('/Account/MarkAllRead', function() {
-            // Update UI instantly
             $('#notificationDropdown .badge').remove();
             $('#notificationDropdown h6').text('Notifications');
-            $('#notificationDropdown .text-primary').remove();
-            // Optionally clear the list or reload component
-            // location.reload(); 
+            $('#notificationDropdown .text-primary').remove(); 
+        });
+    }
+
+    function handleNotificationClick(event, id, url) {
+        event.preventDefault();
+        $.post('/Account/MarkAsRead', { id: id }, function() {
+            if (url && url !== '#' && url !== window.location.href) {
+                window.location.href = url;
+            } else {
+                location.reload();
+            }
+        }).fail(function() {
+            if (url && url !== '#') {
+                window.location.href = url;
+            }
         });
     }
 </script>
