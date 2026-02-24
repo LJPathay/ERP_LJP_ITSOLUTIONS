@@ -1,46 +1,23 @@
 :root {
-    --pos-bg: #f8f9fa;
-    --sidebar-bg: #ffffff;
-    --accent-color: #6d4c41;
-    /* Coffee Brown */
-    --accent-light: #8d6e63;
-    --text-main: #2d3436;
-    --text-muted: #636e72;
-    --border-color: #dfe6e9;
-    --card-bg: #ffffff;
-    --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    --primary-gradient: linear-gradient(135deg, #6d4c41 0%, #4e342e 100%);
-    --secondary-gradient: linear-gradient(135deg, #8d6e63 0%, #6d4c41 100%);
-}
-
-.access-high-contrast .pos-container {
-    --accent-color: #000000;
-    --accent-light: #333333;
-    --text-main: #000000;
-    --border-color: #000000;
-    --card-bg: #ffffff;
-    --pos-bg: #ffffff;
-}
-
-.access-high-contrast .product-card {
-    border: 2px solid #000 !important;
-}
-
-.access-high-contrast .category-btn.active {
-    background: #000 !important;
-    color: #fff !important;
-}
-
-.access-high-contrast .pay-now-btn {
-    background: #000 !important;
-    border: 2px solid #000 !important;
+    --pos-bg: #f8fafc;
+    --sidebar-bg: var(--glass-bg);
+    --accent-color: var(--accent-amber);
+    --accent-light: #f59e0b;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border-color: rgba(0, 0, 0, 0.05);
+    --card-bg: white;
+    --shadow: var(--glass-shadow);
+    --primary-gradient: linear-gradient(135deg, var(--primary-espresso) 0%, var(--secondary-espresso) 100%);
+    --secondary-gradient: linear-gradient(135deg, var(--accent-amber) 0%, #b45309 100%);
 }
 
 .pos-container {
     display: flex;
-    height: calc(100vh - 100px);
+    height: calc(100vh - 120px);
     overflow: hidden;
-    gap: 20px;
+    gap: 24px;
+    padding: 10px 0;
 }
 
 /* Products Section (Left) */
@@ -109,24 +86,26 @@
 }
 
 .product-card {
-    background: var(--card-bg);
-    border-radius: 16px;
-    padding: 15px;
+    background: white;
+    border-radius: 20px;
+    padding: 1.25rem;
     text-align: center;
-    border: 1px solid transparent;
+    border: 1px solid var(--border-color);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
 }
 
 .product-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow);
-    border-color: var(--accent-light);
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
+    border-color: var(--accent-color);
 }
 
 .product-image-container {
@@ -315,19 +294,26 @@
 
 .pay-now-btn {
     width: 100%;
-    padding: 18px;
+    padding: 20px;
     border: none;
-    border-radius: 16px;
-    background: var(--primary-gradient);
+    border-radius: 18px;
+    background: var(--secondary-gradient);
     color: white;
     font-size: 1.1rem;
     font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 12px;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 15px -3px rgba(217, 119, 6, 0.3);
+}
+
+.pay-now-btn:hover {
+    background: #b45309;
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(217, 119, 6, 0.4);
 }
 
 .pay-now-btn:active {

@@ -156,13 +156,33 @@ namespace ljp_itsolutions.Controllers
         public async Task<IActionResult> ArchiveUser(string id)
         {
             if (!Guid.TryParse(id, out var guid)) return RedirectToAction("Users");
+            
             var user = await _db.Users.FindAsync(guid);
             if (user != null)
             {
-                user.IsActive = false;
+                if (user.Role == UserRoles.SuperAdmin)
+                {
+                    TempData["Error"] = "SuperAdmin accounts cannot be archived.";
+                    return RedirectToAction("Users");
+                }
+
+                var archivedUser = new ArchivedUser
+                {
+                    OriginalUserID = user.UserID,
+                    Username = user.Username,
+                    FullName = user.FullName,
+                    Email = user.Email ?? "",
+                    Role = user.Role,
+                    ArchivedAt = DateTime.UtcNow,
+                    Reason = "User requested archive"
+                };
+
+                _db.ArchivedUsers.Add(archivedUser);
+                _db.Users.Remove(user);
+                
                 await _db.SaveChangesAsync();
                 await LogAudit($"Archived user: {user.Username}", $"Target User ID: {user.UserID}");
-                TempData["Success"] = "User archived successfully.";
+                TempData["Success"] = "User moved to archives successfully.";
             }
             return RedirectToAction("Users");
         }

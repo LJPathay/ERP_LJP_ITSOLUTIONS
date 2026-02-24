@@ -334,8 +334,41 @@ namespace ljp_itsolutions.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ArchiveProduct(int id)
+        {
+            var product = await _db.Products
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(p => p.ProductID == id);
+
+            if (product != null)
+            {
+                var archived = new ArchivedProduct
+                {
+                    OriginalProductID = product.ProductID,
+                    ProductName = product.ProductName,
+                    CategoryID = product.CategoryID,
+                    CategoryName = product.Category?.CategoryName,
+                    Price = product.Price,
+                    ImageURL = product.ImageURL,
+                    ArchivedAt = DateTime.UtcNow,
+                    Reason = "User requested archive"
+                };
+
+                _db.ArchivedProducts.Add(archived);
+                _db.Products.Remove(product);
+                
+                await _db.SaveChangesAsync();
+                await LogAudit($"Archived Product: {product.ProductName}");
+                TempData["SuccessMessage"] = "Product moved to archives successfully!";
+            }
+            return RedirectToAction("Products");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteProduct(int id)
         {
+            // Keeping for compatibility but favoring Archive
             var product = await _db.Products.FindAsync(id);
             if (product != null)
             {

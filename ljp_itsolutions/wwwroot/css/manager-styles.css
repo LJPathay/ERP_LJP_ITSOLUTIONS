@@ -20,43 +20,67 @@
 
 /* KPI Cards */
 .kpi-card {
-    background: white;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    border-radius: 1rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
     padding: 1.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-    transition: all 0.2s ease-in-out;
+    box-shadow: var(--glass-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+    pointer-events: none;
 }
 
 .kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-8px) scale(1.01);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    border-color: var(--accent-amber);
 }
 
 .kpi-card-label {
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.8rem;
+    font-weight: 700;
     color: #64748b;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .kpi-card-value {
-    font-size: 1.75rem;
-    font-weight: 700;
+    font-size: 2rem;
+    font-weight: 800;
     margin: 0;
-    color: #0f172a;
+    color: var(--primary-espresso);
+    letter-spacing: -0.03em;
 }
 
 .kpi-card-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 0.75rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.kpi-card:hover .kpi-card-icon {
+    transform: rotate(-10deg) scale(1.1);
 }
 
 /* Border Accent Utilities */
@@ -94,60 +118,34 @@
 /* Modern Tables */
 .modern-table {
     background: white;
-    border-radius: 1rem;
+    border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    width: 100%;
-}
-
-.scrollable-table {
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-/* Custom Scrollbar for scrollable tables */
-.scrollable-table::-webkit-scrollbar {
-    width: 6px;
-}
-
-.scrollable-table::-webkit-scrollbar-track {
-    background: #f1f5f9;
-}
-
-.scrollable-table::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-}
-
-.scrollable-table::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-.modern-table table {
-    margin-bottom: 0;
-    width: 100%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .modern-table thead th {
     background: #f8fafc;
-    color: #475569;
-    font-size: 0.75rem;
-    font-weight: 700;
+    color: #64748b;
+    font-size: 0.7rem;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.025em;
-    padding: 1rem 0.75rem;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.modern-table tbody td {
-    padding: 1rem 0.75rem;
-    color: #1e293b;
-    font-size: 0.875rem;
+    letter-spacing: 0.1em;
+    padding: 1.25rem 1.5rem;
     border-bottom: 1px solid #f1f5f9;
 }
 
-.modern-table tr:hover {
+.modern-table tbody td {
+    padding: 1.25rem 1.5rem;
+    color: #334155;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+}
+
+.modern-table tr:hover td {
     background-color: #fbfcfe;
+    color: var(--primary-espresso);
 }
 
 @media (max-width: 991px) {
@@ -289,23 +287,43 @@ tr:hover .sticky-action-col {
 }
 
 /* Sidebar & Navigation Enhancements */
+/* Sidebar & Navigation Enhancements */
 .sidebar {
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    width: var(--sidebar-width);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 100;
+    /* Lowered to ensure modals can be on top */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Center horizontally */
+}
+
+.brand {
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .sidebar .nav-link {
-    font-size: 0.9rem !important;
-    padding: 10px 16px !important;
-    letter-spacing: 0.01em;
+    border-radius: 12px;
+    margin: 4px 0;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    /* Icon above text for centering */
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    padding: 12px !important;
 }
 
 .sidebar .nav-link i {
-    font-size: 1rem !important;
-    opacity: 0.8;
-}
-
-.sidebar .nav-link.active i {
-    opacity: 1;
+    font-size: 1.25rem !important;
+    margin-bottom: 4px;
+    margin-right: 0 !important;
+    width: auto !important;
 }
 
 .sidebar .dropdown-menu {
@@ -345,12 +363,13 @@ tr:hover .sticky-action-col {
 
 /* Layout Header Aesthetic */
 .layout-header {
-    background: rgba(255, 255, 255, 0.8) !important;
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
     position: sticky !important;
     top: 0 !important;
-    z-index: 1020 !important;
-    /* Reduced to allow Bootstrap modals (z-index 1050+) to overlap correctly */
+    z-index: 1000 !important;
 }
 
 .header-left h1 {
@@ -412,23 +431,52 @@ tr:hover .sticky-action-col {
 
 /* Form Controls */
 .modern-form-label {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #495057;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
     margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .modern-form-control {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 0.65rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
     font-size: 0.95rem;
-    transition: all 0.2s;
+    background: #f8fafc;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #1e293b;
 }
 
 .modern-form-control:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+    background: white;
+    border-color: var(--accent-amber);
+    box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.1);
+    outline: none;
+}
+
+.action-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: #64748b;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.action-btn:hover {
+    border-color: var(--accent-amber);
+    color: var(--accent-amber);
+    background: rgba(217, 119, 6, 0.05);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);
 }
 
 /* Utility Classes */

@@ -135,7 +135,7 @@
 </div>
 
 <!-- Modals (Refined) -->
-<div class="modal fade" id="addUserModal" tabindex="-1">
+<div class="modal fade" id="addUserModal" tabindex="-1" style="z-index: 2000;">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header bg-light border-0 pb-0 pt-4 px-4">
@@ -204,7 +204,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="editUserModal" tabindex="-1">
+<div class="modal fade" id="editUserModal" tabindex="-1" style="z-index: 2000;">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header bg-light border-0 pb-0 pt-4 px-4">
@@ -245,13 +245,29 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0 p-4 pt-0">
+                <div class="modal-footer border-0 p-4 pt-0 d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="confirmArchive()">
+                        <i class="fas fa-archive me-1"></i>Archive Personnel
+                    </button>
                     <button type="submit" class="btn btn-primary rounded-pill px-4">Commit Changes</button>
                 </div>
+            </form>
+            <form id="archiveForm" asp-action="ArchiveUser" method="post" style="display:none;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="archive-userid" />
             </form>
         </div>
     </div>
 </div>
+
+<script>
+    function confirmArchive() {
+        if (confirm('Are you sure you want to archive this user? They will be moved to the Archived_Users table.')) {
+            $('#archive-userid').val($('#edit-userid').val());
+            $('#archiveForm').submit();
+        }
+    }
+</script>
 
 @section Scripts {
     <script>

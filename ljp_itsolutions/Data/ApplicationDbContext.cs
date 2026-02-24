@@ -28,6 +28,8 @@ namespace ljp_itsolutions.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<RecipeTemplate> RecipeTemplates { get; set; }
         public DbSet<RecipeTemplateIngredient> RecipeTemplateIngredients { get; set; }
+        public DbSet<ArchivedProduct> ArchivedProducts { get; set; }
+        public DbSet<ArchivedUser> ArchivedUsers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -59,6 +61,11 @@ namespace ljp_itsolutions.Data
             });
 
             builder.Entity<Product>(b =>
+            {
+                b.Property(p => p.Price).HasPrecision(18, 2);
+            });
+
+            builder.Entity<ArchivedProduct>(b =>
             {
                 b.Property(p => p.Price).HasPrecision(18, 2);
             });
