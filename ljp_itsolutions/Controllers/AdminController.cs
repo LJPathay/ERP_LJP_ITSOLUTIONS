@@ -123,6 +123,23 @@ namespace ljp_itsolutions.Controllers
                 .Take(5)
                 .ToList();
 
+            var dayStart = DateTime.Today;
+            var hourlyData = _db.Orders
+                .Where(o => o.OrderDate >= dayStart)
+                .GroupBy(o => o.OrderDate.Hour)
+                .Select(g => new { Hour = g.Key, Count = g.Count() })
+                .ToList();
+
+            var hourlyLabels = new List<string>();
+            var hourlyValues = new List<int>();
+
+            for (int i = 0; i < 24; i++)
+            {
+                hourlyLabels.Add(i < 12 ? $"{i}am" : (i == 12 ? "12pm" : $"{i-12}pm"));
+                var count = hourlyData.FirstOrDefault(h => h.Hour == i)?.Count ?? 0;
+                hourlyValues.Add(count);
+            }
+
             var model = new
             {
                 TodaysSales = todaysSales,
@@ -132,7 +149,9 @@ namespace ljp_itsolutions.Controllers
                 TopItemName = topItem?.ProductName ?? "N/A",
                 TopItemCount = topItem?.Count ?? 0,
                 RecentTransactions = recentTransactions,
-                LowStockItems = lowStockItems
+                LowStockItems = lowStockItems,
+                HourlyLabels = hourlyLabels,
+                HourlyData = hourlyValues
             };
 
             return View("Reports_Cashier", model);
@@ -191,13 +210,45 @@ namespace ljp_itsolutions.Controllers
                 .Take(10)
                 .ToList();
 
+            var thirtyDaysAgo = DateTime.UtcNow.Date.AddDays(-29);
+            var dailyRevenue = _db.Orders
+                .Where(o => o.OrderDate >= thirtyDaysAgo && (o.PaymentStatus == "Completed" || o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)"))
+                .GroupBy(o => o.OrderDate.Date)
+                .Select(g => new { Date = g.Key, Total = g.Sum(o => o.FinalAmount) })
+                .ToList();
+
+            var revenueLabels = new List<string>();
+            var revenueValues = new List<decimal>();
+
+            for (int i = 0; i < 30; i++)
+            {
+                var date = thirtyDaysAgo.AddDays(i);
+                revenueLabels.Add(date.ToString("MMM dd"));
+                var total = dailyRevenue.FirstOrDefault(d => d.Date == date)?.Total ?? 0;
+                revenueValues.Add(total);
+            }
+
+            var categoryData = _db.OrderDetails
+                .Include(od => od.Product)
+                .ThenInclude(p => p.Category)
+                .Where(od => od.Order.OrderDate >= thirtyDaysAgo)
+                .GroupBy(od => od.Product.Category.CategoryName)
+                .Select(g => new { Category = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(5)
+                .ToList();
+
             var model = new
             {
                 InventoryValue = inventoryValue,
                 LowStockCount = lowStockCount,
                 MonthlyRevenue = monthlyRevenue,
                 LastMonthRevenue = lastMonthRevenue,
-                Staff = staff
+                Staff = staff,
+                RevenueLabels = revenueLabels,
+                RevenueData = revenueValues,
+                CategoryLabels = categoryData.Select(c => c.Category).ToList(),
+                CategoryData = categoryData.Select(c => c.Count).ToList()
             };
 
             return View("Reports_Manager", model);

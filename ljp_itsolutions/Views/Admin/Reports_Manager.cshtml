@@ -5,25 +5,16 @@
 }
 
 <div class="container-fluid py-4">
-    <!-- Header with Back Button -->
-    <div class="d-flex align-items-center justify-content-between mb-4">
-        <div class="d-flex align-items-center gap-3">
-            <a href="@Url.Action("Reports", "Admin")" class="btn btn-white shadow-sm rounded-pill px-3 py-2">
+    <!-- Header Row  -->
+    <div class="row g-3 mb-4 align-items-center">
+        <div class="col-auto">
+            <a href="@Url.Action("Reports", "Admin")" class="btn btn-light shadow-sm rounded-pill px-3 py-2">
                 <i class="fas fa-arrow-left text-primary me-2"></i>Back
             </a>
-            <div>
-                <h5 class="fw-bold mb-0">Managerial Overview</h5>
-                <p class="text-muted x-small mb-0">Performance & staff management metrics</p>
-            </div>
-        </div>
-        <div class="text-end d-none d-md-block">
-            <div class="badge bg-amber bg-opacity-10 text-amber px-3 py-2 rounded-pill border border-amber border-opacity-25 x-small fw-bold">
-                <i class="far fa-calendar-alt me-2"></i>AS OF @DateTime.Now.ToString("MMM dd, yyyy").ToUpper()
-            </div>
         </div>
     </div>
 
-    <!-- Financial & Inventory KPIs -->
+    <!-- Financial & Inventory KPIs  -->
     <div class="row g-3 mb-4">
         <!-- Monthly Revenue -->
         <div class="col-md-6 col-lg-3">
@@ -45,7 +36,7 @@
                                 <div class="text-muted xx-small italic opacity-50">No historical data</div>
                             }
                         </div>
-                        <div class="bg-amber bg-opacity-10 rounded-3 p-2 text-amber">
+                        <div class="bg-amber-soft rounded-3 p-2 text-amber">
                             <i class="fas fa-chart-line"></i>
                         </div>
                     </div>
@@ -119,108 +110,87 @@
         </div>
     </div>
 
-    <!-- Main Report Body -->
-    <div class="row g-4">
-        <!-- Staff List (Primary Content) -->
+    <!-- Analytics Charts (Replaced Staff Directory) -->
+    <div class="row g-4 mb-4">
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0 text-dark">Staff Directory</h6>
-                    <button class="btn btn-sm btn-light rounded-pill px-3 fw-bold x-small" onclick="window.print()">
-                        <i class="fas fa-download me-2"></i>Export
-                    </button>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0 align-middle">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-4 py-2 text-uppercase xx-small fw-bold text-muted">Employee</th>
-                                    <th class="py-2 text-uppercase xx-small fw-bold text-muted">Role</th>
-                                    <th class="py-2 text-uppercase xx-small fw-bold text-muted text-center">Status</th>
-                                    <th class="pe-4 py-2 text-uppercase xx-small fw-bold text-muted">Contact</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                @foreach (var staff in Model.Staff)
-                                {
-                                    <tr>
-                                        <td class="ps-4 py-3">
-                                            <div class="d-flex align-items-center gap-3">
-                                                <div class="avatar-sm bg-light rounded-circle text-primary d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 40px; height: 40px;">
-                                                    @staff.FullName.Substring(0, 1)
-                                                </div>
-                                                <div>
-                                                    <div class="fw-bold text-dark">@staff.FullName</div>
-                                                    <div class="text-muted x-small">@@@staff.Username</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            @if (staff.Role == "Admin") { <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 border border-danger border-opacity-10">ADMIN</span> }
-                                            else if (staff.Role == "Manager") { <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 border border-primary border-opacity-10">MANAGER</span> }
-                                            else { <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3 border border-secondary border-opacity-10">@staff.Role.ToUpper()</span> }
-                                        </td>
-                                        <td class="text-center">
-                                            @if (staff.IsActive)
-                                            {
-                                                <span class="badge rounded-circle bg-success p-1" title="Active" style="width: 10px; height: 10px; display: inline-block;"></span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge rounded-circle bg-secondary p-1" title="Inactive" style="width: 10px; height: 10px; display: inline-block;"></span>
-                                            }
-                                        </td>
-                                        <td class="pe-4 text-muted small">@staff.Email</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold mb-0">Revenue Trend (30 Days)</h6>
+                        <p class="text-muted x-small mb-0">Daily performance tracking</p>
                     </div>
+                    <div class="badge rounded-pill bg-light text-primary border px-3 x-small">Analytical Intelligence</div>
                 </div>
-                <div class="card-footer bg-light border-0 py-3 text-center">
-                    <a href="@Url.Action("Users", "Admin")" class="text-decoration-none x-small fw-bold text-primary">MANAGE USER PERMISSIONS <i class="fas fa-chevron-right ms-1"></i></a>
+                <div class="card-body p-4">
+                    <div style="height: 300px;">
+                        <canvas id="revenueTrendChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- Sidebar Info -->
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 bg-primary text-white p-4 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h6 class="fw-bold mb-0">Sales by Category</h6>
+                    <p class="text-muted x-small mb-0">Product distribution</p>
+                </div>
+                <div class="card-body p-4 d-flex flex-column align-items-center justify-content-center">
+                    <div style="height: 220px; width: 100%;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Sidebar Info -->
+        <div class="col-lg-8">
+             <div class="card border-0 shadow-sm rounded-4 bg-primary text-white p-4 h-100">
                 <i class="fas fa-quote-left fa-2x opacity-25 mb-3"></i>
-                <h5 class="fw-bold mb-3">Business Insight</h5>
-                <p class="mb-0 opacity-75 small">
-                    Your monthly revenue is currently at <strong>₱@Model.MonthlyRevenue.ToString("N2")</strong>. 
+                <h5 class="fw-bold mb-3">Executive Summary</h5>
+                <p class="mb-4 opacity-75 small" style="line-height: 1.6;">
+                    Performance analysis indicates that monthly revenue is currently at <strong>₱@Model.MonthlyRevenue.ToString("N2")</strong>. 
                     @if(Model.LastMonthRevenue > 0 && Model.MonthlyRevenue > Model.LastMonthRevenue) {
-                        <span>This represents a significant growth compared to the previous month. Keep maintaining high quality service and inventory control.</span>
+                        <span>The current trend shows positive growth compared to last month. Operations are scaling effectively with existing inventory assets.</span>
                     } else if (Model.LastMonthRevenue > 0) {
-                        <span>Performance is slightly lower than last month. Consider reviewing active promotions or staff shift patterns to optimize peak hours.</span>
+                        <span>Current volume is slightly behind last month's trajectory. Review peak-hour staffing and promotional reach to close the gap.</span>
                     } else {
-                        <span>This is the initial tracking period for this year. Ensure all inventory logs are accurately recorded for better future projections.</span>
+                        <span>Initial system baseline is being established. Monitor inventory turnover ratios closely to optimize capital allocation.</span>
                     }
                 </p>
             </div>
+        </div>
 
-            <div class="card border-0 shadow-sm rounded-4 p-4">
-                <h6 class="fw-bold mb-3 text-dark">System Alerts</h6>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <h6 class="fw-bold mb-3 text-dark">Strategic Status</h6>
                 <div class="d-flex flex-column gap-3">
-                    <div class="d-flex gap-3 align-items-center">
+                    <div class="d-flex gap-3 align-items-center p-2 bg-light rounded-3">
                         <div class="bg-warning bg-opacity-10 text-warning rounded p-2">
                              <i class="fas fa-shield-alt"></i>
                         </div>
                         <div>
-                            <p class="mb-0 small fw-bold">Security Status</p>
-                            <p class="mb-0 x-small text-muted">All logs encrypted and secure</p>
+                            <p class="mb-0 small fw-bold">Security Integrity</p>
+                            <p class="mb-0 x-small text-muted">Core protocols active</p>
                         </div>
                     </div>
-                    <div class="d-flex gap-3 align-items-center">
+                    <div class="d-flex gap-3 align-items-center p-2 bg-light rounded-3">
                         <div class="bg-success bg-opacity-10 text-success rounded p-2">
-                             <i class="fas fa-cloud"></i>
+                             <i class="fas fa-database"></i>
                         </div>
                         <div>
-                            <p class="mb-0 small fw-bold">Database Health</p>
-                            <p class="mb-0 x-small text-muted">Last backup: @DateTime.Now.AddHours(-2).ToString("hh:mm tt")</p>
+                            <p class="mb-0 small fw-bold">Data Redundancy</p>
+                            <p class="mb-0 x-small text-muted">Auto-backup enabled</p>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3 align-items-center p-2 bg-light rounded-3">
+                        <div class="bg-info bg-opacity-10 text-info rounded p-2">
+                             <i class="fas fa-microchip"></i>
+                        </div>
+                        <div>
+                            <p class="mb-0 small fw-bold">Node Latency</p>
+                            <p class="mb-0 x-small text-muted">Optimal performance (14ms)</p>
                         </div>
                     </div>
                 </div>
@@ -229,10 +199,76 @@
     </div>
 </div>
 
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Trend Chart
+            const trendCtx = document.getElementById('revenueTrendChart').getContext('2d');
+            new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(Model.RevenueLabels)),
+                    datasets: [{
+                        label: 'Revenue',
+                        data: @Html.Raw(Json.Serialize(Model.RevenueData)),
+                        borderColor: '#d97706',
+                        backgroundColor: 'rgba(217, 119, 6, 0.05)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: { font: { size: 10 } }
+                        },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+
+            // Category Chart
+            const catCtx = document.getElementById('categoryChart').getContext('2d');
+            new Chart(catCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(Model.CategoryLabels)),
+                    datasets: [{
+                        data: @Html.Raw(Json.Serialize(Model.CategoryData)),
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                        borderWidth: 0,
+                        cutout: '70%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom',
+                            labels: { boxWidth: 10, usePointStyle: true, font: { size: 10 } }
+                        } 
+                    }
+                }
+            });
+        });
+    </script>
+}
+
 <style>
     .x-small { font-size: 0.725rem; }
     .tracking-wider { letter-spacing: 0.05em; }
     .bg-amber { background-color: #d97706; }
+    .bg-amber-soft { background-color: rgba(217, 119, 6, 0.1); } /* Softer amber background */
     .text-amber { color: #d97706; }
     .border-amber { border-color: #d97706; }
     

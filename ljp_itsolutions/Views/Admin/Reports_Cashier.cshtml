@@ -5,20 +5,16 @@
 }
 
 <div class="container-fluid py-4">
-    <!-- Header with Back Button -->
-    <div class="d-flex align-items-center justify-content-between mb-4">
-        <div class="d-flex align-items-center gap-3">
-            <a href="@Url.Action("Reports", "Admin")" class="btn btn-white shadow-sm rounded-pill px-3 py-2">
+    <!-- Header Row (Fixed Double Header) -->
+    <div class="row g-3 mb-4 align-items-center">
+        <div class="col-auto">
+            <a href="@Url.Action("Reports", "Admin")" class="btn btn-light shadow-sm rounded-pill px-3 py-2">
                 <i class="fas fa-arrow-left text-primary me-2"></i>Back
             </a>
-            <div>
-                <h5 class="fw-bold mb-0">Cashier Performance</h5>
-                <p class="text-muted x-small mb-0">Daily sales metrics & transaction history</p>
-            </div>
         </div>
-        <div class="text-end d-none d-md-block">
-            <div class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill border border-success border-opacity-25 x-small fw-bold">
-                <i class="fas fa-circle me-2 small"></i>LIVE FEED
+        <div class="col text-end d-none d-md-block">
+            <div class="badge bg-success text-white px-3 py-2 rounded-pill border border-success border-opacity-25 x-small fw-bold shadow-sm">
+                <i class="fas fa-circle me-2 small pulse"></i>LIVE TRANSACTION FEED
             </div>
         </div>
     </div>
@@ -118,13 +114,26 @@
         </div>
     </div>
 
+    <!-- Analytics Chart -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+        <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0">Hourly Transaction Volume</h6>
+            <div class="badge bg-light text-success border x-small">Peak Hour Analysis</div>
+        </div>
+        <div class="card-body p-4">
+            <div style="height: 250px;">
+                <canvas id="hourlyVolumeChart"></canvas>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-4 mb-4">
         <!-- Recent Cash Transactions -->
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
                 <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0 text-dark">Recent Transactions</h6>
-                    <a href="@Url.Action("Transactions", "Admin")" class="text-decoration-none xx-small fw-bold text-primary">VIEW ALL <i class="fas fa-chevron-right ms-1"></i></a>
+                    <h6 class="fw-bold mb-0 text-dark">Recent Activity</h6>
+                    <a href="@Url.Action("Transactions", "Admin")" class="text-decoration-none xx-small fw-bold text-primary">FULL LOG <i class="fas fa-chevron-right ms-1"></i></a>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover mb-0 align-middle">
@@ -133,8 +142,7 @@
                                 <th class="ps-4 py-2 text-uppercase xx-small fw-bold text-muted">ID</th>
                                 <th class="py-2 text-uppercase xx-small fw-bold text-muted">Time</th>
                                 <th class="py-2 text-uppercase xx-small fw-bold text-muted">Customer</th>
-                                <th class="py-2 text-uppercase xx-small fw-bold text-muted">Cashier</th>
-                                <th class="pe-4 py-2 text-uppercase xx-small fw-bold text-muted text-end">Amount Paid</th>
+                                <th class="pe-4 py-2 text-uppercase xx-small fw-bold text-muted text-end">Amount</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -155,9 +163,6 @@
                                                 <span class="text-dark small">@(trx.Customer?.FullName ?? "Walk-in")</span>
                                             </div>
                                         </td>
-                                        <td>
-                                            <span class="badge bg-light text-dark rounded-pill px-2 border">@(trx.Cashier?.FullName ?? "System")</span>
-                                        </td>
                                         <td class="pe-4 text-end fw-bold text-primary">₱@trx.FinalAmount.ToString("N2")</td>
                                     </tr>
                                 }
@@ -165,9 +170,9 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="5" class="text-center py-5 text-muted">
-                                        <i class="fas fa-receipt fa-3x opacity-25 mb-3 d-block"></i>
-                                        No cash transactions recorded today.
+                                    <td colspan="4" class="text-center py-5 text-muted">
+                                        <i class="fas fa-receipt fa-2x opacity-25 mb-3 d-block"></i>
+                                        No recent transactions.
                                     </td>
                                 </tr>
                             }
@@ -181,10 +186,10 @@
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-header bg-white border-0 py-3 px-4">
-                    <h5 class="fw-bold mb-0 text-dark">Inventory Risk</h5>
+                    <h5 class="fw-bold mb-0 text-dark">Stock Risks</h5>
                 </div>
                 <div class="card-body px-4 pt-0">
-                    <p class="text-muted x-small mb-4">Items listed below are falling below safe operating thresholds.</p>
+                    <p class="text-muted x-small mb-4">Critical items requiring replenishment.</p>
                     
                     @if (Model.LowStockItems != null && Model.LowStockItems.Count > 0)
                     {
@@ -196,7 +201,7 @@
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <span class="fw-bold text-dark small">@item.Name</span>
                                         <span class="badge @(item.StockQuantity < 5 ? "bg-danger" : "bg-warning") bg-opacity-10 text-@(item.StockQuantity < 5 ? "danger" : "warning") x-small">
-                                            @item.StockQuantity units left
+                                            @item.StockQuantity units
                                         </span>
                                     </div>
                                     <div class="progress" style="height: 4px;">
@@ -209,17 +214,14 @@
                     else
                     {
                         <div class="text-center py-5">
-                            <div class="avatar-lg bg-success bg-opacity-10 text-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
-                                <i class="fas fa-check-circle fa-2x"></i>
-                            </div>
-                            <h6 class="fw-bold text-dark mb-1">All Clear</h6>
-                            <p class="text-muted small mb-0">Stock levels are currently optimal.</p>
+                            <i class="fas fa-check-circle fa-2x text-success opacity-50 mb-3"></i>
+                            <h6 class="fw-bold text-dark mb-1">Stable Inventory</h6>
                         </div>
                     }
                 </div>
                 <div class="card-footer bg-light border-0 p-3 mt-auto">
-                    <a href="@Url.Action("InventoryOverview", "Admin")" class="btn btn-primary w-100 rounded-pill fw-bold btn-sm">
-                        <i class="fas fa-truck-loading me-2"></i>Restock Management
+                    <a href="@Url.Action("InventoryOverview", "Admin")" class="btn btn-primary w-100 rounded-pill fw-bold btn-sm shadow-sm">
+                        <i class="fas fa-box-open me-2"></i>Go to Inventory
                     </a>
                 </div>
             </div>
@@ -227,12 +229,48 @@
     </div>
 </div>
 
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const ctx = document.getElementById('hourlyVolumeChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(Model.HourlyLabels)),
+                    datasets: [{
+                        label: 'Transactions',
+                        data: @Html.Raw(Json.Serialize(Model.HourlyData)),
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 5,
+                        hoverBackgroundColor: '#2563eb'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { font: { size: 10 }, stepSize: 1 },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: { 
+                            ticks: { font: { size: 9 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}
+
 <style>
     .x-small { font-size: 0.725rem; }
+    .xx-small { font-size: 0.65rem; }
     .tracking-wider { letter-spacing: 0.05em; }
-    .family-monospace { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; }
-    
-    .inventory-alert-item {
         padding: 8px 0;
     }
     

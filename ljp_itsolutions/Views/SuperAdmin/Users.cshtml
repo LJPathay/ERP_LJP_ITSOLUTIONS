@@ -142,25 +142,25 @@
                 <h5 class="fw-bold text-dark"><i class="fas fa-user-plus text-primary me-2"></i>Provision New User</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form asp-action="CreateUser" method="post">
+            <form id="addUserForm">
                 @Html.AntiForgeryToken()
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label x-small fw-bold text-muted">Legal Full Name</label>
-                            <input type="text" name="FullName" class="form-control rounded-3" placeholder="e.g. John Doe" required>
+                            <input type="text" name="FullName" id="add-fullname" class="form-control rounded-3" placeholder="e.g. John Doe" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label x-small fw-bold text-muted">Account Username</label>
-                            <input type="text" name="Username" class="form-control rounded-3" placeholder="unique_handler" required>
+                            <input type="text" name="Username" id="add-username" class="form-control rounded-3" placeholder="unique_handler" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label x-small fw-bold text-muted">Email</label>
-                            <input type="email" name="Email" class="form-control rounded-3" placeholder="user@coffee.local" required>
+                            <input type="email" name="Email" id="add-email" class="form-control rounded-3" placeholder="user@coffee.local" required>
                         </div>
                         <div class="col-12">
                             <label class="form-label x-small fw-bold text-muted">Security Role Assignment</label>
-                            <select name="Role" class="form-select rounded-3" required>
+                            <select name="Role" id="add-role" class="form-select rounded-3" required>
                                 @foreach (var role in roles)
                                 {
                                     <option value="@role">@role</option>
@@ -171,16 +171,35 @@
                             <label class="form-label x-small fw-bold text-muted">Initial Access Password</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="fas fa-lock x-small"></i></span>
-                                <input type="password" name="Password" class="form-control border-start-0 rounded-end-3" required>
+                                <input type="password" name="Password" id="add-password" class="form-control border-start-0 rounded-end-3" required>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
                     <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-4">Initialize Account</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnAddUser">Initialize Account</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body text-center p-5">
+                <div class="avatar-lg bg-success bg-opacity-10 text-success rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                    <i class="fas fa-check-circle fa-3x"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">Success!</h4>
+                <p class="text-muted mb-4">The personnel account has been created successfully.</p>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary rounded-pill fw-bold" onclick="location.reload()">Done</button>
+                    <button type="button" class="btn btn-light rounded-pill fw-bold" onclick="resetAndAddAnother()">Add Another</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -192,7 +211,7 @@
                 <h5 class="fw-bold text-dark"><i class="fas fa-user-edit text-warning me-2"></i>Update Personnel Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form asp-action="EditUser" method="post">
+            <form asp-action="EditUser" method="post" id="editUserForm">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="UserID" id="edit-userid" />
                 <div class="modal-body p-4">
@@ -313,6 +332,8 @@
             event.preventDefault();
         };
 
+        const addUserModal = new bootstrap.Modal(document.getElementById('addUserModal'));
+        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
         const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
 
         window.openEditUserModal = function(id, fullname, username, email, role, isActive) {
@@ -323,6 +344,49 @@
             $('#edit-role').val(role);
             $('#edit-isactive').prop('checked', isActive);
             editModal.show();
+        };
+
+        $('#addUserForm').on('submit', async function(e) {
+            e.preventDefault();
+            const btn = $('#btnAddUser');
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...');
+
+            const data = {
+                FullName: $('#add-fullname').val(),
+                Username: $('#add-username').val(),
+                Email: $('#add-email').val(),
+                Role: $('#add-role').val(),
+                Password: $('#add-password').val()
+            };
+
+            try {
+                const res = await fetch('@Url.Action("CreateUser", "SuperAdmin")', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').first().val()
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    addUserModal.hide();
+                    successModal.show();
+                } else {
+                    const err = await res.text();
+                    alert(err || 'Failed to create user. Use unique identifiers.');
+                }
+            } catch (err) {
+                alert('Connection error. Please try again.');
+            } finally {
+                btn.prop('disabled', false).html('Initialize Account');
+            }
+        });
+
+        window.resetAndAddAnother = function() {
+            $('#addUserForm')[0].reset();
+            successModal.hide();
+            addUserModal.show();
         };
 
         $(document).ready(function() {

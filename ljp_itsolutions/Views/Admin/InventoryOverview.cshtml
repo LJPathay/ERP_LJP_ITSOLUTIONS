@@ -42,7 +42,7 @@
         </div>
     </div>
 
-    <!-- Stats Row (Compact) -->
+    <!-- Stats Row  -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #3b82f6 !important;">
@@ -61,32 +61,32 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #ef4444 !important;">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid @(ViewBag.OutOfStockCount > 0 ? "#ef4444" : "#10b981") !important;">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
                             <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Critical</p>
-                            <h4 class="fw-bold mb-0 text-danger">@ViewBag.OutOfStockCount</h4>
-                            <span class="text-danger xx-small">Needs Urgent Reorder</span>
+                            <h4 class="fw-bold mb-0 @(ViewBag.OutOfStockCount > 0 ? "text-danger" : "text-success")">@ViewBag.OutOfStockCount</h4>
+                            <span class="@(ViewBag.OutOfStockCount > 0 ? "text-danger" : "text-muted") xx-small">@(ViewBag.OutOfStockCount > 0 ? "Needs Urgent Reorder" : "Stock Levels Stable")</span>
                         </div>
-                        <div class="bg-danger bg-opacity-10 rounded-3 p-2 text-danger">
-                            <i class="fas fa-exclamation-triangle"></i>
+                        <div class="@(ViewBag.OutOfStockCount > 0 ? "bg-danger" : "bg-success") bg-opacity-10 rounded-3 p-2 @(ViewBag.OutOfStockCount > 0 ? "text-danger" : "text-success")">
+                            <i class="fas @(ViewBag.OutOfStockCount > 0 ? "fa-exclamation-triangle" : "fa-check-circle")"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #f59e0b !important;">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid @(ViewBag.LowStockCount > 0 ? "#f59e0b" : "#3b82f6") !important;">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
                             <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Low Stock</p>
-                            <h4 class="fw-bold mb-0 text-warning">@ViewBag.LowStockCount</h4>
-                            <span class="text-warning xx-small">Below Threshold</span>
+                            <h4 class="fw-bold mb-0 @(ViewBag.LowStockCount > 0 ? "text-warning" : "text-primary")">@ViewBag.LowStockCount</h4>
+                            <span class="@(ViewBag.LowStockCount > 0 ? "text-warning" : "text-muted") xx-small">@(ViewBag.LowStockCount > 0 ? "Below Threshold" : "Healthy Buffer")</span>
                         </div>
-                        <div class="bg-warning bg-opacity-10 rounded-3 p-2 text-warning">
-                            <i class="fas fa-arrow-down"></i>
+                        <div class="@(ViewBag.LowStockCount > 0 ? "bg-warning" : "bg-primary") bg-opacity-10 rounded-3 p-2 @(ViewBag.LowStockCount > 0 ? "text-warning" : "text-primary")">
+                            <i class="fas @(ViewBag.LowStockCount > 0 ? "fa-arrow-down" : "fa-shield-alt")"></i>
                         </div>
                     </div>
                 </div>

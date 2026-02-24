@@ -183,6 +183,25 @@
     </div>
 </div>
 
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body text-center p-5">
+                <div class="avatar-lg bg-success bg-opacity-10 text-success rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                    <i class="fas fa-check-circle fa-3x"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">Success!</h4>
+                <p class="text-muted mb-4">The user has been created and an invite has been sent.</p>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary rounded-pill fw-bold" onclick="location.reload()">Done</button>
+                    <button type="button" class="btn btn-light rounded-pill fw-bold" onclick="resetAndAddAnother()">Add Another</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Edit User Modal -->
 <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -335,6 +354,9 @@
         document.addEventListener('DOMContentLoaded', initPagination);
 
         // Add User
+        const addUserModal = new bootstrap.Modal(document.getElementById('addUserModal'));
+        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+
         document.getElementById('addUserForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
@@ -359,7 +381,10 @@
                     body: JSON.stringify(data)
                 });
 
-                if (res.ok) location.reload();
+                if (res.ok) {
+                    addUserModal.hide();
+                    successModal.show();
+                }
                 else {
                     const err = await res.text();
                     alert(err || 'Failed to create user.');
@@ -371,6 +396,12 @@
                 btn.innerHTML = 'Create User';
             }
         });
+
+        window.resetAndAddAnother = function() {
+            document.getElementById('addUserForm').reset();
+            successModal.hide();
+            addUserModal.show();
+        };
 
         // Edit User
         const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
