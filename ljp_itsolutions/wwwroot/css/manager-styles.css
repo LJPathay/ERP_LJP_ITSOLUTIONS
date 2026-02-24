@@ -303,11 +303,15 @@ tr:hover .sticky-action-col {
     margin: 2px 0;
     font-weight: 500;
     transition: all 0.2s ease;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex-direction: row !important;
 }
 
 .sidebar .nav-link:hover {
     color: #fff !important;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.08) !important;
     transform: translateX(4px);
 }
 
@@ -321,6 +325,7 @@ tr:hover .sticky-action-col {
     width: 20px;
     text-align: center;
     flex-shrink: 0;
+    margin-bottom: 0 !important;
 }
 
 .sidebar .dropdown-menu {
