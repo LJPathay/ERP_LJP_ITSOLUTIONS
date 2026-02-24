@@ -287,16 +287,10 @@ tr:hover .sticky-action-col {
 }
 
 /* Sidebar & Navigation Enhancements */
-/* Sidebar & Navigation Enhancements */
 .sidebar {
     width: var(--sidebar-width);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 100;
-    /* Lowered to ensure modals can be on top */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    /* Center horizontally */
+    z-index: 1040;
 }
 
 .brand {
@@ -306,24 +300,27 @@ tr:hover .sticky-action-col {
 
 .sidebar .nav-link {
     border-radius: 12px;
-    margin: 4px 0;
+    margin: 2px 0;
     font-weight: 500;
     transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    /* Icon above text for centering */
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    width: 100%;
-    padding: 12px !important;
+}
+
+.sidebar .nav-link:hover {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateX(4px);
+}
+
+.sidebar .nav-link.active {
+    color: #fff !important;
+    background: var(--accent-amber) !important;
+    box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);
 }
 
 .sidebar .nav-link i {
-    font-size: 1.25rem !important;
-    margin-bottom: 4px;
-    margin-right: 0 !important;
-    width: auto !important;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
 }
 
 .sidebar .dropdown-menu {
