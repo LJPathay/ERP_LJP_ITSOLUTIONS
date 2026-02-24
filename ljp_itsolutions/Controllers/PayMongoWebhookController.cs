@@ -18,13 +18,15 @@ namespace ljp_itsolutions.Controllers
         private readonly ILogger<PayMongoWebhookController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IReceiptService _receiptService;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public PayMongoWebhookController(ApplicationDbContext db, ILogger<PayMongoWebhookController> logger, IConfiguration configuration, IReceiptService receiptService)
+        public PayMongoWebhookController(ApplicationDbContext db, ILogger<PayMongoWebhookController> logger, IConfiguration configuration, IReceiptService receiptService, IServiceScopeFactory scopeFactory)
         {
             _db = db;
             _logger = logger;
             _configuration = configuration;
             _receiptService = receiptService;
+            _scopeFactory = scopeFactory;
         }
 
         [HttpPost("webhook")]
@@ -112,10 +114,20 @@ namespace ljp_itsolutions.Controllers
                             _logger.LogInformation("Order {OrderId} marked as paid via webhook.", orderId);
 
                             // Auto-send e-receipt if customer has an email
-                            if (order.CustomerID.HasValue)
-                            {
-                                await _receiptService.SendOrderReceiptAsync(order.OrderID);
-                            }
+                             // Auto-send e-receipt if customer has an email in background
+                             if (order.CustomerID.HasValue)
+                             {
+                                 _ = Task.Run(async () => {
+                                     try {
+                                         using (var scope = _scopeFactory.CreateScope()) {
+                                             var scopedReceiptService = scope.ServiceProvider.GetRequiredService<IReceiptService>();
+                                             await scopedReceiptService.SendOrderReceiptAsync(order.OrderID);
+                                         }
+                                     } catch (Exception ex) {
+                                         _logger.LogError(ex, "Background webhook receipt sending failed for order {OrderId}", order.OrderID);
+                                     }
+                                 });
+                             }
                         }
                     }
                 }

@@ -195,7 +195,7 @@
 <div class="modal fade" id="addIngredientModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="modal-header border-0 pb-0 pt-4 px-4 bg-white">
+            <div class="modal-header bg-light border-0 pb-0 pt-4 px-4">
                 <div class="d-flex align-items-center gap-3">
                     <div class="avatar-sm bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary">
                         <i class="fas fa-box-open fw-bold"></i>
@@ -253,7 +253,7 @@
 <div class="modal fade" id="editIngredientModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="modal-header border-0 pb-0 pt-4 px-4 bg-white">
+            <div class="modal-header bg-light border-0 pb-0 pt-4 px-4">
                 <div class="d-flex align-items-center gap-3">
                     <div class="avatar-sm bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-warning">
                         <i class="fas fa-edit fw-bold"></i>
@@ -311,7 +311,7 @@
 <div class="modal fade" id="stockIntakeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="modal-header border-0 pb-0 pt-4 px-4 bg-white">
+            <div class="modal-header bg-light border-0 pb-0 pt-4 px-4">
                 <div class="d-flex align-items-center gap-3">
                     <div class="avatar-sm bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-success">
                         <i class="fas fa-plus fw-bold"></i>
@@ -372,7 +372,7 @@
 <div class="modal fade" id="ingredientDetailsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="modal-header border-0 pb-0 pt-4 px-4 bg-white">
+            <div class="modal-header bg-light border-0 pb-0 pt-4 px-4">
                 <div class="d-flex align-items-center gap-3">
                     <div class="avatar-sm bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 48px; height: 48px;">
                         <i class="fas fa-cube fw-bold"></i>
@@ -552,18 +552,23 @@
                 event.preventDefault();
             };
 
-            // Search functionality
+            // Search functionality with debounce
+            let searchTimeoutInvent;
             $('#inventorySearch').on('keyup', function() {
+                clearTimeout(searchTimeoutInvent);
                 const searchValue = $(this).val().toLowerCase();
-                const allRows = Array.from(document.querySelectorAll('#inventoryTable tbody tr.ingredient-row'));
                 
-                filteredRows = allRows.filter(row => {
-                    const text = row.textContent.toLowerCase();
-                    return text.includes(searchValue);
-                });
-                
-                currentPage = 1;
-                updatePagination();
+                searchTimeoutInvent = setTimeout(() => {
+                    const allRows = Array.from(document.querySelectorAll('#inventoryTable tbody tr.ingredient-row'));
+                    
+                    filteredRows = allRows.filter(row => {
+                        const text = row.textContent.toLowerCase();
+                        return text.includes(searchValue);
+                    });
+                    
+                    currentPage = 1;
+                    updatePagination();
+                }, 300);
             });
 
     
@@ -582,7 +587,8 @@
 
             initPagination();
 
-            $(document).on('click', '.btn-edit-ingredient', function() {
+            $(document).on('click', '.btn-edit-ingredient', function(e) {
+                e.stopPropagation();
                 var id = $(this).data('id');
                 var name = $(this).data('name');
                 var stock = $(this).data('stock');
@@ -597,12 +603,16 @@
                 $('#edit-ing-threshold').val(threshold);
                 $('#edit-ing-expiry').val(expiry);
 
-                var myModal = new bootstrap.Modal(document.getElementById('editIngredientModal'));
+                var modalEl = document.getElementById('editIngredientModal');
+                var myModal = bootstrap.Modal.getOrCreateInstance(modalEl);
                 myModal.show();
             });
 
             // Row Click for Details
-            $(document).on('click', '.clickable-row', function() {
+            $(document).on('click', '.clickable-row', function(e) {
+                // Ignore if clicking on a button or something interactive
+                if ($(e.target).closest('button, a, input, select').length) return;
+                
                 var id = $(this).data('id');
                 loadIngredientDetails(id);
             });
@@ -668,17 +678,18 @@
                         // Set up "Edit" button in detail modal
                         $('.btn-edit-from-detail').off('click').on('click', function() {
                             const detailsModalEl = document.getElementById('ingredientDetailsModal');
-                            const detailsModal = bootstrap.Modal.getInstance(detailsModalEl);
+                            const detailsModal = bootstrap.Modal.getOrCreateInstance(detailsModalEl);
                             
                             detailsModalEl.addEventListener('hidden.bs.modal', function onHidden() {
                                 $(`.btn-edit-ingredient[data-id="${id}"]`).click();
                                 detailsModalEl.removeEventListener('hidden.bs.modal', onHidden);
-                            });
+                            }, { once: true });
                             
                             detailsModal.hide();
                         });
 
-                        var detailModal = new bootstrap.Modal(document.getElementById('ingredientDetailsModal'));
+                        var detailModalEl = document.getElementById('ingredientDetailsModal');
+                        var detailModal = bootstrap.Modal.getOrCreateInstance(detailModalEl);
                         detailModal.show();
                     }
                 } catch (error) {

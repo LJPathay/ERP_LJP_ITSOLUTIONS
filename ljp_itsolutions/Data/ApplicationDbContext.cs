@@ -37,7 +37,7 @@ namespace ljp_itsolutions.Data
                 b.Property(u => u.Username).IsRequired().HasMaxLength(50);
                 b.Property(u => u.FullName).IsRequired().HasMaxLength(100);
                 b.Property(u => u.IsActive).HasDefaultValue(true);
-                b.Property(u => u.CreatedAt).HasDefaultValueSql("GETDATE()");
+                b.Property(u => u.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
                 b.Property(u => u.IsHighContrast).HasDefaultValue(false);
                 b.Property(u => u.FontSize).HasDefaultValue("default");
                 b.Property(u => u.ReduceMotion).HasDefaultValue(false);
@@ -46,7 +46,7 @@ namespace ljp_itsolutions.Data
             builder.Entity<Order>(b =>
             {
                 b.HasKey(o => o.OrderID);
-                b.Property(o => o.OrderDate).HasDefaultValueSql("GETDATE()");
+                b.Property(o => o.OrderDate).HasDefaultValueSql("GETUTCDATE()");
                 b.HasOne(o => o.Cashier).WithMany().HasForeignKey(o => o.CashierID).OnDelete(DeleteBehavior.Restrict);
             });
 

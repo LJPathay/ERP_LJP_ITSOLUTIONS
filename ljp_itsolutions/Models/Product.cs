@@ -20,6 +20,7 @@ namespace ljp_itsolutions.Models
         public decimal Price { get; set; }
 
         public int StockQuantity { get; set; }
+        public int LowStockThreshold { get; set; } = 5;
 
         public string? ImageURL { get; set; }
 

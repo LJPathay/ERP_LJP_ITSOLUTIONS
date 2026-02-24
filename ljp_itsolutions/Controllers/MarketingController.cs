@@ -22,7 +22,7 @@ namespace ljp_itsolutions.Controllers
         public async Task<IActionResult> Dashboard()
         {
             var totalCustomers = await _db.Customers.CountAsync();
-            var activePromotions = await _db.Promotions.CountAsync(p => p.IsActive && p.EndDate >= DateTime.Now);
+            var activePromotions = await _db.Promotions.CountAsync(p => p.IsActive && p.EndDate >= DateTime.UtcNow);
             var totalOrders = await _db.Orders.CountAsync();
             var totalPointsAwarded = await _db.Customers.SumAsync(c => (long)c.Points);
 
@@ -89,11 +89,11 @@ namespace ljp_itsolutions.Controllers
                 PromotionName = promoCode, 
                 DiscountType = "Percentage",
                 DiscountValue = 15, 
-                StartDate = DateTime.Now,
-                EndDate = DateTime.Now.AddDays(30),
+                StartDate = DateTime.UtcNow,
+                EndDate = DateTime.UtcNow.AddDays(30),
                 IsActive = true,
                 ApprovalStatus = "Approved",
-                ApprovedDate = DateTime.Now
+                ApprovedDate = DateTime.UtcNow
             };
 
             _db.Promotions.Add(promotion);

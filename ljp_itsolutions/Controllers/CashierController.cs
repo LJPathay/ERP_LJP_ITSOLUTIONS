@@ -16,14 +16,16 @@ namespace ljp_itsolutions.Controllers
         private readonly IPayMongoService _payMongoService;
         private readonly ILogger<CashierController> _logger;
         private readonly IReceiptService _receiptService;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public CashierController(ApplicationDbContext db, InMemoryStore store, IPayMongoService payMongoService, ILogger<CashierController> logger, IReceiptService receiptService)
+        public CashierController(ApplicationDbContext db, InMemoryStore store, IPayMongoService payMongoService, ILogger<CashierController> logger, IReceiptService receiptService, IServiceScopeFactory scopeFactory)
             : base(db)
         {
             _store = store;
             _payMongoService = payMongoService;
             _logger = logger;
             _receiptService = receiptService;
+            _scopeFactory = scopeFactory;
         }
 
         public class OrderRequest
@@ -43,25 +45,9 @@ namespace ljp_itsolutions.Controllers
             public string? Email { get; set; }
         }
 
-        public async Task<IActionResult> CreateOrder()
+        public IActionResult CreateOrder()
         {
-            var products = await _db.Products
-                .Include(p => p.Category)
-                .Include(p => p.ProductRecipes)
-                    .ThenInclude(pr => pr.Ingredient)
-                .Where(p => p.IsAvailable)
-                .ToListAsync();
-
-            // Filter out products that are truly out of stock 
-            var availableProducts = products.Where(p => {
-                if (p.ProductRecipes != null && p.ProductRecipes.Any())
-                {
-                    return p.ProductRecipes.All(pr => pr.Ingredient.StockQuantity >= pr.QuantityRequired);
-                }
-                return p.StockQuantity > 0;
-            }).ToList();
-
-            return View(availableProducts);
+            return RedirectToAction("Index", "POS");
         }
 
         [HttpPost]
@@ -87,11 +73,22 @@ namespace ljp_itsolutions.Controllers
                 if (!Guid.TryParse(userIdClaim, out var cashierId))
                     return Challenge();
 
+                // Ensure active shift
+                var currentShift = await _db.CashShifts.FirstOrDefaultAsync(s => s.CashierID == cashierId && !s.IsClosed);
+                if (currentShift == null)
+                {
+                    var msg = "No open shift found. Please start a shift first.";
+                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                        return Json(new { success = false, message = msg });
+                    TempData["ErrorMessage"] = msg;
+                    return RedirectToAction("ShiftManagement");
+                }
+
                 //Create the order
                 var order = new Order
                 {
                     OrderID = Guid.NewGuid(),
-                    OrderDate = DateTime.Now,
+                    OrderDate = DateTime.UtcNow,
                     CashierID = cashierId,
                     CustomerID = customerId,
                     PaymentMethod = paymentMethod,
@@ -105,8 +102,8 @@ namespace ljp_itsolutions.Controllers
                         p.PromotionName == promoCode && 
                         p.IsActive && 
                         p.ApprovalStatus == "Approved" && 
-                        p.StartDate <= DateTime.Now && 
-                        p.EndDate >= DateTime.Now);
+                        p.StartDate <= DateTime.UtcNow && 
+                        p.EndDate >= DateTime.UtcNow);
                     
                     if (promotion != null)
                     {
@@ -225,12 +222,22 @@ namespace ljp_itsolutions.Controllers
                                         Message = $"{recipe.Ingredient.Name} needs restocking ({recipe.Ingredient.StockQuantity:0.##} {recipe.Ingredient.Unit}).",
                                         Type = "danger",
                                         IconClass = "fas fa-cube",
-                                        CreatedAt = DateTime.Now,
+                                        CreatedAt = DateTime.UtcNow,
                                         TargetUrl = "/Manager/Inventory"
                                     });
 
                                     // Email Alert
-                                    await _receiptService.SendLowStockAlertAsync(recipe.IngredientID);
+                                    // Fire low stock alert in background
+                                    _ = Task.Run(async () => {
+                                        try {
+                                            using (var scope = _scopeFactory.CreateScope()) {
+                                                var scopedReceiptService = scope.ServiceProvider.GetRequiredService<IReceiptService>();
+                                                await scopedReceiptService.SendLowStockAlertAsync(recipe.IngredientID);
+                                            }
+                                        } catch (Exception ex) {
+                                            _logger.LogError(ex, "Background low stock alert failed for ingredient {Id}", recipe.IngredientID);
+                                        }
+                                    });
                                 }
                                 
                                 // Log ingredient usage
@@ -240,7 +247,7 @@ namespace ljp_itsolutions.Controllers
                                     ProductID = product.ProductID,
                                     QuantityChange = -(recipe.QuantityRequired * qty),
                                     ChangeType = "Recipe Deduction",
-                                    LogDate = DateTime.Now,
+                                    LogDate = DateTime.UtcNow,
                                     Remarks = $"Used for {product.ProductName} (Order #{order.OrderID.ToString().Substring(0, 8)})"
                                 });
                             }
@@ -294,7 +301,7 @@ namespace ljp_itsolutions.Controllers
                         Message = $"Order #{order.OrderID.ToString().Substring(0, 8)} for ₱{order.FinalAmount:N2} received!",
                         Type = "success",
                         IconClass = "fas fa-star",
-                        CreatedAt = DateTime.Now,
+                        CreatedAt = DateTime.UtcNow,
                         TargetUrl = "/Manager/Transactions"
                     });
                 }
@@ -303,7 +310,7 @@ namespace ljp_itsolutions.Controllers
                 order.Payments.Add(new Payment
                 {
                     OrderID = order.OrderID,
-                    PaymentDate = DateTime.Now,
+                    PaymentDate = DateTime.UtcNow,
                     AmountPaid = order.FinalAmount,
                     PaymentMethod = paymentMethod,
                     PaymentStatus = "Success"
@@ -317,7 +324,7 @@ namespace ljp_itsolutions.Controllers
                         ProductID = detail.ProductID,
                         QuantityChange = -detail.Quantity,
                         ChangeType = "Sale",
-                        LogDate = DateTime.Now,
+                        LogDate = DateTime.UtcNow,
                         Remarks = $"Order #{order.OrderID.ToString().Substring(0, 8)}"
                     });
                 }
@@ -345,7 +352,17 @@ namespace ljp_itsolutions.Controllers
                 // Auto-send e-receipt if customer has an email
                 if (order.CustomerID.HasValue)
                 {
-                    await _receiptService.SendOrderReceiptAsync(order.OrderID);
+                    // Send receipt in background
+                    _ = Task.Run(async () => {
+                        try {
+                            using (var scope = _scopeFactory.CreateScope()) {
+                                var scopedReceiptService = scope.ServiceProvider.GetRequiredService<IReceiptService>();
+                                await scopedReceiptService.SendOrderReceiptAsync(order.OrderID);
+                            }
+                        } catch (Exception ex) {
+                            _logger.LogError(ex, "Background receipt sending failed for order {OrderId}", order.OrderID);
+                        }
+                    });
                 }
                 
                 // Detailed audit log with total
@@ -389,6 +406,7 @@ namespace ljp_itsolutions.Controllers
 
         [HttpPost]
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreatePayMongoOrder([FromBody] PayMongoOrderRequest request)
         {
             if (request.ProductIds == null || !request.ProductIds.Any())
@@ -399,11 +417,18 @@ namespace ljp_itsolutions.Controllers
             if (!Guid.TryParse(userIdClaim, out var cashierId))
                 return Unauthorized();
 
+            // Ensure active shift
+            var currentShift = await _db.CashShifts.FirstOrDefaultAsync(s => s.CashierID == cashierId && !s.IsClosed);
+            if (currentShift == null)
+            {
+                return BadRequest("No open shift found. Please start a shift first.");
+            }
+
             // Create the order
             var order = new Order
             {
                 OrderID = Guid.NewGuid(),
-                OrderDate = DateTime.Now,
+                OrderDate = DateTime.UtcNow,
                 CashierID = cashierId,
                 CustomerID = request.CustomerId,
                 PaymentMethod = "E-Wallet (Paymongo)",
@@ -417,8 +442,8 @@ namespace ljp_itsolutions.Controllers
                     p.PromotionName == request.PromoCode && 
                     p.IsActive && 
                     p.ApprovalStatus == "Approved" && 
-                    p.StartDate <= DateTime.Now && 
-                    p.EndDate >= DateTime.Now);
+                    p.StartDate <= DateTime.UtcNow && 
+                    p.EndDate >= DateTime.UtcNow);
                 
                 if (promotion != null)
                 {
@@ -530,12 +555,22 @@ namespace ljp_itsolutions.Controllers
                                     Message = $"{recipe.Ingredient.Name} needs restocking ({recipe.Ingredient.StockQuantity:0.##} {recipe.Ingredient.Unit}).",
                                     Type = "danger",
                                     IconClass = "fas fa-cube",
-                                    CreatedAt = DateTime.Now,
+                                    CreatedAt = DateTime.UtcNow,
                                     TargetUrl = "/Manager/Inventory"
                                 });
 
                                 // Email Alert
-                                await _receiptService.SendLowStockAlertAsync(recipe.IngredientID);
+                                // Fire low stock alert in background
+                                _ = Task.Run(async () => {
+                                    try {
+                                        using (var scope = _scopeFactory.CreateScope()) {
+                                            var scopedReceiptService = scope.ServiceProvider.GetRequiredService<IReceiptService>();
+                                            await scopedReceiptService.SendLowStockAlertAsync(recipe.IngredientID);
+                                        }
+                                    } catch (Exception ex) {
+                                        _logger.LogError(ex, "Background low stock alert failed for ingredient {Id}", recipe.IngredientID);
+                                    }
+                                });
                             }
                             
                             _db.InventoryLogs.Add(new InventoryLog
@@ -544,7 +579,7 @@ namespace ljp_itsolutions.Controllers
                                 ProductID = product.ProductID,
                                 QuantityChange = -(recipe.QuantityRequired * qty),
                                 ChangeType = "Recipe Deduction",
-                                LogDate = DateTime.Now,
+                                LogDate = DateTime.UtcNow,
                                 Remarks = $"Used for {product.ProductName} (Order #{order.OrderID.ToString().Substring(0, 8)})"
                             });
                         }
@@ -552,6 +587,33 @@ namespace ljp_itsolutions.Controllers
                     else
                     {
                         product.StockQuantity -= qty;
+                        
+                        // Trigger Low Stock Notification for Standalone Products
+                        if (product.StockQuantity <= product.LowStockThreshold)
+                        {
+                            _db.Notifications.Add(new Notification
+                            {
+                                Title = "Product Low Stock",
+                                Message = $"{product.ProductName} is running low ({product.StockQuantity} left).",
+                                Type = "warning",
+                                IconClass = "fas fa-coffee",
+                                CreatedAt = DateTime.UtcNow,
+                                TargetUrl = "/Manager/Products" // Or wherever products are managed
+                            });
+                            
+                            // reuse alert service if available for products
+                            // Fire product alert in background
+                            _ = Task.Run(async () => {
+                                try {
+                                    using (var scope = _scopeFactory.CreateScope()) {
+                                        var scopedReceiptService = scope.ServiceProvider.GetRequiredService<IReceiptService>();
+                                        await scopedReceiptService.SendProductLowStockAlertAsync(product.ProductID);
+                                    }
+                                } catch (Exception ex) {
+                                    _logger.LogError(ex, "Background product alert failed for product {Id}", product.ProductID);
+                                }
+                            }); 
+                        }
                     }
                 }
             }
@@ -598,7 +660,7 @@ namespace ljp_itsolutions.Controllers
                     Message = $"Online Order #{order.OrderID.ToString().Substring(0, 8)} for ₱{order.FinalAmount:N2} pending payment.",
                     Type = "info",
                     IconClass = "fas fa-star",
-                    CreatedAt = DateTime.Now,
+                    CreatedAt = DateTime.UtcNow,
                     TargetUrl = "/Manager/Transactions"
                 });
             }
@@ -611,7 +673,7 @@ namespace ljp_itsolutions.Controllers
                     ProductID = detail.ProductID,
                     QuantityChange = -detail.Quantity,
                     ChangeType = "Sale",
-                    LogDate = DateTime.Now,
+                    LogDate = DateTime.UtcNow,
                     Remarks = $"Order #{order.OrderID.ToString().Substring(0, 8)} (Pending Digital)"
                 });
             }
@@ -709,6 +771,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegisterCustomer([FromBody] CustomerRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.FullName))
@@ -736,6 +799,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendReceipt(Guid orderId, string email)
         {
             if (string.IsNullOrEmpty(email)) return Json(new { success = false, message = "Email is required." });
@@ -791,7 +855,7 @@ namespace ljp_itsolutions.Controllers
             var shift = new CashShift
             {
                 CashierID = cashierId,
-                StartTime = DateTime.Now,
+                StartTime = DateTime.UtcNow,
                 StartingCash = startingCash,
                 IsClosed = false
             };
@@ -830,11 +894,23 @@ namespace ljp_itsolutions.Controllers
             shift.ExpectedEndingCash = expected;
             shift.ActualEndingCash = actualEndingCash;
             shift.Difference = actualEndingCash - expected;
-            shift.EndTime = DateTime.Now;
+            shift.EndTime = DateTime.UtcNow;
             shift.IsClosed = true;
 
             await _db.SaveChangesAsync();
-            await _receiptService.SendShiftReportAsync(shift.CashShiftID);
+            
+            // Send Shift Report in background to avoid blocking the UI
+            _ = Task.Run(async () => {
+                try {
+                    using (var scope = _scopeFactory.CreateScope()) {
+                        var scopedReceiptService = scope.ServiceProvider.GetRequiredService<IReceiptService>();
+                        await scopedReceiptService.SendShiftReportAsync(shift.CashShiftID);
+                    }
+                } catch (Exception ex) {
+                    _logger.LogError(ex, "Background shift report sending failed for shift {ShiftId}", shift.CashShiftID);
+                }
+            });
+
             await LogAudit($"Closed Shift", $"Expected: ₱{expected:N2}, Actual: ₱{actualEndingCash:N2}, Difference: ₱{shift.Difference:N2}");
 
             TempData["SuccessMessage"] = $"Shift closed successfully. Difference: ₱{shift.Difference:N2}";

@@ -15,13 +15,15 @@ namespace ljp_itsolutions.Controllers
         private readonly IPhotoService _photoService;
         private readonly IRecipeService _recipeService;
         private readonly IReceiptService _receiptService;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public ManagerController(ApplicationDbContext db, IPhotoService photoService, IRecipeService recipeService, IReceiptService receiptService)
+        public ManagerController(ApplicationDbContext db, IPhotoService photoService, IRecipeService recipeService, IReceiptService receiptService, IServiceScopeFactory scopeFactory)
             : base(db)
         {
             _photoService = photoService;
             _recipeService = recipeService;
             _receiptService = receiptService;
+            _scopeFactory = scopeFactory;
         }
 
         public IActionResult Index()
@@ -138,7 +140,7 @@ namespace ljp_itsolutions.Controllers
                 return RedirectToAction("Inventory");
             }
 
-            var actualDate = IntakeDate ?? DateTime.Now;
+            var actualDate = IntakeDate ?? DateTime.UtcNow;
 
             ingredient.StockQuantity += Quantity;
             ingredient.LastStockedDate = actualDate;
@@ -263,7 +265,7 @@ namespace ljp_itsolutions.Controllers
                         ProductID = product.ProductID,
                         QuantityChange = (decimal)diff,
                         ChangeType = "Correction",
-                        LogDate = DateTime.Now,
+                        LogDate = DateTime.UtcNow,
                         Remarks = "Direct stock update from Product list"
                     });
                 }
@@ -313,7 +315,7 @@ namespace ljp_itsolutions.Controllers
                     ProductID = existingProduct.ProductID,
                     QuantityChange = (decimal)stockDiff,
                     ChangeType = "Correction",
-                    LogDate = DateTime.Now,
+                    LogDate = DateTime.UtcNow,
                     Remarks = "Manual adjustment from Edit Product menu"
                 });
             }
@@ -385,10 +387,11 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EmailSalesReport(DateTime? startDate, DateTime? endDate)
         {
             DateTime start = startDate ?? DateTime.Today.AddDays(-30);
-            DateTime end = endDate ?? DateTime.Now;
+            DateTime end = endDate ?? DateTime.UtcNow;
 
             bool success = await _receiptService.SendSalesReportAsync(start, end);
             
@@ -402,7 +405,7 @@ namespace ljp_itsolutions.Controllers
         public async Task<IActionResult> ExportSalesCSV(DateTime? startDate, DateTime? endDate)
         {
             DateTime start = startDate ?? DateTime.Today.AddDays(-30);
-            DateTime end = endDate ?? DateTime.Now;
+            DateTime end = endDate ?? DateTime.UtcNow;
 
             var data = await _db.OrderDetails
                 .Include(od => od.Order)
@@ -432,7 +435,7 @@ namespace ljp_itsolutions.Controllers
             csv.AppendLine("LJP IT SOLUTIONS - COFFEE ERP");
             csv.AppendLine("SALES PERFORMANCE REPORT");
             csv.AppendLine($"Period: {start:yyyy-MM-dd} to {end:yyyy-MM-dd}");
-            csv.AppendLine($"Generated: {DateTime.Now:f}");
+            csv.AppendLine($"Generated: {DateTime.UtcNow:f}");
             csv.AppendLine();
 
             // Executive Summary Stats
@@ -645,7 +648,7 @@ namespace ljp_itsolutions.Controllers
                                 IngredientID = recipe.IngredientID,
                                 QuantityChange = (recipe.QuantityRequired * detail.Quantity),
                                 ChangeType = "Reversal",
-                                LogDate = DateTime.Now,
+                                LogDate = DateTime.UtcNow,
                                 Remarks = $"Restored from Voided/Refunded Order #{order.OrderID.ToString().Substring(0, 8)} ({product.ProductName})"
                             });
                         }
@@ -659,7 +662,7 @@ namespace ljp_itsolutions.Controllers
                             ProductID = product.ProductID,
                             QuantityChange = detail.Quantity,
                             ChangeType = "Reversal",
-                            LogDate = DateTime.Now,
+                            LogDate = DateTime.UtcNow,
                             Remarks = $"Stock restored from Order #{order.OrderID.ToString().Substring(0, 8)}"
                         });
                     }
@@ -731,7 +734,7 @@ namespace ljp_itsolutions.Controllers
             {
                 if (ingredient.StockQuantity > 0)
                 {
-                    ingredient.LastStockedDate = DateTime.Now;
+                    ingredient.LastStockedDate = DateTime.UtcNow;
                 }
 
                 // STEP 1: Save the ingredient first so it gets a valid IngredientID
@@ -746,7 +749,7 @@ namespace ljp_itsolutions.Controllers
                         IngredientID = ingredient.IngredientID, // Now has a valid DB-assigned ID
                         QuantityChange = ingredient.StockQuantity,
                         ChangeType = "Initial",
-                        LogDate = DateTime.Now,
+                        LogDate = DateTime.UtcNow,
                         Remarks = "Initial stock upon ingredient creation"
                     });
                     await _db.SaveChangesAsync();
@@ -769,14 +772,14 @@ namespace ljp_itsolutions.Controllers
                 if (Math.Abs(ingredient.StockQuantity - existing.StockQuantity) > 0.0001m)
                 {
                     bool isIncrease = ingredient.StockQuantity > existing.StockQuantity;
-                    if (isIncrease) existing.LastStockedDate = DateTime.Now;
+                    if (isIncrease) existing.LastStockedDate = DateTime.UtcNow;
 
                     _db.InventoryLogs.Add(new InventoryLog
                     {
                         IngredientID = existing.IngredientID,
                         QuantityChange = ingredient.StockQuantity - existing.StockQuantity,
                         ChangeType = "Correction",
-                        LogDate = DateTime.Now,
+                        LogDate = DateTime.UtcNow,
                         Remarks = "Manual adjustment from Edit menu"
                     });
                 }
@@ -796,13 +799,23 @@ namespace ljp_itsolutions.Controllers
                         Message = $"{existing.Name} needs restocking ({existing.StockQuantity:0.##} {existing.Unit}).",
                         Type = "danger",
                         IconClass = "fas fa-cube",
-                        CreatedAt = DateTime.Now,
+                        CreatedAt = DateTime.UtcNow,
                         TargetUrl = "/Manager/Inventory"
                     };
                     _db.Notifications.Add(notification);
 
                     // Email Alert
-                    await _receiptService.SendLowStockAlertAsync(existing.IngredientID);
+                    // Send alert in background
+                    _ = Task.Run(async () => {
+                        try {
+                            using (var scope = _scopeFactory.CreateScope()) {
+                                var scopedReceiptService = scope.ServiceProvider.GetRequiredService<IReceiptService>();
+                                await scopedReceiptService.SendLowStockAlertAsync(existing.IngredientID);
+                            }
+                        } catch (Exception ex) {
+                            Console.WriteLine($"[Email Failure]: {ex.Message}");
+                        }
+                    });
                 }
 
                 await _db.SaveChangesAsync();
@@ -973,14 +986,24 @@ namespace ljp_itsolutions.Controllers
                 return NotFound();
 
             campaign.ApprovalStatus = "Approved";
-            campaign.ApprovedDate = DateTime.Now;
+            campaign.ApprovedDate = DateTime.UtcNow;
             campaign.ApprovedBy = GetCurrentUserId();
             
             await _db.SaveChangesAsync();
             await LogAudit($"Approved Campaign: {campaign.PromotionName}");
             
             // Email Notification to Marketing/Admins
-            await _receiptService.SendPromotionStatusAlertAsync(campaign);
+            // Send status alert in background
+            _ = Task.Run(async () => {
+                try {
+                    using (var scope = _scopeFactory.CreateScope()) {
+                        var scopedReceiptService = scope.ServiceProvider.GetRequiredService<IReceiptService>();
+                        await scopedReceiptService.SendPromotionStatusAlertAsync(campaign);
+                    }
+                } catch (Exception ex) {
+                    Console.WriteLine($"[Email Failure]: {ex.Message}");
+                }
+            });
             
             TempData["SuccessMessage"] = $"Campaign '{campaign.PromotionName}' approved successfully!";
             return Ok();
@@ -1001,7 +1024,17 @@ namespace ljp_itsolutions.Controllers
             await LogAudit($"Rejected Campaign: {campaign.PromotionName} (Reason: {dto.Reason})");
 
             // Email Notification to Marketing/Admins
-            await _receiptService.SendPromotionStatusAlertAsync(campaign);
+            // Send status alert in background
+            _ = Task.Run(async () => {
+                try {
+                    using (var scope = _scopeFactory.CreateScope()) {
+                        var scopedReceiptService = scope.ServiceProvider.GetRequiredService<IReceiptService>();
+                        await scopedReceiptService.SendPromotionStatusAlertAsync(campaign);
+                    }
+                } catch (Exception ex) {
+                    Console.WriteLine($"[Email Failure]: {ex.Message}");
+                }
+            });
             
             TempData["SuccessMessage"] = $"Campaign '{campaign.PromotionName}' rejected.";
             return Ok();

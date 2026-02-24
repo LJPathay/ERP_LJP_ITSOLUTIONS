@@ -358,6 +358,68 @@ namespace ljp_itsolutions.Services
             }
         }
 
+        public async Task<bool> SendProductLowStockAlertAsync(int productId)
+        {
+            if (!await IsFeatureEnabledAsync("EmailNotifications") || !await IsFeatureEnabledAsync("LowStockAlerts")) return false;
+
+            var product = await _db.Products.FindAsync(productId);
+            if (product == null) return false;
+
+            string htmlBody = $@"
+                <div style='background-color: #fff1f2; padding: 40px 0; font-family: ""Inter"", sans-serif;'>
+                    <div style='max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(225, 29, 72, 0.1); border: 1px solid #fecdd3;'>
+                        <div style='background-color: #be123c; padding: 25px; text-align: center; color: #ffffff;'>
+                            <h1 style='margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 1px;'>ORDER ALERT: PRODUCT LOW STOCK</h1>
+                        </div>
+                        
+                        <div style='padding: 30px; text-align: center;'>
+                            <div style='width: 64px; height: 64px; background-color: #fff1f2; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; border: 2px solid #fb7185;'>
+                                <span style='font-size: 32px;'>☕</span>
+                            </div>
+                            
+                            <h2 style='color: #1e293b; font-size: 18px; font-weight: 700; margin-bottom: 10px;'>{product.ProductName} is almost sold out!</h2>
+                            <p style='color: #64748b; font-size: 14px; line-height: 1.6; margin-bottom: 25px;'>
+                                This is an automated alert for standalone product: <strong>{product.ProductName}</strong>.
+                            </p>
+                            
+                            <div style='background-color: #f8fafc; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; margin-bottom: 30px;'>
+                                <table style='width: 100%;'>
+                                    <tr>
+                                        <td style='text-align: left; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase;'>Stock Remaining</td>
+                                        <td style='text-align: right; color: #be123c; font-size: 18px; font-weight: 800;'>{product.StockQuantity} units</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='text-align: left; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase; padding-top: 10px;'>Reorder Point</td>
+                                        <td style='text-align: right; color: #1e293b; font-size: 14px; font-weight: 600; padding-top: 10px;'>{product.LowStockThreshold} units</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <div style='margin-top: 40px; border-top: 1px solid #f1f5f9; padding-top: 20px;'>
+                                <p style='color: #94a3b8; font-size: 11px;'>
+                                    LJP Coffee ERP · Inventory Control System
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>";
+
+            try
+            {
+                var recipientEmails = await GetManagementEmailsAsync();
+                foreach (var email in recipientEmails)
+                {
+                    await _emailSender.SendEmailAsync(email, $"🚨 PRODUCT ALERT: {product.ProductName} is Low!", htmlBody);
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send low stock alert for Product ID {ProductId}", productId);
+                return false;
+            }
+        }
+
         public async Task<bool> SendSalesReportAsync(DateTime startDate, DateTime endDate)
         {
             if (!await IsFeatureEnabledAsync("EmailNotifications")) return false;
@@ -492,7 +554,7 @@ namespace ljp_itsolutions.Services
             }
         }
 
-        public async Task<bool> SendWelcomeEmailAsync(User user, string plainPassword)
+        public async Task<bool> SendStaffInviteAsync(User user, string inviteLink)
         {
             if (!await IsFeatureEnabledAsync("EmailNotifications")) return false;
 
@@ -511,38 +573,42 @@ namespace ljp_itsolutions.Services
                             </p>
                             
                             <div style='background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; margin: 30px 0;'>
-                                <p style='margin: 0 0 15px; color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase;'>Your Temporary Credentials</p>
+                                <p style='margin: 0 0 15px; color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase;'>Your Access Details</p>
                                 <table style='width: 100%; font-size: 14px;'>
                                     <tr>
-                                        <td style='color: #94a3b8; padding-bottom: 10px;'>Username:</td>
-                                        <td style='color: #1e293b; font-weight: 700; padding-bottom: 10px;'>{user.Username}</td>
+                                        <td style='color: #94a3b8; padding-bottom: 5px;'>Username:</td>
+                                        <td style='color: #1e293b; font-weight: 700; padding-bottom: 5px;'>{user.Username}</td>
                                     </tr>
                                     <tr>
-                                        <td style='color: #94a3b8;'>Password:</td>
-                                        <td style='color: #1e293b; font-weight: 700;'>{plainPassword}</td>
+                                        <td style='color: #94a3b8;'>Role:</td>
+                                        <td style='color: #1e293b; font-weight: 700;'>{user.Role}</td>
                                     </tr>
                                 </table>
                             </div>
 
                             <p style='color: #64748b; font-size: 13px; line-height: 1.6;'>
-                                <strong>Important:</strong> Please log in and change your password immediately in your Profile settings.
+                                <strong>Action Required:</strong> For security reasons, you must set your own password before you can log in. Click the button below to secure your account.
                             </p>
 
                             <div style='margin-top: 40px; text-align: center;'>
-                                <a href='#' style='background-color: #3b82f6; color: #ffffff; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px;'>Launch ERP Console</a>
+                                <a href='{inviteLink}' style='background-color: #3b82f6; color: #ffffff; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px; display: inline-block; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);'>Set My Password</a>
                             </div>
+                            
+                            <p style='margin-top: 30px; color: #94a3b8; font-size: 11px; text-align: center;'>
+                                This link will expire in 2 hours. If it expires, please contact your Administrator.
+                            </p>
                         </div>
                     </div>
                 </div>";
 
             try
             {
-                await _emailSender.SendEmailAsync(user.Email ?? "", "Welcome to LJP IT Solutions ERP", htmlBody);
+                await _emailSender.SendEmailAsync(user.Email ?? "", "Action Required: Complete your LJP ERP Account Setup", htmlBody);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to send welcome email to {Email}", user.Email);
+                _logger.LogError(ex, "Failed to send staff invite email to {Email}", user.Email);
                 return false;
             }
         }

@@ -15,13 +15,15 @@ namespace ljp_itsolutions.Controllers
         private readonly InMemoryStore _store;
         private readonly IPasswordHasher<ljp_itsolutions.Models.User> _hasher;
         private readonly IReceiptService _receiptService;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public SuperAdminController(InMemoryStore store, ljp_itsolutions.Data.ApplicationDbContext db, IPasswordHasher<ljp_itsolutions.Models.User> hasher, IReceiptService receiptService)
+        public SuperAdminController(InMemoryStore store, ljp_itsolutions.Data.ApplicationDbContext db, IPasswordHasher<ljp_itsolutions.Models.User> hasher, IReceiptService receiptService, IServiceScopeFactory scopeFactory)
             : base(db)
         {
             _store = store;
             _hasher = hasher;
             _receiptService = receiptService;
+            _scopeFactory = scopeFactory;
         }
 
 
@@ -34,7 +36,7 @@ namespace ljp_itsolutions.Controllers
             
             // Security metrics
             var failedLoginsCount = _db.AuditLogs.Count(a => a.Action.Contains("Failed login"));
-            var lockedOutUsersCount = _db.Users.Count(u => u.LockoutEnd != null && u.LockoutEnd > DateTime.Now);
+            var lockedOutUsersCount = _db.Users.Count(u => u.LockoutEnd != null && u.LockoutEnd > DateTime.UtcNow);
 
             var model = new {
                 AuditLogs = auditLogs,
@@ -89,20 +91,38 @@ namespace ljp_itsolutions.Controllers
                 }
 
                 user.UserID = Guid.NewGuid();
-                user.CreatedAt = DateTime.Now;
+                user.CreatedAt = DateTime.UtcNow;
                 user.IsActive = true;
-                user.Password = _hasher.HashPassword(user, Password);
+                
+                // Secure Invite Link flow
+                var token = Guid.NewGuid().ToString("N");
+                user.PasswordResetToken = token;
+                user.ResetTokenExpiry = DateTime.UtcNow.AddHours(2);
+                user.Password = "LOCKED_INITIALLY"; 
+
                 _db.Users.Add(user);
                 await _db.SaveChangesAsync();
 
-                // Send Welcome Email
+                // Send Invite Email
                 if (!string.IsNullOrEmpty(user.Email))
                 {
-                    await _receiptService.SendWelcomeEmailAsync(user, Password);
+                    var inviteLink = Url.Action("ResetPassword", "Account", new { userId = user.UserID, token = token }, protocol: Request.Scheme) ?? "";
+                    // Send welcome email invite in background
+                    _ = Task.Run(async () => {
+                        try {
+                            using (var scope = _scopeFactory.CreateScope()) {
+                                var scopedReceiptService = scope.ServiceProvider.GetRequiredService<IReceiptService>();
+                                await scopedReceiptService.SendStaffInviteAsync(user, inviteLink);
+                            }
+                        } catch (Exception ex) {
+                            // Log locally but don't block
+                            Console.WriteLine($"[Email Failure]: {ex.Message}");
+                        }
+                    });
                 }
 
                 await LogAudit($"Created user: {user.Username} as {user.Role}", $"Target User ID: {user.UserID}");
-                TempData["Success"] = "User created successfully. Welcome email sent.";
+                TempData["Success"] = "User created successfully. Secure invite link sent to their email.";
             }
             return RedirectToAction("Users");
         }
@@ -225,10 +245,10 @@ namespace ljp_itsolutions.Controllers
             try {
                 var path = Path.Combine(Directory.GetCurrentDirectory(), "Backups");
                 if (!Directory.Exists(path)) Directory.CreateDirectory(path);
-                var fileName = $"backup_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+                var fileName = $"backup_{DateTime.UtcNow:yyyyMMdd_HHmmss}.json";
                 var fullPath = Path.Combine(path, fileName);
                 var backupData = new {
-                    GeneratedAt = DateTime.Now,
+                    GeneratedAt = DateTime.UtcNow,
                     Users = await _db.Users.AsNoTracking().ToListAsync(),
                     Products = await _db.Products.AsNoTracking().ToListAsync(),
                     Orders = await _db.Orders.AsNoTracking().Include(o => o.OrderDetails).ToListAsync(),

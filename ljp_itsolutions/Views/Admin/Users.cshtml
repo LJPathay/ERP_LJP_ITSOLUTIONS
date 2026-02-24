@@ -134,13 +134,15 @@
     </div>
 </div>
 
+@Html.AntiForgeryToken()
+
 <!-- Add User Modal -->
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header bg-primary text-white border-bottom-0">
-                <h5 class="modal-title fw-bold">Add New User</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-light border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark">Add New User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body pt-4">
                 <form id="addUserForm">
@@ -185,8 +187,8 @@
 <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header bg-white border-bottom-0 pb-0">
-                <h5 class="modal-title fw-bold">Edit User</h5>
+            <div class="modal-header bg-light border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark">Edit User</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body pt-4">
@@ -350,7 +352,10 @@
             try {
                 const res = await fetch('@Url.Action("CreateUser", "Admin")', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
                     body: JSON.stringify(data)
                 });
 
@@ -393,7 +398,10 @@
 
             const res = await fetch('@Url.Action("EditUser", "Admin")', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
                 body: JSON.stringify(data)
             });
 

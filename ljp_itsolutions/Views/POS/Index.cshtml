@@ -32,10 +32,14 @@
         <div class="products-grid" id="productsGrid">
             @foreach (var product in products)
             {
-                var isStocked = product.StockQuantity > 0; // kung naay recipe , dapat i-check pud ang stock sa mga ingredients, pero for simplicity, we just check the product stock here.
+                var isStocked = (product.ProductRecipes != null && product.ProductRecipes.Any()) ? 
+                    product.ProductRecipes.All(pr => pr.Ingredient.StockQuantity >= pr.QuantityRequired) : 
+                    product.StockQuantity > 0;
                 <div class="product-card @(isStocked ? "" : "out-of-stock")" 
                      data-category="@product.Category?.CategoryName" 
-                     onclick="@(isStocked ? $"addToCart('{product.ProductID}', '{product.ProductName}', {product.Price})" : "")">
+                     tabindex="@(isStocked ? "0" : "-1")"
+                     onclick="@(isStocked ? $"addToCart('{product.ProductID}', '{product.ProductName}', {product.Price})" : "")"
+                     onkeypress="if(event.key === 'Enter') this.click()">
                     <div class="product-image-container">
                         @if (!string.IsNullOrEmpty(product.ImageURL))
                         {
@@ -181,9 +185,9 @@
 <div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 1.5rem;">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold text-success">
-                    <i class="fas fa-check-circle me-2"></i>Transaction Successful
+            <div class="modal-header bg-light border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fas fa-check-circle me-2 text-success"></i>Transaction Successful
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -216,8 +220,8 @@
 <div class="modal fade" id="registerCustomerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Quick Enrollment</h5>
+            <div class="modal-header bg-light border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark">Quick Enrollment</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
@@ -283,6 +287,18 @@
     <script>
         let cart = [];
         let paymentMethod = 'Cash';
+        let isRedeeming = false;
+        let customerPoints = 0;
+        let totalAmount = 0;
+        let selectedCustomerEmail = null;
+        let currentOrderId = null;
+
+        // Cart loss protection
+        window.onbeforeunload = function() {
+            if (cart.length > 0) {
+                return "You have items in your cart. Are you sure you want to leave?";
+            }
+        };
 
         function addToCart(id, name, price) {
             const existing = cart.find(item => item.id === id);
@@ -309,8 +325,6 @@
             cart = [];
             renderCart();
         }
-
-        let totalAmount = 0;
 
         function renderCart() {
             const cartContainer = document.getElementById('cartItems');
@@ -343,9 +357,6 @@
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
             updateTotals(subtotal);
         }
-
-        let isRedeeming = false;
-        let customerPoints = 0;
 
         function toggleRedeem() {
             if (customerPoints < 5) {
@@ -416,16 +427,38 @@
             }
         }
 
+        let searchTimeoutProducts;
         function searchProducts() {
-            const query = document.getElementById('productSearch').value.toLowerCase();
-            document.querySelectorAll('.product-card').forEach(card => {
-                const name = card.querySelector('.product-name').innerText.toLowerCase();
-                if (name.includes(query)) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
+            clearTimeout(searchTimeoutProducts);
+            searchTimeoutProducts = setTimeout(() => {
+                const query = document.getElementById('productSearch').value.toLowerCase();
+                const cards = document.querySelectorAll('.product-card');
+                let foundMatch = false;
+
+                cards.forEach(card => {
+                    const name = card.querySelector('.product-name').innerText.toLowerCase();
+                    if (name.includes(query)) {
+                        card.style.display = 'flex';
+                        foundMatch = true;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Show "No results" message if needed
+                let noResults = document.getElementById('noResultsMessage');
+                if (!foundMatch) {
+                    if (!noResults) {
+                        noResults = document.createElement('div');
+                        noResults.id = 'noResultsMessage';
+                        noResults.className = 'col-12 text-center py-5 text-muted';
+                        noResults.innerHTML = '<i class="fas fa-search fa-3x mb-3 opacity-25"></i><p class="fw-bold">No products found matching your search</p>';
+                        document.getElementById('productsGrid').appendChild(noResults);
+                    }
+                } else if (noResults) {
+                    noResults.remove();
                 }
-            });
+            }, 300);
         }
 
         function applyPromo() {
@@ -481,7 +514,7 @@
             if (paymentMethod === 'Cash') {
                 const cash = parseFloat(document.getElementById('cashReceived').value) || 0;
                 if (cash < totalAmount) {
-                    alert('Insufficient cash provided.');
+                    showToast('Insufficient cash provided.', 'error');
                     return;
                 }
             }
@@ -521,6 +554,11 @@
                     qrContainer.innerHTML = `<img src="${data.qrCodeUrl}" alt="Real QR Ph" class="img-fluid" />`;
                     qrInstruction.innerText = "Scan this QR Ph code with GCash or Maya to pay.";
                     doneBtn.innerText = "I Have Paid / Complete Order";
+                    doneBtn.onclick = function() {
+                        if (confirm("Have you successfully completed the payment on your device? Clicking 'OK' will finalize this session and redirect you to the transaction history.")) {
+                            window.location.href = '@Url.Action("TransactionHistory", "Cashier")';
+                        }
+                    };
                     doneBtn.disabled = false;
                 } else {
                     const error = await response.text();
@@ -530,53 +568,6 @@
             } catch (err) {
                 qrContainer.innerHTML = `<div class="text-danger p-3"><i class="fas fa-wifi fa-2x mb-2"></i><br><small>Connection Error</small></div>`;
                 qrInstruction.innerText = "Please check your internet connection.";
-            }
-        }
-
-        async function finalizePaymongo() {
-            const btn = event.target;
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating QR Ph...';
-            btn.disabled = true;
-
-            const productIds = cart.flatMap(item => Array(item.qty).fill(item.id));
-            const promoCode = document.getElementById('promoCode').value;
-
-            try {
-                const response = await fetch('@Url.Action("CreatePayMongoOrder", "Cashier")', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-                    },
-                    body: JSON.stringify({ productIds, promoCode })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    // Update QR Code Image in Modal
-                    const qrImg = document.querySelector('#paymongoModal img[alt="Payment QR Code"]');
-                    if (qrImg) {
-                        qrImg.src = data.qrCodeUrl;
-                    }
-
-                    // Change button behavior to "Done"
-                    btn.innerHTML = 'Complete Order';
-                    btn.disabled = false;
-                    btn.onclick = () => window.location.href = '@Url.Action("TransactionHistory", "Cashier")';
-                    
-                } else {
-                    const error = await response.text();
-                    alert('Error: ' + error);
-                    btn.innerHTML = originalHtml;
-                    btn.disabled = false;
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Connection error. Please check your internet.');
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
             }
         }
 
@@ -654,8 +645,7 @@
             }
         }
 
-        let currentOrderId = null;
-        let selectedCustomerEmail = null;
+
 
         async function sendEReceipt() {
             if (!currentOrderId) {
@@ -782,7 +772,11 @@
             const email = document.getElementById('regEmail').value;
 
             if (!fullName) {
-                alert('Please enter a name.');
+                showToast('Please enter a name.', 'error');
+                return;
+            }
+            if (phoneNumber && !/^09\d{9}$/.test(phoneNumber)) {
+                showToast('Please enter a valid 11-digit PH mobile number starting with 09.', 'error');
                 return;
             }
 
@@ -807,11 +801,21 @@
                 });
                 document.getElementById('registerCustomerForm').reset();
             } else {
-                alert(data.message || 'Registration failed');
+                showToast(data.message || 'Registration failed', 'error');
             }
         }
 
-        // Handle modal close to reset POS
+        // Handle modal close to reset POS and clean backdrops
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('hidden.bs.modal', function () {
+                // Remove leftover backdrops that might cause "freezing"
+                document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            });
+        });
+
         document.getElementById('receiptModal').addEventListener('hidden.bs.modal', function () {
             location.reload();
         });

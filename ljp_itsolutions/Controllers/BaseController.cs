@@ -22,7 +22,7 @@ namespace ljp_itsolutions.Controllers
                 {
                     Action = action,
                     Details = details,
-                    Timestamp = DateTime.Now,
+                    Timestamp = DateTime.UtcNow,
                     UserID = userId ?? GetCurrentUserId()
                 };
                 _db.AuditLogs.Add(auditLog);

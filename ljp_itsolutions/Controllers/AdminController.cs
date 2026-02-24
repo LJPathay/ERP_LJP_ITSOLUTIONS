@@ -14,13 +14,15 @@ namespace ljp_itsolutions.Controllers
         private readonly InMemoryStore _store;
         private readonly IPasswordHasher<ljp_itsolutions.Models.User> _hasher;
         private readonly IReceiptService _receiptService;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public AdminController(InMemoryStore store, ljp_itsolutions.Data.ApplicationDbContext db, IPasswordHasher<ljp_itsolutions.Models.User> hasher, IReceiptService receiptService)
+        public AdminController(InMemoryStore store, ljp_itsolutions.Data.ApplicationDbContext db, IPasswordHasher<ljp_itsolutions.Models.User> hasher, IReceiptService receiptService, IServiceScopeFactory scopeFactory)
             : base(db)
         {
             _store = store;
             _hasher = hasher;
             _receiptService = receiptService;
+            _scopeFactory = scopeFactory;
         }
 
 
@@ -63,7 +65,7 @@ namespace ljp_itsolutions.Controllers
                 .Sum(o => (decimal?)o.FinalAmount) ?? 0;
             
             var totalOrders = _db.Orders.Count();
-            var activePromotions = _db.Promotions.Count(p => p.StartDate <= DateTime.Now && p.EndDate >= DateTime.Now);
+            var activePromotions = _db.Promotions.Count(p => p.StartDate <= DateTime.UtcNow && p.EndDate >= DateTime.UtcNow);
             
             var recentTransactions = _db.Orders
                 .Include(o => o.Cashier)
@@ -139,7 +141,7 @@ namespace ljp_itsolutions.Controllers
         public IActionResult Reports_Marketing()
         {
             var activePromotionsList = _db.Promotions
-                .Where(p => p.StartDate <= DateTime.Now && p.EndDate >= DateTime.Now)
+                .Where(p => p.StartDate <= DateTime.UtcNow && p.EndDate >= DateTime.UtcNow)
                 .OrderByDescending(p => p.StartDate)
                 .ToList();
             
@@ -147,7 +149,7 @@ namespace ljp_itsolutions.Controllers
             
             var totalCustomers = _db.Customers.Count();
             
-            var startOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
             var newCustomersThisMonth = _db.Customers
                 .Where(c => c.Orders.Any())
                 .Select(c => new { FirstOrderDate = c.Orders.Min(o => o.OrderDate) })
@@ -169,7 +171,7 @@ namespace ljp_itsolutions.Controllers
             var inventoryValue = _db.Products.Sum(p => p.Price * p.StockQuantity);
             var lowStockCount = _db.Products.Count(p => p.StockQuantity < 20);
             
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             var startOfMonth = new DateTime(now.Year, now.Month, 1);
             
             var monthlyRevenue = _db.Orders
@@ -351,35 +353,56 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateUser([FromBody] User user)
         {
-            if (string.IsNullOrEmpty(user.Username) || string.IsNullOrEmpty(user.Password))
-                return BadRequest("Username and Password are required.");
+            if (string.IsNullOrEmpty(user.Username))
+                return BadRequest("Username is required.");
 
             if (_db.Users.Any(u => u.Username == user.Username))
                 return BadRequest("Username already exists.");
 
+            // SECURITY: Prevent creating a SuperAdmin from this endpoint
+            if (user.Role == UserRoles.SuperAdmin)
+                return Forbid("Admin cannot create a SuperAdmin account.");
+
             user.UserID = Guid.NewGuid();
-            var plainPassword = user.Password; 
-            user.Password = _hasher.HashPassword(user, user.Password);
-            user.CreatedAt = DateTime.Now;
+            
+            var token = Guid.NewGuid().ToString("N");
+            user.PasswordResetToken = token;
+            user.ResetTokenExpiry = DateTime.UtcNow.AddHours(2);
+            user.Password = "LOCKED_INITIALLY"; 
+
+            user.CreatedAt = DateTime.UtcNow;
             user.IsActive = true;
 
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
 
-            // Send Welcome Email
             if (!string.IsNullOrEmpty(user.Email))
             {
-                await _receiptService.SendWelcomeEmailAsync(user, plainPassword);
+                var inviteLink = Url.Action("ResetPassword", "Account", new { userId = user.UserID, token = token }, protocol: Request.Scheme) ?? "";
+                // Send welcome email invite in background
+                _ = Task.Run(async () => {
+                    try {
+                        using (var scope = _scopeFactory.CreateScope()) {
+                            var scopedReceiptService = scope.ServiceProvider.GetRequiredService<IReceiptService>();
+                            await scopedReceiptService.SendStaffInviteAsync(user, inviteLink);
+                        }
+                    } catch (Exception ex) {
+                        // Log locally but don't block
+                        Console.WriteLine($"[Email Failure]: {ex.Message}");
+                    }
+                });
             }
 
-            await LogAudit("Created User: " + user.Username, null, user.UserID);
+            await LogAudit("Created User & Sent Invite: " + user.Username, null, user.UserID);
 
             return Ok();
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditUser([FromBody] JsonElement data)
         {
             try
@@ -394,7 +417,14 @@ namespace ljp_itsolutions.Controllers
 
                 existingUser.FullName = data.GetProperty("FullName").GetString() ?? existingUser.FullName;
                 existingUser.Email = data.GetProperty("Email").GetString() ?? existingUser.Email;
-                existingUser.Role = data.GetProperty("Role").GetString() ?? existingUser.Role;
+                
+                string newRole = data.GetProperty("Role").GetString() ?? existingUser.Role;
+                // SECURITY: Prevent promotion to SuperAdmin
+                if (newRole == UserRoles.SuperAdmin && existingUser.Role != UserRoles.SuperAdmin)
+                {
+                    return Forbid("Cannot promote a user to SuperAdmin.");
+                }
+                existingUser.Role = newRole;
 
                 _db.Users.Update(existingUser);
                 await _db.SaveChangesAsync();
@@ -409,6 +439,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleUserStatus(Guid id)
         {
             var user = await _db.Users.FindAsync(id);
@@ -425,6 +456,7 @@ namespace ljp_itsolutions.Controllers
         }
         // Inventory Actions
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddIngredient([FromBody] Ingredient ingredient)
         {
             if (string.IsNullOrEmpty(ingredient.Name)) return BadRequest("Name is required.");
@@ -434,13 +466,13 @@ namespace ljp_itsolutions.Controllers
 
             if (ingredient.StockQuantity > 0)
             {
-                ingredient.LastStockedDate = DateTime.Now;
+                ingredient.LastStockedDate = DateTime.UtcNow;
                 _db.InventoryLogs.Add(new InventoryLog
                 {
                     IngredientID = ingredient.IngredientID,
                     QuantityChange = ingredient.StockQuantity,
                     ChangeType = "Initial",
-                    LogDate = DateTime.Now,
+                    LogDate = DateTime.UtcNow,
                     Remarks = "Initial stock upon ingredient creation"
                 });
                 await _db.SaveChangesAsync();
@@ -463,7 +495,7 @@ namespace ljp_itsolutions.Controllers
                 return RedirectToAction("InventoryOverview");
             }
 
-            var actualDate = IntakeDate ?? DateTime.Now;
+            var actualDate = IntakeDate ?? DateTime.UtcNow;
 
             ingredient.StockQuantity += Quantity;
             ingredient.LastStockedDate = actualDate;
@@ -496,6 +528,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStock(int id, decimal quantity, decimal? threshold, DateTime? expiryDate, string remarks)
         {
             var ingredient = await _db.Ingredients.FindAsync(id);
@@ -506,14 +539,14 @@ namespace ljp_itsolutions.Controllers
 
             if (Math.Abs(diff) > 0.0001m)
             {
-                if (diff > 0) ingredient.LastStockedDate = DateTime.Now;
+                if (diff > 0) ingredient.LastStockedDate = DateTime.UtcNow;
 
                 _db.InventoryLogs.Add(new InventoryLog
                 {
                     IngredientID = ingredient.IngredientID,
                     QuantityChange = diff,
                     ChangeType = diff > 0 ? "Adjustment (Add)" : "Adjustment (Remove)",
-                    LogDate = DateTime.Now,
+                    LogDate = DateTime.UtcNow,
                     Remarks = string.IsNullOrEmpty(remarks) ? "Manual adjustment via Admin" : remarks
                 });
                 ingredient.StockQuantity = quantity;

@@ -23,9 +23,12 @@ namespace ljp_itsolutions.Services
         /// <summary>
         /// Sends an alert email to the manager when an ingredient hits low stock.
         /// </summary>
-        /// <param name="ingredientId">The ID of the ingredient.</param>
-        /// <returns>True if the email was sent successfully.</returns>
         Task<bool> SendLowStockAlertAsync(int ingredientId);
+
+        /// <summary>
+        /// Sends an alert email to the manager when a standalone product hits low stock.
+        /// </summary>
+        Task<bool> SendProductLowStockAlertAsync(int productId);
 
         /// <summary>
         /// Sends a comprehensive sales report to the manager for a specific date range.
@@ -36,9 +39,9 @@ namespace ljp_itsolutions.Services
         Task<bool> SendSalesReportAsync(DateTime startDate, DateTime endDate);
 
         /// <summary>
-        /// Sends a welcome email to a newly created staff member with their credentials.
+        /// Sends a welcome email to a newly created staff member with a set-password link.
         /// </summary>
-        Task<bool> SendWelcomeEmailAsync(User user, string plainPassword);
+        Task<bool> SendStaffInviteAsync(User user, string inviteLink);
 
         /// <summary>
         /// Notifies the marketing team about a promotion's approval or rejection.

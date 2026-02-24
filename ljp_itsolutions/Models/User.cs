@@ -39,6 +39,10 @@ namespace ljp_itsolutions.Models
         public int AccessFailedCount { get; set; } = 0;
         public DateTimeOffset? LockoutEnd { get; set; }
 
+        // Password Reset
+        public string? PasswordResetToken { get; set; }
+        public DateTime? ResetTokenExpiry { get; set; }
+
         // Legacy compatibility
         [NotMapped]
         public Guid Id { get => UserID; set => UserID = value; }

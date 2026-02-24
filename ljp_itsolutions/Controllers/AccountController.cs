@@ -107,7 +107,7 @@ namespace ljp_itsolutions.Controllers
                 }
                 
                 await _db.SaveChangesAsync();
-                await LogAudit("Failed Login Attempt", user.UserID);
+                await LogAudit("Failed Login Attempt", null, user.UserID);
                 return View(model);
             }
  
@@ -134,7 +134,7 @@ namespace ljp_itsolutions.Controllers
  
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
-            await LogAudit("User Login", user.UserID);
+            await LogAudit("User Login", null, user.UserID);
  
             // Set session variables for layout consistency
             HttpContext.Session.SetString("UserRole", roleName);
@@ -176,20 +176,28 @@ namespace ljp_itsolutions.Controllers
         {
             if (string.IsNullOrEmpty(username))
             {
-                TempData["Message"] = "If the account exists, password reset instructions were sent.";
+                TempData["Message"] = "Username is required.";
                 return RedirectToAction("Login");
             }
 
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == username || u.Email == username);
             if (user == null)
             {
-                TempData["Message"] = "If the account exists, password reset instructions were sent.";
+                // To prevent user enumeration, we still show the same message
+                TempData["Message"] = "If an account is associated with that username, instructions were sent.";
                 return RedirectToAction("Login");
             }
 
-            var callback = Url.Action("ResetPassword", "Account", new { userId = user.Id, token = "placeholder" }, protocol: Request.Scheme);
-            await _emailSender.SendEmailAsync(user.Email ?? string.Empty, "Password Reset", $"Reset your password using this link: {callback}");
-            TempData["Message"] = "Password reset instructions were sent to the registered email.";
+            var token = Guid.NewGuid().ToString("N");
+            user.PasswordResetToken = token;
+            user.ResetTokenExpiry = DateTime.UtcNow.AddHours(1);
+            await _db.SaveChangesAsync();
+
+            var callback = Url.Action("ResetPassword", "Account", new { userId = user.UserID, token = token }, protocol: Request.Scheme);
+            await _emailSender.SendEmailAsync(user.Email ?? string.Empty, "Password Reset Request - Coffee ERP", 
+                $"Click here to reset your password: <a href='{callback}'>Reset Link</a>. This link expires in 1 hour.");
+
+            TempData["Message"] = "If an account is associated with that username, instructions were sent.";
             return RedirectToAction("Login");
         }
 
@@ -211,23 +219,35 @@ namespace ljp_itsolutions.Controllers
 
             if (!Guid.TryParse(model.UserId, out var guid))
             {
-                ModelState.AddModelError(string.Empty, "Invalid password reset request.");
+                ModelState.AddModelError(string.Empty, "Invalid request.");
                 return View(model);
             }
 
-            var user = await _db.Users.FindAsync(guid);
-            if (user == null)
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.UserID == guid && u.PasswordResetToken == model.Token);
+
+            if (user == null || user.ResetTokenExpiry < DateTime.UtcNow)
             {
-                ModelState.AddModelError(string.Empty, "Invalid password reset request.");
+                ModelState.AddModelError(string.Empty, "Invalid or expired token.");
                 return View(model);
             }
 
-            // Simple reset: replace password hash directly (token omitted in this simplified flow)
-            user.Password = _hasher.HashPassword(user, model.NewPassword);
-            await _db.SaveChangesAsync();
-            await LogAudit("Password Reset Successful", user.UserID);
+            // Complexity Check
+            if (model.NewPassword.Length < 8 || !model.NewPassword.Any(char.IsUpper) || !model.NewPassword.Any(char.IsDigit))
+            {
+                ModelState.AddModelError(string.Empty, "Password must be at least 8 characters long and contain at least one uppercase letter and one number.");
+                return View(model);
+            }
 
-            TempData["Message"] = "Password has been reset.";
+            user.Password = _hasher.HashPassword(user, model.NewPassword);
+            user.PasswordResetToken = null;
+            user.ResetTokenExpiry = null;
+            user.AccessFailedCount = 0; // Reset lockout on password reset too
+            user.LockoutEnd = null;
+
+            await _db.SaveChangesAsync();
+            await LogAudit("Password Reset Success", $"User: {user.Username} (Manual Reset via Email)");
+
+            TempData["Message"] = "Success! Password has been updated.";
             return RedirectToAction("Login");
         }
 
@@ -372,7 +392,7 @@ namespace ljp_itsolutions.Controllers
 
             if (result > 0)
             {
-                await LogAudit("Self-Service Password Change", user.UserID);
+                await LogAudit("Self-Service Password Change", null, user.UserID);
                 TempData["SuccessMessage"] = "Password updated successfully.";
             }
             else
@@ -385,9 +405,13 @@ namespace ljp_itsolutions.Controllers
 
         [Authorize]
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkAllRead()
         {
-            var unread = await _db.Notifications.Where(n => !n.IsRead).ToListAsync();
+            var userId = GetCurrentUserId();
+            if (userId == null) return Unauthorized();
+
+            var unread = await _db.Notifications.Where(n => n.UserID == userId && !n.IsRead).ToListAsync();
             foreach (var n in unread) n.IsRead = true;
             await _db.SaveChangesAsync();
             return Ok();
@@ -395,10 +419,12 @@ namespace ljp_itsolutions.Controllers
 
         [Authorize]
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkAsRead(int id)
         {
+            var userId = GetCurrentUserId();
             var notification = await _db.Notifications.FindAsync(id);
-            if (notification != null)
+            if (notification != null && notification.UserID == userId)
             {
                 notification.IsRead = true;
                 await _db.SaveChangesAsync();
@@ -406,14 +432,15 @@ namespace ljp_itsolutions.Controllers
             return Ok();
         }
 
-        private async Task LogAudit(string action, Guid? userId = null)
+        private async Task LogAudit(string action, string? details = null, Guid? userId = null)
         {
             try
             {
                 var auditLog = new AuditLog
                 {
                     Action = action,
-                    Timestamp = DateTime.Now,
+                    Details = details,
+                    Timestamp = DateTime.UtcNow,
                     UserID = userId ?? GetCurrentUserId()
                 };
                 _db.AuditLogs.Add(auditLog);

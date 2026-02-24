@@ -197,6 +197,35 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="~/js/dashboard.js"></script>
+    <script>
+        function showToast(message, type = 'success') {
+            const container = document.querySelector('.layout-body');
+            const toastId = 'toast-' + Date.now();
+            const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            
+            const toastHtml = `
+                <div id="${toastId}" class="position-fixed top-0 end-0 p-3" style="z-index: 2000">
+                    <div class="toast show animate__animated animate__fadeInRight" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header ${bgClass} text-white border-0">
+                            <i class="fas ${icon} me-2"></i>
+                            <strong class="me-auto">${type.charAt(0).toUpperCase() + type.slice(1)}</strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body bg-white text-dark shadow-sm">
+                            ${message}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', toastHtml);
+            
+            setTimeout(() => {
+                $(`#${toastId}`).fadeOut(500, function() { $(this).remove(); });
+            }, 4000);
+        }
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

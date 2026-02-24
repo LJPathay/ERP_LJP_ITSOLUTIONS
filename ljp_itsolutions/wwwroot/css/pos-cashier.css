@@ -13,6 +13,29 @@
     --secondary-gradient: linear-gradient(135deg, #8d6e63 0%, #6d4c41 100%);
 }
 
+.access-high-contrast .pos-container {
+    --accent-color: #000000;
+    --accent-light: #333333;
+    --text-main: #000000;
+    --border-color: #000000;
+    --card-bg: #ffffff;
+    --pos-bg: #ffffff;
+}
+
+.access-high-contrast .product-card {
+    border: 2px solid #000 !important;
+}
+
+.access-high-contrast .category-btn.active {
+    background: #000 !important;
+    color: #fff !important;
+}
+
+.access-high-contrast .pay-now-btn {
+    background: #000 !important;
+    border: 2px solid #000 !important;
+}
+
 .pos-container {
     display: flex;
     height: calc(100vh - 100px);
@@ -364,8 +387,37 @@
     justify-content: center;
 }
 
-.out-of-stock-overlay .badge {
-    font-size: 0.6rem;
-    letter-spacing: 0.03em;
-    padding: 4px 8px;
+@media print {
+
+    /* Hide everything except the receipt paper */
+    .sidebar,
+    .layout-header,
+    .cart-section,
+    .products-section,
+    .pos-container,
+    .modal-header,
+    .modal-footer,
+    #sidebarToggle,
+    .navbar {
+        display: none !important;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background: white;
+    }
+
+    /* Target the receipt specifically if it's inside a modal */
+    #receiptModalContent {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .modal-content {
+        border: none !important;
+        box-shadow: none !important;
+    }
 }
