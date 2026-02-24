@@ -827,10 +827,10 @@ namespace ljp_itsolutions.Controllers
                     .Where(o => o.CashierID == cashierId && o.OrderDate >= currentShift.StartTime && o.PaymentMethod == "Cash" && (o.PaymentStatus == "Paid" || o.PaymentStatus == "Completed" || o.PaymentStatus == "Partially Refunded"))
                     .ToListAsync();
                 
-                decimal expected = currentShift.StartingCash;
-                foreach(var o in cashOrders)
-                    expected += (o.FinalAmount - o.RefundedAmount);
+                decimal sales = cashOrders.Sum(o => o.FinalAmount - o.RefundedAmount);
+                decimal expected = currentShift.StartingCash + sales;
                 
+                ViewBag.CashSales = sales;
                 ViewBag.ExpectedCash = expected;
             }
             

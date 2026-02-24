@@ -187,7 +187,9 @@ namespace ljp_itsolutions.Controllers
 
         public IActionResult Reports_Manager()
         {
-            var inventoryValue = _db.Products.Sum(p => p.Price * p.StockQuantity);
+            var inventoryValue = _db.Expenses
+                .Where(e => e.Category == "Supplies")
+                .Sum(e => e.Amount);
             var lowStockCount = _db.Products.Count(p => p.StockQuantity < 20);
             
             var now = DateTime.UtcNow;

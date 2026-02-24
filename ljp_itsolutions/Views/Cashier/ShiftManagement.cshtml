@@ -38,13 +38,20 @@
                             <p class="text-muted small">Shift started at: <strong>@Model.StartTime.ToString("hh:mm tt")</strong></p>
                         </div>
 
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Starting Cash:</span>
-                            <span class="fw-bold">₱@Model.StartingCash.ToString("N2")</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-4">
-                            <span class="text-muted">Expected Cash (From Cash Orders):</span>
-                            <span class="fw-bold text-success">₱@Convert.ToDecimal(ViewBag.ExpectedCash).ToString("N2")</span>
+                        <div class="p-3 bg-light rounded-3 mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Starting Float (Initial):</span>
+                                <span class="fw-bold text-dark">₱@Model.StartingCash.ToString("N2")</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Net Cash Sales (+):</span>
+                                <span class="fw-bold text-success">₱@Convert.ToDecimal(ViewBag.CashSales).ToString("N2")</span>
+                            </div>
+                            <hr class="my-2 opacity-10">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-dark fw-bold">Total Expected in Drawer:</span>
+                                <span class="fw-bold text-primary h5 mb-0">₱@Convert.ToDecimal(ViewBag.ExpectedCash).ToString("N2")</span>
+                            </div>
                         </div>
 
                         <form asp-action="CloseShift" method="post">

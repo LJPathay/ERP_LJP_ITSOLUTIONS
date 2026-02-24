@@ -149,14 +149,15 @@ namespace ljp_itsolutions.Services
 
             if (shift == null) return false;
 
-            // Gather sales data for this shift
+            // Gather only finalized sales data for this shift (matches CloseShift logic)
             var shiftOrders = await _db.Orders
                 .Include(o => o.OrderDetails)
                 .Where(o => o.OrderDate >= shift.StartTime && o.OrderDate <= (shift.EndTime ?? DateTime.Now))
+                .Where(o => o.PaymentStatus == "Paid" || o.PaymentStatus == "Completed" || o.PaymentStatus == "Partially Refunded" || o.PaymentStatus == "Paid (Digital)")
                 .ToListAsync();
 
-            var totalSales = shiftOrders.Sum(o => o.FinalAmount);
-            var cashSales = shiftOrders.Where(o => o.PaymentMethod == "Cash").Sum(o => o.FinalAmount);
+            var totalSales = shiftOrders.Sum(o => o.FinalAmount - o.RefundedAmount);
+            var cashSales = shiftOrders.Where(o => o.PaymentMethod == "Cash").Sum(o => o.FinalAmount - o.RefundedAmount);
             var digitalSales = totalSales - cashSales;
             var ordersCount = shiftOrders.Count;
 
