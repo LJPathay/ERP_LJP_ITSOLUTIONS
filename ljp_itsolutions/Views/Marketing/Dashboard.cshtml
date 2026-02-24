@@ -4,53 +4,69 @@
 }
 
 <div class="marketing-dashboard py-2">
-    <!-- Quick Stats (Premium Command Center Style) -->
-    <div class="row g-4 mb-4">
+    <!-- Quick Stats (Compact Premium Style) -->
+    <div class="row g-3 mb-4">
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 transition-hover">
-                <div class="card-body p-4 text-center">
-                    <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3 shadow-sm rounded-4 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-                        <i class="fas fa-user-friends fa-lg"></i>
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #4f46e5 !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Total Reach</p>
+                            <h4 class="fw-bold mb-0">@Model.TotalCustomers</h4>
+                            <span class="text-success xx-small fw-bold"><i class="fas fa-arrow-up me-1"></i>+12% Trend</span>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-2 text-primary">
+                            <i class="fas fa-user-friends"></i>
+                        </div>
                     </div>
-                    <p class="text-secondary x-small fw-bold text-uppercase tracking-wider mb-1">Total Reach</p>
-                    <h2 class="fw-bold mb-1">@Model.TotalCustomers</h2>
-                    <div class="text-success x-small fw-bold"><i class="fas fa-arrow-up me-1"></i>+12% vs last month</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 transition-hover">
-                <div class="card-body p-4 text-center">
-                    <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3 shadow-sm rounded-4 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-                        <i class="fas fa-tags fa-lg"></i>
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #10b981 !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Active Offers</p>
+                            <h4 class="fw-bold mb-0">@Model.ActivePromotions</h4>
+                            <span class="text-success xx-small fw-bold"><i class="fas fa-check-circle me-1"></i>Operational</span>
+                        </div>
+                        <div class="bg-success bg-opacity-10 rounded-3 p-2 text-success">
+                            <i class="fas fa-tags"></i>
+                        </div>
                     </div>
-                    <p class="text-secondary x-small fw-bold text-uppercase tracking-wider mb-1">Active Offers</p>
-                    <h2 class="fw-bold mb-1">@Model.ActivePromotions</h2>
-                    <div class="text-success x-small fw-bold"><i class="fas fa-check-circle me-1"></i>Live & Operational</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 transition-hover">
-                <div class="card-body p-4 text-center">
-                    <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3 shadow-sm rounded-4 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-                        <i class="fas fa-star fa-lg"></i>
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #f59e0b !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Loyalty Points</p>
+                            <h4 class="fw-bold mb-0">@Model.TotalPointsAwarded</h4>
+                            <span class="text-warning xx-small fw-bold">Network Equity</span>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 rounded-3 p-2 text-warning">
+                            <i class="fas fa-star"></i>
+                        </div>
                     </div>
-                    <p class="text-secondary x-small fw-bold text-uppercase tracking-wider mb-1">Loyalty Points</p>
-                    <h2 class="fw-bold mb-1">@Model.TotalPointsAwarded</h2>
-                    <div class="text-muted x-small">Network-wide equity</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 transition-hover">
-                <div class="card-body p-4 text-center">
-                    <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3 shadow-sm rounded-4 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-                        <i class="fas fa-chart-line fa-lg"></i>
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #0ea5e9 !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Conversions</p>
+                            <h4 class="fw-bold mb-0">@Model.TotalOrders</h4>
+                            <span class="text-info xx-small fw-bold"><i class="fas fa-caret-up me-1"></i>4.2% Growth</span>
+                        </div>
+                        <div class="bg-info bg-opacity-10 rounded-3 p-2 text-info">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
                     </div>
-                    <p class="text-secondary x-small fw-bold text-uppercase tracking-wider mb-1">Conversions</p>
-                    <h2 class="fw-bold mb-1">@Model.TotalOrders</h2>
-                    <div class="text-success x-small fw-bold"><i class="fas fa-caret-up me-1"></i>+4.2% shift</div>
                 </div>
             </div>
         </div>

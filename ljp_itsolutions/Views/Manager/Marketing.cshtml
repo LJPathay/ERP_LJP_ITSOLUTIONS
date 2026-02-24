@@ -46,34 +46,70 @@
         </div>
     </div>
 
-    <!-- Marketing KPIs -->
-    <div class="row g-4">
+    <!-- Marketing KPIs (Compact) -->
+    <div class="row g-3">
         <div class="col-md-3">
-            <div class="card border shadow-sm p-4 text-center h-100">
-                <h6 class="text-muted small fw-bold mb-2">Active Campaigns</h6>
-                <h3 class="fw-bold mb-0">@ViewBag.ActivePromos</h3>
-                <small class="text-info mt-2"><i class="fas fa-bullhorn me-1"></i>Current Live</small>
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #0dcaf0 !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Active Campaigns</p>
+                            <h4 class="fw-bold mb-0">@ViewBag.ActivePromos</h4>
+                            <span class="text-info xx-small"><i class="fas fa-bullhorn me-1"></i>Live Now</span>
+                        </div>
+                        <div class="bg-info bg-opacity-10 rounded-3 p-2 text-info">
+                            <i class="fas fa-bullhorn"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border shadow-sm p-4 text-center h-100">
-                <h6 class="text-muted small fw-bold mb-2">Total Promo Uses</h6>
-                <h3 class="fw-bold mb-0">@ViewBag.TotalPromoUses</h3>
-                <small class="text-success mt-2"><i class="fas fa-check-circle me-1"></i>Orders with discount</small>
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #198754 !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Promo Uses</p>
+                            <h4 class="fw-bold mb-0">@ViewBag.TotalPromoUses</h4>
+                            <span class="text-success xx-small"><i class="fas fa-check-circle me-1"></i>Redemptions</span>
+                        </div>
+                        <div class="bg-success bg-opacity-10 rounded-3 p-2 text-success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border shadow-sm p-4 text-center h-100">
-                <h6 class="text-muted small fw-bold mb-2">Avg. Discount</h6>
-                <h3 class="fw-bold mb-0">₱@ViewBag.AvgDiscount.ToString("N2")</h3>
-                <small class="text-danger mt-2"><i class="fas fa-tag me-1"></i>Average per order</small>
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #dc3545 !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Avg. Discount</p>
+                            <h4 class="fw-bold mb-0">₱@ViewBag.AvgDiscount.ToString("N1")</h4>
+                            <span class="text-danger xx-small"><i class="fas fa-tag me-1"></i>Per Order</span>
+                        </div>
+                        <div class="bg-danger bg-opacity-10 rounded-3 p-2 text-danger">
+                            <i class="fas fa-tag"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border shadow-sm p-4 text-center h-100">
-                <h6 class="text-muted small fw-bold mb-2">Promo Revenue</h6>
-                <h3 class="fw-bold mb-0">₱@ViewBag.TotalPromoRevenue.ToString("N0")</h3>
-                <small class="text-primary mt-2">Driven by campaigns</small>
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #0d6efd !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Promo Revenue</p>
+                            <h4 class="fw-bold mb-0">₱@ViewBag.TotalPromoRevenue.ToString("N0")</h4>
+                            <span class="text-primary xx-small">Campaign Driven</span>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-2 text-primary">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

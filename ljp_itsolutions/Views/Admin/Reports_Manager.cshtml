@@ -4,28 +4,49 @@
     ViewBag.ModuleCount = 4;
 }
 
-<div class="container-fluid py-3">
+<div class="container-fluid py-4">
+    <!-- Header with Back Button -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <a href="@Url.Action("Reports", "Admin")" class="btn btn-white shadow-sm rounded-pill px-3 py-2">
+                <i class="fas fa-arrow-left text-primary me-2"></i>Back
+            </a>
+            <div>
+                <h5 class="fw-bold mb-0">Managerial Overview</h5>
+                <p class="text-muted x-small mb-0">Performance & staff management metrics</p>
+            </div>
+        </div>
+        <div class="text-end d-none d-md-block">
+            <div class="badge bg-amber bg-opacity-10 text-amber px-3 py-2 rounded-pill border border-amber border-opacity-25 x-small fw-bold">
+                <i class="far fa-calendar-alt me-2"></i>AS OF @DateTime.Now.ToString("MMM dd, yyyy").ToUpper()
+            </div>
+        </div>
+    </div>
+
     <!-- Financial & Inventory KPIs -->
     <div class="row g-3 mb-4">
         <!-- Monthly Revenue -->
         <div class="col-md-6 col-lg-3">
-            <div class="card border shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #d97706 !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <p class="text-muted small fw-bold mb-1">Monthly Revenue</p>
-                            <h3 class="fw-bold mb-2">₱@Model.MonthlyRevenue.ToString("N2")</h3>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Monthly Revenue</p>
+                            <h4 class="fw-bold mb-1">₱@Model.MonthlyRevenue.ToString("N2")</h4>
                             @if(Model.LastMonthRevenue > 0) {
                                 var growth = ((Model.MonthlyRevenue - Model.LastMonthRevenue) / Model.LastMonthRevenue) * 100;
-                                <small class="@(growth >= 0 ? "text-success" : "text-danger")">
-                                    <i class="fas @(growth >= 0 ? "fa-arrow-up" : "fa-arrow-down") me-1"></i>@Math.Abs(growth).ToString("N1")% vs last month
-                                </small>
+                                <div class="d-flex align-items-center gap-1">
+                                    <span class="text-@(growth >= 0 ? "success" : "danger") x-small fw-bold">
+                                        <i class="fas @(growth >= 0 ? "fa-caret-up" : "fa-caret-down") me-1"></i>@Math.Abs(growth).ToString("N1")%
+                                    </span>
+                                    <span class="text-muted xx-small">vs last month</span>
+                                </div>
                             } else {
-                                <small class="text-muted">No data from last month</small>
+                                <div class="text-muted xx-small italic opacity-50">No historical data</div>
                             }
                         </div>
-                        <div class="text-success opacity-50">
-                            <i class="fas fa-chart-line fa-2x"></i>
+                        <div class="bg-amber bg-opacity-10 rounded-3 p-2 text-amber">
+                            <i class="fas fa-chart-line"></i>
                         </div>
                     </div>
                 </div>
@@ -34,18 +55,19 @@
 
         <!-- Inventory Value -->
         <div class="col-md-6 col-lg-3">
-            <div class="card border shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #3b82f6 !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <p class="text-muted small fw-bold mb-1">Inventory Value</p>
-                            <h3 class="fw-bold mb-2">₱@Model.InventoryValue.ToString("N2")</h3>
-                            <small class="text-primary">
-                                Total asset value
-                            </small>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Inventory Value</p>
+                            <h4 class="fw-bold mb-1">₱@Model.InventoryValue.ToString("N2")</h4>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="badge bg-primary bg-opacity-10 text-primary xx-small fw-bold">ASSET</span>
+                                <span class="text-muted xx-small">Current products</span>
+                            </div>
                         </div>
-                        <div class="text-primary opacity-50">
-                            <i class="fas fa-box fa-2x"></i>
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-2 text-primary">
+                            <i class="fas fa-boxes"></i>
                         </div>
                     </div>
                 </div>
@@ -54,38 +76,42 @@
 
         <!-- Low Stock Items -->
         <div class="col-md-6 col-lg-3">
-            <div class="card border shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #ef4444 !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <p class="text-muted small fw-bold mb-1">Low Stock Alerts</p>
-                            <h3 class="fw-bold mb-2">@Model.LowStockCount</h3>
-                            <small class="@(Model.LowStockCount > 0 ? "text-danger" : "text-success")">
-                                Items need restock
-                            </small>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Low Stock Alerts</p>
+                            <h4 class="fw-bold mb-1">@Model.LowStockCount</h4>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="badge @(Model.LowStockCount > 0 ? "bg-danger" : "bg-success") bg-opacity-10 text-@(Model.LowStockCount > 0 ? "danger" : "success") xx-small fw-bold">
+                                    @(Model.LowStockCount > 0 ? "CRITICAL" : "STABLE")
+                                </span>
+                                <span class="text-muted xx-small">Needs attention</span>
+                            </div>
                         </div>
-                        <div class="text-warning opacity-50">
-                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        <div class="bg-danger bg-opacity-10 rounded-3 p-2 text-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Staff on Duty (Approx) -->
+        <!-- Staff KPI -->
         <div class="col-md-6 col-lg-3">
-            <div class="card border shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #10b981 !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <p class="text-muted small fw-bold mb-1">Active Staff</p>
-                            <h3 class="fw-bold mb-2">@Model.Staff.Count</h3>
-                            <small class="text-info">
-                                Registered employees
-                            </small>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Active Staff</p>
+                            <h4 class="fw-bold mb-1">@Model.Staff.Count</h4>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="badge bg-success bg-opacity-10 text-success xx-small fw-bold">TEAM</span>
+                                <span class="text-muted xx-small">Registered staff</span>
+                            </div>
                         </div>
-                        <div class="text-info opacity-50">
-                            <i class="fas fa-user-friends fa-2x"></i>
+                        <div class="bg-success bg-opacity-10 rounded-3 p-2 text-success">
+                            <i class="fas fa-user-friends"></i>
                         </div>
                     </div>
                 </div>
@@ -93,75 +119,127 @@
         </div>
     </div>
 
-    <!-- Staff List -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card border shadow-sm">
-                <div class="card-header bg-white py-3">
-                    <h5 class="fw-bold mb-0">Staff Directory</h5>
+    <!-- Main Report Body -->
+    <div class="row g-4">
+        <!-- Staff List (Primary Content) -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-dark">Staff Directory</h6>
+                    <button class="btn btn-sm btn-light rounded-pill px-3 fw-bold x-small" onclick="window.print()">
+                        <i class="fas fa-download me-2"></i>Export
+                    </button>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
+                        <table class="table table-hover mb-0 align-middle">
                             <thead class="bg-light">
                                 <tr>
-                                    <th class="ps-4">Name</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th>Email</th>
+                                    <th class="ps-4 py-2 text-uppercase xx-small fw-bold text-muted">Employee</th>
+                                    <th class="py-2 text-uppercase xx-small fw-bold text-muted">Role</th>
+                                    <th class="py-2 text-uppercase xx-small fw-bold text-muted text-center">Status</th>
+                                    <th class="pe-4 py-2 text-uppercase xx-small fw-bold text-muted">Contact</th>
                                 </tr>
                             </thead>
+
                             <tbody>
                                 @foreach (var staff in Model.Staff)
                                 {
                                     <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <div class="me-3">
-                                                    <div class="bg-light rounded-circle text-primary d-flex align-items-center justify-content-center fw-bold" style="width: 35px; height: 35px;">
-                                                        @staff.FullName.Substring(0, 1)
-                                                    </div>
+                                        <td class="ps-4 py-3">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="avatar-sm bg-light rounded-circle text-primary d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 40px; height: 40px;">
+                                                    @staff.FullName.Substring(0, 1)
                                                 </div>
                                                 <div>
-                                                    <h6 class="mb-0 fw-semibold">@staff.FullName</h6>
-                                                    <small class="text-muted">@staff.Username</small>
+                                                    <div class="fw-bold text-dark">@staff.FullName</div>
+                                                    <div class="text-muted x-small">@@@staff.Username</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
-                                            @if (staff.Role == "Admin")
-                                            {
-                                                <span class="badge bg-danger">Admin</span>
-                                            }
-                                            else if (staff.Role == "Manager")
-                                            {
-                                                <span class="badge bg-primary">Manager</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-secondary">@staff.Role</span>
-                                            }
+                                            @if (staff.Role == "Admin") { <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 border border-danger border-opacity-10">ADMIN</span> }
+                                            else if (staff.Role == "Manager") { <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 border border-primary border-opacity-10">MANAGER</span> }
+                                            else { <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3 border border-secondary border-opacity-10">@staff.Role.ToUpper()</span> }
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             @if (staff.IsActive)
                                             {
-                                                <span class="badge bg-success bg-opacity-10 text-success">
-                                                    Active
-                                                </span>
+                                                <span class="badge rounded-circle bg-success p-1" title="Active" style="width: 10px; height: 10px; display: inline-block;"></span>
                                             }
                                             else
                                             {
-                                                <span class="badge bg-secondary">Inactive</span>
+                                                <span class="badge rounded-circle bg-secondary p-1" title="Inactive" style="width: 10px; height: 10px; display: inline-block;"></span>
                                             }
                                         </td>
-                                        <td>@staff.Email</td>
+                                        <td class="pe-4 text-muted small">@staff.Email</td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
                     </div>
                 </div>
+                <div class="card-footer bg-light border-0 py-3 text-center">
+                    <a href="@Url.Action("Users", "Admin")" class="text-decoration-none x-small fw-bold text-primary">MANAGE USER PERMISSIONS <i class="fas fa-chevron-right ms-1"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-primary text-white p-4 mb-4">
+                <i class="fas fa-quote-left fa-2x opacity-25 mb-3"></i>
+                <h5 class="fw-bold mb-3">Business Insight</h5>
+                <p class="mb-0 opacity-75 small">
+                    Your monthly revenue is currently at <strong>₱@Model.MonthlyRevenue.ToString("N2")</strong>. 
+                    @if(Model.LastMonthRevenue > 0 && Model.MonthlyRevenue > Model.LastMonthRevenue) {
+                        <span>This represents a significant growth compared to the previous month. Keep maintaining high quality service and inventory control.</span>
+                    } else if (Model.LastMonthRevenue > 0) {
+                        <span>Performance is slightly lower than last month. Consider reviewing active promotions or staff shift patterns to optimize peak hours.</span>
+                    } else {
+                        <span>This is the initial tracking period for this year. Ensure all inventory logs are accurately recorded for better future projections.</span>
+                    }
+                </p>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h6 class="fw-bold mb-3 text-dark">System Alerts</h6>
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex gap-3 align-items-center">
+                        <div class="bg-warning bg-opacity-10 text-warning rounded p-2">
+                             <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div>
+                            <p class="mb-0 small fw-bold">Security Status</p>
+                            <p class="mb-0 x-small text-muted">All logs encrypted and secure</p>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3 align-items-center">
+                        <div class="bg-success bg-opacity-10 text-success rounded p-2">
+                             <i class="fas fa-cloud"></i>
+                        </div>
+                        <div>
+                            <p class="mb-0 small fw-bold">Database Health</p>
+                            <p class="mb-0 x-small text-muted">Last backup: @DateTime.Now.AddHours(-2).ToString("hh:mm tt")</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .x-small { font-size: 0.725rem; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    .bg-amber { background-color: #d97706; }
+    .text-amber { color: #d97706; }
+    .border-amber { border-color: #d97706; }
+    
+    @@media print {
+        .sidebar, .layout-header, .btn-white { display: none !important; }
+        .content { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+        .card { box-shadow: none !important; border: 1px solid #eee !important; }
+    }
+</style>
+

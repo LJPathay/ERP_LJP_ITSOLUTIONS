@@ -300,10 +300,14 @@
     .avatar-xs { width: 32px; height: 32px; }
     tbody tr:hover { background-color: rgba(var(--bs-primary-rgb), 0.03) !important; }
     
+    .bg-primary .modal-title { color: #ffffff !important; }
+    .modal-title { color: #000000 !important; font-weight: 800; letter-spacing: -0.02em; }
+
     /* Sticky Header fix */
     thead.sticky-top th {
-        background-color: #f8f9fa; /* Ensure header has background when scrolling */
-        box-shadow: 0 1px 0 rgba(0,0,0,0.05); /* Optional: add border effect */
+        background-color: #f8f9fa !important;
+        box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+        z-index: 10;
     }
     
     /* Custom Scrollbar */
@@ -330,3 +334,4 @@
         .btn-close, .modal-footer { display: none !important; }
     }
 </style>
+

@@ -42,43 +42,52 @@
         </div>
     </div>
 
-    <!-- Stats Row (Simplified) -->
+    <!-- Stats Row (Compact) -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden p-1" style="border-left: 4px solid #3b82f6 !important;">
-                <div class="card-body p-3 d-flex align-items-center">
-                    <div class="avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
-                        <i class="fas fa-cubes"></i>
-                    </div>
-                    <div>
-                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">Total Items</p>
-                        <h4 class="fw-bold mb-0">@ViewBag.TotalCount</h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden p-1" style="border-left: 4px solid #ef4444 !important;">
-                <div class="card-body p-3 d-flex align-items-center">
-                    <div class="avatar-sm bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div>
-                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">Critical</p>
-                        <h4 class="fw-bold mb-0 text-danger">@ViewBag.OutOfStockCount</h4>
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #3b82f6 !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Total Items</p>
+                            <h4 class="fw-bold mb-0">@ViewBag.TotalCount</h4>
+                            <span class="text-muted xx-small">Unique Ingredients</span>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-2 text-primary">
+                            <i class="fas fa-cubes"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden p-1" style="border-left: 4px solid #f59e0b !important;">
-                <div class="card-body p-3 d-flex align-items-center">
-                    <div class="avatar-sm bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
-                        <i class="fas fa-arrow-down"></i>
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #ef4444 !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Critical</p>
+                            <h4 class="fw-bold mb-0 text-danger">@ViewBag.OutOfStockCount</h4>
+                            <span class="text-danger xx-small">Needs Urgent Reorder</span>
+                        </div>
+                        <div class="bg-danger bg-opacity-10 rounded-3 p-2 text-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
                     </div>
-                    <div>
-                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">Low Stock</p>
-                        <h4 class="fw-bold mb-0 text-warning">@ViewBag.LowStockCount</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #f59e0b !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Low Stock</p>
+                            <h4 class="fw-bold mb-0 text-warning">@ViewBag.LowStockCount</h4>
+                            <span class="text-warning xx-small">Below Threshold</span>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 rounded-3 p-2 text-warning">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
                     </div>
                 </div>
             </div>

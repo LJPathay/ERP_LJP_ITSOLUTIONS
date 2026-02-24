@@ -22,153 +22,178 @@
 
 <div class="container-fluid py-4">
 
-    <!-- Inventory Summary (Simplified) -->
+    <!-- KPI Summary Row (Compact) -->
     <div class="row g-3 mb-4">
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden p-1" style="border-left: 4px solid #3b82f6 !important;">
-                <div class="card-body p-3 d-flex align-items-center">
-                    <div class="avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                        <i class="fas fa-leaf"></i>
-                    </div>
-                    <div>
-                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">Total Items</p>
-                        <h5 class="fw-bold mb-0">@Model.Ingredients.Count</h5>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden p-1" style="border-left: 4px solid #f59e0b !important;">
-                <div class="card-body p-3 d-flex align-items-center">
-                    <div class="avatar-sm bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div>
-                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">Low Stock</p>
-                        <h5 class="fw-bold mb-0 text-warning">@Model.LowStockCount</h5>
+        <!-- Total Items -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #3b82f6 !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Total Items</p>
+                            <h4 class="fw-bold mb-0">@Model.Ingredients.Count</h4>
+                            <span class="text-muted xx-small">Stocked Ingredients</span>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-2 text-primary">
+                            <i class="fas fa-cubes"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden p-1" style="border-left: 4px solid #ef4444 !important;">
-                <div class="card-body p-3 d-flex align-items-center">
-                    <div class="avatar-sm bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                        <i class="fas fa-times-circle"></i>
-                    </div>
-                    <div>
-                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">Out of Stock</p>
-                        <h5 class="fw-bold mb-0 text-danger">@Model.OutOfStockCount</h5>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden p-1" style="border-left: 4px solid #10b981 !important;">
-                <div class="card-body p-3 d-flex align-items-center">
-                    <div class="avatar-sm bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div>
-                        <p class="mb-0 x-small fw-bold text-muted text-uppercase">Healthy Stock</p>
-                        <h5 class="fw-bold mb-0 text-success">@Model.HealthyStockCount</h5>
+        <!-- Critical Items -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #ef4444 !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Critical</p>
+                            <h4 class="fw-bold mb-0 text-danger">@Model.OutOfStockCount</h4>
+                            <span class="text-danger xx-small">Out of Stock</span>
+                        </div>
+                        <div class="bg-danger bg-opacity-10 rounded-3 p-2 text-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Action Bar below KPIs -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-body p-3">
-            <div class="row g-3 align-items-center">
-                <div class="col-lg-4 col-md-12">
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-0 text-muted"><i class="fas fa-search"></i></span>
-                        <input type="text" id="inventorySearch" class="form-control bg-light border-0 ps-0" placeholder="Search ingredients by name or unit...">
+        <!-- Low Stock Items -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #f59e0b !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Low Stock</p>
+                            <h4 class="fw-bold mb-0 text-warning">@Model.LowStockCount</h4>
+                            <span class="text-warning xx-small">Below Threshold</span>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 rounded-3 p-2 text-warning">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
                     </div>
                 </div>
-                <div class="col-lg-8 col-md-12 text-md-end text-center">
-                    <div class="d-flex flex-wrap gap-2 justify-content-md-end justify-content-center">
-                        <button class="btn btn-outline-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#stockIntakeModal">
-                            <i class="fas fa-truck-loading me-2"></i>Stock Intake
-                        </button>
-                        <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addIngredientModal">
-                            <i class="fas fa-plus me-2"></i>Add New Ingredient
-                        </button>
+            </div>
+        </div>
+        <!-- Healthy Stock Items -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #10b981 !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Healthy</p>
+                            <h4 class="fw-bold mb-0 text-success">@Model.HealthyStockCount</h4>
+                            <span class="text-success xx-small">Optimal Levels</span>
+                        </div>
+                        <div class="bg-success bg-opacity-10 rounded-3 p-2 text-success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Ingredients Table -->
-    <div class="modern-table shadow-sm">
+    <!-- Action Bar -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white">
+        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
+            <div class="input-group" style="max-width: 300px;">
+                <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                <input type="text" id="inventorySearch" class="form-control bg-light border-start-0" placeholder="Search ingredients...">
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-light shadow-sm" onclick="location.reload()">
+                    <i class="fas fa-sync-alt text-primary"></i>
+                </button>
+                <button class="btn btn-outline-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#stockIntakeModal">
+                    <i class="fas fa-truck-loading me-2"></i>Stock Intake
+                </button>
+                <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addIngredientModal">
+                    <i class="fas fa-plus me-2"></i>Add Ingredient
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" id="inventoryTable">
-                <thead>
+                <thead class="bg-light">
                     <tr>
-                        <th class="ps-4">Ingredient Name</th>
-                        <th>Current Stock</th>
-                        <th>Unit</th>
-                        <th>Threshold</th>
-                        <th>Status</th>
+                        <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted">Item Name</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted">Unit</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted" style="width: 30%;">Stock Level</th>
+                        <th class="py-3 text-uppercase x-small fw-bold text-muted">Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var item in Model.Ingredients)
+                    @if (Model.Ingredients.Any())
                     {
-                        <tr class="clickable-row ingredient-row" data-id="@item.IngredientID" style="cursor: pointer;">
-                            <td class="ps-4">
-                                <div class="fw-bold text-dark">@item.Name</div>
-                                <div class="text-muted text-xs">ID: #@item.IngredientID</div>
-                            </td>
-                            <td>
-                                <span class="fw-bold @(item.StockQuantity < item.LowStockThreshold ? "text-danger" : "text-dark")">@item.StockQuantity.ToString("N2")</span>
-                            </td>
-                            <td><span class="text-muted">@item.Unit</span></td>
-                            <td><span class="text-muted">@item.LowStockThreshold.ToString("N2") @item.Unit</span></td>
-                            <td>
-                                @if (item.StockQuantity < 0)
-                                {
-                                    <span class="status-badge danger bg-danger text-white"><i class="fas fa-exclamation-circle me-1"></i>Critical</span>
-                                }
-                                else if (item.StockQuantity == 0)
-                                {
-                                    <span class="status-badge danger">Out of Stock</span>
-                                }
-                                else if (item.StockQuantity < item.LowStockThreshold)
-                                {
-                                    <span class="status-badge warning">Low Stock</span>
-                                }
-                                else
-                                {
-                                    <span class="status-badge success">In Stock</span>
-                                }
-                            </td>
-                            <!-- Hidden Data Store for Pagination/Search -->
-                            <td class="d-none">
-                                <button class="btn-edit-ingredient d-none" 
-                                        data-id="@item.IngredientID"
-                                        data-name="@item.Name"
-                                        data-stock="@item.StockQuantity"
-                                        data-unit="@item.Unit"
-                                        data-threshold="@item.LowStockThreshold"
-                                        data-expiry="@(item.ExpiryDate?.ToString("yyyy-MM-dd"))"></button>
-                            </td>
-                        </tr>
+                        foreach (var item in Model.Ingredients)
+                        {
+                            var stockPercent = Math.Min(100, (double)item.StockQuantity / ((double)item.LowStockThreshold * 3) * 100);
+                            string colorClass = "success";
+                            string statusText = "In Stock";
+                            
+                            if (item.StockQuantity < 0)
+                            {
+                                colorClass = "danger";
+                                statusText = "Critical";
+                            }
+                            else if (item.StockQuantity == 0)
+                            {
+                                colorClass = "danger";
+                                statusText = "Out of Stock";
+                            }
+                            else if (item.StockQuantity < item.LowStockThreshold)
+                            {
+                                colorClass = "warning";
+                                statusText = "Low Stock";
+                            }
+
+                            <tr style="cursor: pointer;" onclick="loadIngredientDetails(@item.IngredientID)" class="ingredient-row">
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">@item.Name</div>
+                                    <div class="text-muted x-small">ID: #@item.IngredientID</div>
+                                </td>
+                                <td class="text-muted small">@item.Unit</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height: 6px;">
+                                            <div class="progress-bar bg-@colorClass" role="progressbar" style="width: @stockPercent%"></div>
+                                        </div>
+                                        <span class="x-small fw-bold text-muted" style="width: 60px;">
+                                            @item.StockQuantity.ToString("N1") / @((item.LowStockThreshold * 3).ToString("N1"))
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill bg-@colorClass bg-opacity-10 text-@colorClass border border-@colorClass border-opacity-10 px-3">
+                                        @statusText
+                                    </span>
+                                </td>
+                                <!-- Hidden button for Edit Modal triggering -->
+                                <td class="d-none">
+                                    <button class="btn-edit-ingredient d-none" 
+                                            data-id="@item.IngredientID"
+                                            data-name="@item.Name"
+                                            data-stock="@item.StockQuantity"
+                                            data-unit="@item.Unit"
+                                            data-threshold="@item.LowStockThreshold"
+                                            data-expiry="@(item.ExpiryDate?.ToString("yyyy-MM-dd"))"></button>
+                                </td>
+                            </tr>
+                        }
                     }
-                    @if (!Model.Ingredients.Any())
+                    else
                     {
                         <tr>
-                            <td colspan="5">
-                                <div class="empty-state">
-                                    <i class="fas fa-box-open empty-state-icon"></i>
-                                    <h4>No Ingredients Found</h4>
-                                    <p>Start by adding some raw materials to your inventory.</p>
-                                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addIngredientModal">
-                                        <i class="fas fa-plus me-2"></i>Add First Ingredient
-                                    </button>
+                            <td colspan="4" class="text-center py-5">
+                                <div class="py-5">
+                                    <i class="fas fa-box-open fa-4x text-muted opacity-25 mb-4"></i>
+                                    <h6 class="fw-bold text-dark">Inventory Empty</h6>
+                                    <p class="text-muted small">No ingredients found in the inventory.</p>
                                 </div>
                             </td>
                         </tr>
@@ -188,6 +213,7 @@
             </nav>
         </div>
     </div>
+
 </div>
 </div>
 

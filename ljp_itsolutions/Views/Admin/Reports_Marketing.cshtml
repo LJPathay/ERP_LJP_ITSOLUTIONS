@@ -1,61 +1,87 @@
-net@model dynamic
+@model dynamic
 @{
     ViewData["Title"] = "Marketing Reports";
     ViewBag.ModuleCount = 4;
 }
 
-<div class="container-fluid py-3">
+<div class="container-fluid py-4">
+    <!-- Header with Back Button -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <a href="@Url.Action("Reports", "Admin")" class="btn btn-white shadow-sm rounded-pill px-3 py-2">
+                <i class="fas fa-arrow-left text-primary me-2"></i>Back
+            </a>
+            <div>
+                <h5 class="fw-bold mb-0">Marketing Analytics</h5>
+                <p class="text-muted x-small mb-0">Campaign performance & acquisition metrics</p>
+            </div>
+        </div>
+        <div class="text-end d-none d-md-block">
+            <div class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill border border-primary border-opacity-25 x-small fw-bold">
+                 <i class="fas fa-bullhorn me-2"></i>ACTIVE PERIOD
+            </div>
+        </div>
+    </div>
+
     <!-- KPIs -->
     <div class="row g-3 mb-4">
+        <!-- Active Promotions -->
         <div class="col-md-4">
-            <div class="card border shadow-sm h-100">
-                <div class="card-body">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #10b981 !important;">
+                <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <p class="text-muted small fw-bold mb-1">Active Promotions</p>
-                            <h3 class="fw-bold mb-0">@Model.ActivePromotionsCount</h3>
-                            <small class="text-success">
-                                Running now
-                            </small>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Active Promotions</p>
+                            <h4 class="fw-bold mb-1">@Model.ActivePromotionsCount</h4>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="badge bg-success bg-opacity-10 text-success xx-small fw-bold">LIVE</span>
+                                <span class="text-muted xx-small">Running campaigns</span>
+                            </div>
                         </div>
-                        <div class="text-success opacity-50">
-                            <i class="fas fa-tags fa-2x"></i>
+                        <div class="bg-success bg-opacity-10 rounded-3 p-2 text-success">
+                            <i class="fas fa-tags"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Total Customers -->
         <div class="col-md-4">
-            <div class="card border shadow-sm h-100">
-                <div class="card-body">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #3b82f6 !important;">
+                <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <p class="text-muted small fw-bold mb-1">Total Customers</p>
-                            <h3 class="fw-bold mb-0">@Model.TotalCustomers</h3>
-                            <small class="text-primary">
-                                Database records
-                            </small>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Total Audience</p>
+                            <h4 class="fw-bold mb-1">@Model.TotalCustomers</h4>
+                             <div class="d-flex align-items-center gap-1">
+                                <span class="badge bg-primary bg-opacity-10 text-primary xx-small fw-bold">CRM</span>
+                                <span class="text-muted xx-small">Database reach</span>
+                            </div>
                         </div>
-                        <div class="text-primary opacity-50">
-                            <i class="fas fa-address-book fa-2x"></i>
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-2 text-primary">
+                            <i class="fas fa-users"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- New This Month -->
         <div class="col-md-4">
-            <div class="card border shadow-sm h-100">
-                <div class="card-body">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #f59e0b !important;">
+                <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <p class="text-muted small fw-bold mb-1">New This Month</p>
-                            <h3 class="fw-bold mb-0">@Model.NewCustomersThisMonth</h3>
-                            <small class="text-info">
-                                First time orders
-                            </small>
+                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">New Acquisition</p>
+                            <h4 class="fw-bold mb-1">@Model.NewCustomersThisMonth</h4>
+                             <div class="d-flex align-items-center gap-1">
+                                <span class="badge bg-warning bg-opacity-10 text-warning xx-small fw-bold">GROWTH</span>
+                                <span class="text-muted xx-small">Orders this month</span>
+                            </div>
                         </div>
-                        <div class="text-info opacity-50">
-                            <i class="fas fa-chart-line fa-2x"></i>
+                        <div class="bg-warning bg-opacity-10 rounded-3 p-2 text-warning">
+                            <i class="fas fa-user-plus"></i>
                         </div>
                     </div>
                 </div>
@@ -64,74 +90,100 @@ net@model dynamic
     </div>
 
     <!-- Active Promotions List -->
-    <div class="row">
+    <div class="row g-4">
         <div class="col-12">
-            <div class="card border shadow-sm">
-                <div class="card-header bg-white py-3">
-                    <h5 class="fw-bold mb-0">Active Campaigns</h5>
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-dark">Active Campaigns</h6>
+                    <button class="btn btn-sm btn-light rounded-pill px-3 fw-bold x-small" onclick="window.print()">
+                        <i class="fas fa-print me-2"></i>Print
+                    </button>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-4">Promotion Name</th>
-                                    <th>Duration</th>
-                                    <th>Discount</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (Model.ActivePromotions != null && Model.ActivePromotions.Count > 0)
-                                {
-                                    foreach (var promo in Model.ActivePromotions)
-                                    {
-                                        <tr>
-                                            <td class="ps-4">
-                                                <div class="fw-bold">@promo.PromotionName</div>
-                                                <small class="text-muted">Marketing Campaign</small>
-                                            </td>
-                                            <td>
-                                                <div class="small text-muted">
-                                                    @promo.StartDate.ToString("MMM dd") - @promo.EndDate.ToString("MMM dd, yyyy")
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-warning text-dark">
-                                                    @if (promo.DiscountType == "Percentage")
-                                                    {
-                                                        <span>@promo.DiscountValue.ToString("0")% OFF</span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span>₱@promo.DiscountValue.ToString("N2") OFF</span>
-                                                    }
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-success bg-opacity-10 text-success">
-                                                    Active
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                                else
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4 py-2 text-uppercase xx-small fw-bold text-muted">Campaign Detail</th>
+                                <th class="py-2 text-uppercase xx-small fw-bold text-muted">Duration</th>
+                                <th class="py-2 text-uppercase xx-small fw-bold text-muted">Benefit</th>
+                                <th class="pe-4 py-2 text-uppercase xx-small fw-bold text-muted text-end">Visibility</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @if (Model.ActivePromotions != null && Model.ActivePromotions.Count > 0)
+                            {
+                                foreach (var promo in Model.ActivePromotions)
                                 {
                                     <tr>
-                                        <td colspan="4" class="text-center py-5">
-                                            <div class="d-flex flex-column align-items-center">
-                                                <h6 class="text-muted mb-2">No Active Promotions</h6>
-                                                <p class="text-muted small mb-0">Create a new campaign to boost sales</p>
+                                        <td class="ps-4 py-3">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="avatar-sm bg-primary bg-opacity-10 text-primary rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-bullhorn"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-dark">@promo.PromotionName</div>
+                                                    <div class="text-muted x-small">Marketing Campaign</div>
+                                                </div>
                                             </div>
+                                        </td>
+                                        <td>
+                                            <div class="small fw-semibold text-dark">
+                                                @promo.StartDate.ToString("MMM dd") - @promo.EndDate.ToString("MMM dd, yyyy")
+                                            </div>
+                                            <div class="text-muted x-small italic text-opacity-50">Active now</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill fw-bold">
+                                                @if (promo.DiscountType == "Percentage")
+                                                {
+                                                    <span>@promo.DiscountValue.ToString("0")% SAVINGS</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>₱@promo.DiscountValue.ToString("N2") OFF</span>
+                                                }
+                                            </span>
+                                        </td>
+                                        <td class="pe-4 text-end">
+                                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">
+                                                PUBLIC
+                                            </span>
                                         </td>
                                     </tr>
                                 }
-                            </tbody>
-                        </table>
-                    </div>
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-5">
+                                        <div class="d-flex flex-column align-items-center opacity-50">
+                                            <i class="fas fa-folder-open fa-3x mb-3"></i>
+                                            <h6 class="fw-bold text-dark mb-1">No Active Promotions</h6>
+                                            <p class="text-muted small mb-0">Create a new campaign to engage your database.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-light border-0 py-3 text-center">
+                    <a href="/Marketing/Promotions" class="text-decoration-none x-small fw-bold text-primary">MANAGE ALL PROMOTIONS <i class="fas fa-chevron-right ms-1"></i></a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .x-small { font-size: 0.725rem; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    
+    @@media print {
+        .sidebar, .layout-header, .btn-white { display: none !important; }
+        .content { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+        .card { box-shadow: none !important; border: 1px solid #eee !important; }
+    }
+</style>
+
