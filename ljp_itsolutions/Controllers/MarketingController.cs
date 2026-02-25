@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using ljp_itsolutions.Data;
 using ljp_itsolutions.Models;
+using ljp_itsolutions.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,9 +15,14 @@ namespace ljp_itsolutions.Controllers
     [Authorize(Roles = "MarketingStaff,Admin,SuperAdmin")]
     public class MarketingController : BaseController
     {
-        public MarketingController(ApplicationDbContext db)
+        private readonly IReceiptService _receiptService;
+        private readonly IServiceScopeFactory _scopeFactory;
+
+        public MarketingController(ApplicationDbContext db, IReceiptService receiptService, IServiceScopeFactory scopeFactory)
             : base(db)
         {
+            _receiptService = receiptService;
+            _scopeFactory = scopeFactory;
         }
 
         //  Dashboard (Analytics Overview)
@@ -76,40 +83,86 @@ namespace ljp_itsolutions.Controllers
             var customer = await _db.Customers.FindAsync(customerId);
             if (customer == null) return NotFound();
 
-            if (customer.Points < 10) 
+            if (customer.Points < 10)
                 return Json(new { success = false, message = "Customer needs at least 10 points for a reward." });
 
-            // Create a unique promo code
+            // Build a unique, readable promo code
             var cleanName = customer.FullName.Replace(" ", "").ToUpper();
             if (cleanName.Length > 5) cleanName = cleanName.Substring(0, 5);
             var promoCode = $"REWARD-{cleanName}-{Guid.NewGuid().ToString().Substring(0, 4).ToUpper()}";
+            const decimal discountValue = 15m;
 
+            // Create the promotion entry
             var promotion = new Promotion
             {
-                PromotionName = promoCode, 
-                DiscountType = "Percentage",
-                DiscountValue = 15, 
-                StartDate = DateTime.UtcNow,
-                EndDate = DateTime.UtcNow.AddDays(30),
-                IsActive = true,
+                PromotionName = promoCode,
+                DiscountType  = "Percentage",
+                DiscountValue = discountValue,
+                StartDate     = DateTime.UtcNow,
+                EndDate       = DateTime.UtcNow.AddDays(30),
+                IsActive      = true,
                 ApprovalStatus = "Approved",
-                ApprovedDate = DateTime.UtcNow
+                ApprovedDate  = DateTime.UtcNow,
+                MaxRedemptions = 1,
+                OneTimePerCustomer = true,
+                IsOneTimeReward = true
             };
-
             _db.Promotions.Add(promotion);
-            
-        
+
+            // Deduct 10 points from customer
             customer.Points -= 10;
-            
+
+            // Log the redemption event
+            _db.RewardRedemptions.Add(new RewardRedemption
+            {
+                CustomerID      = customer.CustomerID,
+                RewardName      = $"{discountValue}% Discount Code",
+                PointsRedeemed  = 10,
+                RedemptionDate  = DateTime.Now
+            });
+
+            await _db.SaveChangesAsync();
             await LogAudit("Generated Loyalty Reward", $"Customer: {customer.FullName}, Code: {promoCode}");
 
-            return Json(new { success = true, promoCode = promoCode, message = $"15% Discount code generated for {customer.FullName}!" });
+            // Send reward code to customer email in background
+            if (!string.IsNullOrEmpty(customer.Email))
+            {
+                var capturedCustomer = customer;
+                var capturedCode     = promoCode;
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        using var scope = _scopeFactory.CreateScope();
+                        var svc = scope.ServiceProvider.GetRequiredService<IReceiptService>();
+                        await svc.SendRedemptionCodeEmailAsync(capturedCustomer, capturedCode, discountValue);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[Email Failure - Reward Code]: {ex.Message}");
+                    }
+                });
+            }
+
+            bool emailSent = !string.IsNullOrEmpty(customer.Email);
+            string emailNote = emailSent
+                ? $" A copy has been sent to {customer.Email}."
+                : " (No email on file — show code manually.)"
+            ;
+            return Json(new
+            {
+                success   = true,
+                promoCode = promoCode,
+                message   = $"{discountValue}% Discount code generated for {customer.FullName}!{emailNote}"
+            });
         }
 
         //  Promotions
         public async Task<IActionResult> Promotions()
         {
-            var promotions = await _db.Promotions.ToListAsync();
+            var promotions = await _db.Promotions
+                .Include(p => p.Orders)
+                .ToListAsync();
             return View(promotions);
         }
 
@@ -151,6 +204,8 @@ namespace ljp_itsolutions.Controllers
             existing.StartDate = promotion.StartDate;
             existing.EndDate = promotion.EndDate;
             existing.IsActive = promotion.IsActive;
+            existing.MaxRedemptions = promotion.MaxRedemptions;
+            existing.OneTimePerCustomer = promotion.OneTimePerCustomer;
             
           
             existing.ApprovalStatus = "Pending";

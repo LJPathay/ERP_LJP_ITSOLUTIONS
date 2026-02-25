@@ -47,5 +47,18 @@ namespace ljp_itsolutions.Services
         /// Notifies the marketing team about a promotion's approval or rejection.
         /// </summary>
         Task<bool> SendPromotionStatusAlertAsync(Promotion promotion);
+
+        /// <summary>
+        /// Sends a loyalty reward promo code directly to the customer's email.
+        /// </summary>
+        /// <param name="customer">The customer who earned the reward.</param>
+        /// <param name="promoCode">The generated discount code.</param>
+        /// <param name="discountValue">The discount percentage or amount.</param>
+        Task<bool> SendRedemptionCodeEmailAsync(Customer customer, string promoCode, decimal discountValue);
+
+        /// <summary>
+        /// Broadcasts a newly approved promotion to all customers who have an email on file.
+        /// </summary>
+        Task<bool> SendNewPromotionToCustomersAsync(Promotion promotion);
     }
 }

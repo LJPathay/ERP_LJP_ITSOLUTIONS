@@ -95,6 +95,7 @@ namespace ljp_itsolutions.Services
                             .ThenInclude(p => p.ProductRecipes)
                                 .ThenInclude(pr => pr.Ingredient)
                     .Where(o => o.PaymentMethod.Contains("Paymongo") && o.PaymentStatus == "Pending" && o.OrderDate < cutoff)
+                    .AsSplitQuery()
                     .ToListAsync();
 
                 if (staleOrders.Any())

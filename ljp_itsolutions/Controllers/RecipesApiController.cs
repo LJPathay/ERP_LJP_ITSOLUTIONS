@@ -22,7 +22,11 @@ namespace ljp_itsolutions.Controllers
         public List<RecipeIngredientDto> Ingredients { get; set; } = new();
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// REST API that exposes the recipe template catalogue stored in the database.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     [Authorize] 
@@ -35,8 +39,8 @@ namespace ljp_itsolutions.Controllers
             _db = db;
         }
 
-
-        /// Returns the full recipe template catalogue from the database.
+        // ── GET /api/recipes ──────────────────────────────────────────────────
+        /// <summary>Returns the full recipe template catalogue from the database.</summary>
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -48,6 +52,7 @@ namespace ljp_itsolutions.Controllers
             return Ok(templates.Select(ToDto));
         }
 
+        // ── GET /api/recipes/{id} ─────────────────────────────────────────────
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -61,6 +66,7 @@ namespace ljp_itsolutions.Controllers
             return Ok(ToDto(template));
         }
 
+        // ── GET /api/recipes/lookup?name=Vanilla+Latte ────────────────────────
         [HttpGet("lookup")]
         public async Task<IActionResult> Lookup([FromQuery] string name)
         {
@@ -83,8 +89,8 @@ namespace ljp_itsolutions.Controllers
             return Ok(ToDto(match));
         }
 
+        // ── Helpers ───────────────────────────────────────────────────────────
 
-        // helpers that when a new product is added , we don't have to update the API code to include it in the response
         private static RecipeDto ToDto(RecipeTemplate t) => new()
         {
             RecipeTemplateID = t.RecipeTemplateID,

@@ -149,7 +149,6 @@ namespace ljp_itsolutions.Services
 
             if (shift == null) return false;
 
-            // Gather only finalized sales data for this shift (matches CloseShift logic)
             var shiftOrders = await _db.Orders
                 .Include(o => o.OrderDetails)
                 .Where(o => o.OrderDate >= shift.StartTime && o.OrderDate <= (shift.EndTime ?? DateTime.Now))
@@ -662,6 +661,159 @@ namespace ljp_itsolutions.Services
                 _logger.LogError(ex, "Failed to send promotion status alert for {Promo}", promotion.PromotionName);
                 return false;
             }
+        }
+
+        public async Task<bool> SendRedemptionCodeEmailAsync(Customer customer, string promoCode, decimal discountValue)
+        {
+            if (!await IsFeatureEnabledAsync("EmailNotifications")) return false;
+            if (string.IsNullOrEmpty(customer.Email)) return false;
+
+            string htmlBody = $@"
+                <div style='background-color: #f4f7f6; padding: 40px 0; font-family: ""Inter"", -apple-system, sans-serif;'>
+                    <div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #e1e8e5;'>
+                        <div style='background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d); padding: 35px 30px; text-align: center; color: #ffffff;'>
+                            <div style='font-size: 40px; margin-bottom: 10px;'>🎁</div>
+                            <h1 style='margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 1px;'>YOU EARNED A REWARD!</h1>
+                            <p style='margin: 6px 0 0; opacity: 0.85; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;'>LJP Coffee Loyalty Program</p>
+                        </div>
+
+                        <div style='padding: 35px 30px;'>
+                            <p style='color: #334155; font-size: 16px; font-weight: 600; margin-bottom: 6px;'>Hello {customer.FullName}! 👋</p>
+                            <p style='color: #64748b; font-size: 14px; line-height: 1.7; margin-bottom: 30px;'>
+                                Thank you for being a loyal LJP Coffee customer! Your points have been redeemed and we've generated an exclusive discount code just for you.
+                            </p>
+
+                            <div style='background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 2px dashed #22c55e; border-radius: 16px; padding: 30px; text-align: center; margin-bottom: 30px;'>
+                                <p style='margin: 0 0 8px; color: #15803d; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;'>Your Discount Code</p>
+                                <p style='margin: 0; color: #14532d; font-size: 26px; font-weight: 900; letter-spacing: 4px; font-family: monospace;'>{promoCode}</p>
+                                <p style='margin: 12px 0 0; color: #15803d; font-size: 13px;'>{discountValue}% OFF your next purchase</p>
+                            </div>
+
+                            <div style='background-color: #f8fafc; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; margin-bottom: 30px;'>
+                                <p style='margin: 0 0 12px; color: #475569; font-size: 12px; font-weight: 700; text-transform: uppercase;'>How to use</p>
+                                <ol style='margin: 0; padding-left: 20px; color: #64748b; font-size: 14px; line-height: 1.8;'>
+                                    <li>Visit any LJP Coffee location</li>
+                                    <li>Show this code to your cashier at checkout</li>
+                                    <li>Enjoy your {discountValue}% discount!</li>
+                                </ol>
+                            </div>
+
+                            <div style='background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 10px; padding: 14px 18px; margin-bottom: 30px;'>
+                                <p style='margin: 0; color: #92400e; font-size: 13px;'>
+                                    ⏰ <strong>Valid for 30 days</strong> from the date of issue. Single use only.
+                                </p>
+                            </div>
+
+                            <div style='text-align: center; border-top: 1px solid #f1f5f9; padding-top: 25px;'>
+                                <p style='color: #94a3b8; font-size: 12px; line-height: 1.6;'>
+                                    Thank you for choosing LJP Coffee!<br>
+                                    © {DateTime.Now.Year} LJP IT Solutions. All rights reserved.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>";
+
+            try
+            {
+                await _emailSender.SendEmailAsync(
+                    customer.Email,
+                    $"🎁 Your LJP Coffee Reward Code: {discountValue}% Off!",
+                    htmlBody);
+                _logger.LogInformation("Redemption code email sent to {Email} for customer {Name}", customer.Email, customer.FullName);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send redemption code email to {Email}", customer.Email);
+                return false;
+            }
+        }
+
+        public async Task<bool> SendNewPromotionToCustomersAsync(Promotion promotion)
+        {
+            if (!await IsFeatureEnabledAsync("EmailNotifications")) return false;
+
+            // Get all customers who have an email address
+            var customerEmails = await _db.Customers
+                .Where(c => !string.IsNullOrEmpty(c.Email))
+                .Select(c => new { c.Email, c.FullName })
+                .ToListAsync();
+
+            if (!customerEmails.Any()) return false;
+
+            string discountDisplay = promotion.DiscountType == "Percentage"
+                ? $"{promotion.DiscountValue}% OFF"
+                : $"₱{promotion.DiscountValue:N2} OFF";
+
+            // The promo code customers can use at POS (derived same way as the card display)
+            string promoCode = promotion.PromotionName.Replace(" ", "").ToUpper();
+
+            string htmlBody = $@"
+                <div style='background-color: #f1f5f9; padding: 40px 0; font-family: ""Inter"", -apple-system, sans-serif;'>
+                    <div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.07); border: 1px solid #e2e8f0;'>
+
+                        <div style='background: linear-gradient(135deg, #1d4ed8, #7c3aed); padding: 40px 30px; text-align: center; color: #ffffff;'>
+                            <div style='font-size: 44px; margin-bottom: 12px;'>🏷️</div>
+                            <h1 style='margin: 0; font-size: 26px; font-weight: 900; letter-spacing: 0.5px;'>NEW DEAL JUST FOR YOU!</h1>
+                            <p style='margin: 8px 0 0; opacity: 0.85; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;'>LJP Coffee Exclusive Offer</p>
+                        </div>
+
+                        <div style='padding: 35px 30px;'>
+                            <h2 style='color: #1e293b; font-size: 20px; font-weight: 800; margin-bottom: 6px;'>{promotion.PromotionName}</h2>
+                            <p style='color: #64748b; font-size: 14px; line-height: 1.7; margin-bottom: 28px;'>
+                                We're excited to bring you an exclusive limited-time offer available at all LJP Coffee locations. Don't miss out!
+                            </p>
+
+                            <div style='background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 2px solid #3b82f6; border-radius: 16px; padding: 28px; text-align: center; margin-bottom: 28px;'>
+                                <p style='margin: 0 0 6px; color: #1d4ed8; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;'>Exclusive Discount</p>
+                                <p style='margin: 0; color: #1e3a8a; font-size: 48px; font-weight: 900; line-height: 1;'>{discountDisplay}</p>
+                                <p style='margin: 12px 0 0; color: #2563eb; font-size: 14px; font-weight: 600;'>Use code at checkout: <span style='font-family: monospace; background: #dbeafe; padding: 3px 10px; border-radius: 5px; letter-spacing: 2px;'>{promoCode}</span></p>
+                            </div>
+
+                            <div style='background-color: #f8fafc; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; margin-bottom: 28px;'>
+                                <table style='width: 100%; font-size: 14px; color: #475569;'>
+                                    <tr>
+                                        <td style='padding-bottom: 10px;'><strong style='color: #334155;'>📅 Valid From</strong></td>
+                                        <td style='text-align: right; padding-bottom: 10px; font-weight: 600;'>{promotion.StartDate:MMMM dd, yyyy}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong style='color: #334155;'>⏰ Valid Until</strong></td>
+                                        <td style='text-align: right; font-weight: 600; color: #dc2626;'>{promotion.EndDate:MMMM dd, yyyy}</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <div style='text-align: center;'>
+                                <p style='color: #94a3b8; font-size: 12px; line-height: 1.6; border-top: 1px solid #f1f5f9; padding-top: 20px; margin-top: 10px;'>
+                                    You received this because you are a registered LJP Coffee loyalty member.<br>
+                                    © {DateTime.Now.Year} LJP IT Solutions. All rights reserved.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>";
+
+            int successCount = 0;
+            foreach (var c in customerEmails)
+            {
+                try
+                {
+                    await _emailSender.SendEmailAsync(
+                        c.Email!,
+                        $"🏷️ New Deal at LJP Coffee: {discountDisplay} — {promotion.PromotionName}",
+                        htmlBody);
+                    successCount++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send promo broadcast to {Email}", c.Email);
+                }
+            }
+
+            _logger.LogInformation("Promotion broadcast sent to {Count}/{Total} customers for '{Promo}'",
+                successCount, customerEmails.Count, promotion.PromotionName);
+            return successCount > 0;
         }
 
         private async Task<bool> IsFeatureEnabledAsync(string key)

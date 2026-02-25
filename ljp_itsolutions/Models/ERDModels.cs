@@ -64,12 +64,21 @@ namespace ljp_itsolutions.Models
         [StringLength(20)]
         public string ApprovalStatus { get; set; } = "Pending"; // Pending, Approved, Rejected
 
-        public Guid? ApprovedBy { get; set; } 
+        public Guid? ApprovedBy { get; set; }
 
         public DateTime? ApprovedDate { get; set; }
 
         [StringLength(500)]
         public string? RejectionReason { get; set; }
+
+        /// <summary>Null = unlimited. Set to e.g. 100 to cap total uses across all customers.</summary>
+        public int? MaxRedemptions { get; set; } = null;
+
+        /// <summary>If true, each customer (by CustomerID) can only redeem this code once.</summary>
+        public bool OneTimePerCustomer { get; set; } = false;
+
+        /// <summary>Auto-set for loyalty reward codes. Deactivates the promotion after its first use.</summary>
+        public bool IsOneTimeReward { get; set; } = false;
 
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
     }

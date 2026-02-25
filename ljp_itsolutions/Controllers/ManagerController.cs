@@ -1025,8 +1025,7 @@ namespace ljp_itsolutions.Controllers
             await _db.SaveChangesAsync();
             await LogAudit($"Approved Campaign: {campaign.PromotionName}");
             
-            // Email Notification to Marketing/Admins
-            // Send status alert in background
+            // Email 1: Notify Marketing/Admin staff of the approval
             _ = Task.Run(async () => {
                 try {
                     using (var scope = _scopeFactory.CreateScope()) {
@@ -1034,11 +1033,24 @@ namespace ljp_itsolutions.Controllers
                         await scopedReceiptService.SendPromotionStatusAlertAsync(campaign);
                     }
                 } catch (Exception ex) {
-                    Console.WriteLine($"[Email Failure]: {ex.Message}");
+                    Console.WriteLine($"[Email Failure - Staff Alert]: {ex.Message}");
                 }
             });
-            
-            TempData["SuccessMessage"] = $"Campaign '{campaign.PromotionName}' approved successfully!";
+
+            // Email 2: Broadcast the new deal to all registered customers who have an email
+            var capturedCampaign = campaign;
+            _ = Task.Run(async () => {
+                try {
+                    using (var scope = _scopeFactory.CreateScope()) {
+                        var scopedReceiptService = scope.ServiceProvider.GetRequiredService<IReceiptService>();
+                        await scopedReceiptService.SendNewPromotionToCustomersAsync(capturedCampaign);
+                    }
+                } catch (Exception ex) {
+                    Console.WriteLine($"[Email Failure - Customer Broadcast]: {ex.Message}");
+                }
+            });
+
+            TempData["SuccessMessage"] = $"Campaign '{campaign.PromotionName}' approved! Customers with emails will be notified.";
             return Ok();
         }
 

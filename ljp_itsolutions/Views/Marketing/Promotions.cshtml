@@ -30,103 +30,112 @@
         </div>
     </div>
 
-    <div class="row g-4" id="promoContainer">
-        @foreach (var promo in Model)
-        {
-            var isEnded = promo.EndDate < DateTime.Now;
-            var isUpcoming = promo.StartDate > DateTime.Now;
-            var status = promo.IsActive ? (isEnded ? "Ended" : (isUpcoming ? "Scheduled" : "Active")) : "Ended";
-            var statusClass = status == "Active" ? "bg-success" : (status == "Scheduled" ? "bg-info" : "bg-secondary");
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 bg-white border-0">
+                <thead class="bg-light bg-opacity-75">
+                    <tr>
+                        <th class="ps-4 fw-bolder text-muted small text-uppercase py-3 border-0">Campaign Info</th>
+                        <th class="fw-bolder text-muted small text-uppercase py-3 border-0">Offer Details</th>
+                        <th class="fw-bolder text-muted small text-uppercase py-3 border-0">Validity</th>
+                        <th class="fw-bolder text-muted small text-uppercase py-3 border-0">Usage</th>
+                        <th class="fw-bolder text-muted small text-uppercase py-3 border-0">Status</th>
+                        <th class="pe-4 fw-bolder text-muted small text-uppercase text-end py-3 border-0">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0" id="promoContainer">
+                    @foreach (var promo in Model)
+                    {
+                        var isEnded = promo.EndDate < DateTime.Now;
+                        var isUpcoming = promo.StartDate > DateTime.Now;
+                        var status = promo.IsActive ? (isEnded ? "Ended" : (isUpcoming ? "Scheduled" : "Active")) : "Ended";
+                        var statusClass = status == "Active" ? "bg-success" : (status == "Scheduled" ? "bg-info" : "bg-secondary");
 
-            <div class="col-xl-4 col-md-6 promo-item" data-status="@status">
-                <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover overflow-hidden border-top-glow" 
-                     style="--glow-color: @(status == "Active" ? "var(--success-color)" : (status == "Scheduled" ? "var(--info-color)" : "#94a3b8"));">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="flex-fill pe-3">
+                        <tr class="promo-item transition-hover border-bottom" data-status="@status" style="cursor: pointer;"
+                            data-view-name="@promo.PromotionName"
+                            data-view-code="@promo.PromotionName.Replace(" ", "").ToUpper()"
+                            data-view-discount="@(promo.DiscountType == "Percentage" ? $"{promo.DiscountValue}%" : $"₱{promo.DiscountValue}")"
+                            data-view-start="@promo.StartDate.ToString("MMM dd, yyyy")"
+                            data-view-end="@promo.EndDate.ToString("MMM dd, yyyy")"
+                            data-view-status="@status"
+                            data-view-usage="@(promo.MaxRedemptions.HasValue ? $"{promo.Orders?.Count ?? 0} / {promo.MaxRedemptions.Value}" : "Unlimited uses")"
+                            data-view-onetime="@promo.OneTimePerCustomer.ToString().ToLower()">
+                            
+                            <td class="ps-4 py-3">
                                 <h6 class="fw-bold text-dark mb-1 search-title">@promo.PromotionName</h6>
-                                <p class="text-muted x-small mb-0">Code: <span class="fw-bold text-primary">@promo.PromotionName.Replace(" ", "").ToUpper()</span></p>
-                            </div>
-                            <div class="d-flex flex-column gap-2 align-items-end">
+                                <p class="text-muted x-small mb-0 search-code">Code: <span class="fw-bold text-primary code-span">@promo.PromotionName.Replace(" ", "").ToUpper()</span></p>
+                            </td>
+                            <td class="py-3">
+                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold">
+                                    @(promo.DiscountType == "Percentage" ? $"{promo.DiscountValue}%" : $"₱{promo.DiscountValue}") OFF
+                                </span>
+                            </td>
+                            <td class="py-3">
+                                <div class="d-flex align-items-center gap-2 small">
+                                    <i class="far fa-calendar-alt text-primary opacity-50"></i>
+                                    <span class="text-dark fw-medium">@promo.StartDate.ToString("MMM dd") — @promo.EndDate.ToString("MMM dd, yy")</span>
+                                </div>
+                            </td>
+                            <td class="py-3">
+                                <div class="d-flex flex-column gap-1">
+                                    <div class="d-flex align-items-center gap-2 small">
+                                        <i class="fas fa-users text-primary opacity-50"></i>
+                                        @if (promo.MaxRedemptions.HasValue)
+                                        {
+                                            <span class="text-dark fw-medium">Used: @(promo.Orders?.Count ?? 0) / @promo.MaxRedemptions.Value</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-dark fw-medium opacity-75">Unlimited</span>
+                                        }
+                                    </div>
+                                    @if (promo.OneTimePerCustomer)
+                                    {
+                                        <span class="badge bg-warning bg-opacity-10 text-warning px-2 rounded-pill x-small fw-bold border border-warning border-opacity-25" style="width: fit-content;">1 per customer</span>
+                                    }
+                                </div>
+                            </td>
+                            <td class="py-3">
                                 @{
                                     var approvalBadge = promo.ApprovalStatus == "Approved" ? "bg-success" : 
                                                        (promo.ApprovalStatus == "Rejected" ? "bg-danger" : "bg-warning");
                                     var approvalIcon = promo.ApprovalStatus == "Approved" ? "fa-check-circle" : 
                                                       (promo.ApprovalStatus == "Rejected" ? "fa-times-circle" : "fa-clock");
                                 }
-                                <span class="badge rounded-pill @approvalBadge px-3 x-small">
-                                    <i class="fas @approvalIcon me-1"></i>@promo.ApprovalStatus.ToUpper()
-                                </span>
-                                @if (promo.ApprovalStatus == "Approved")
-                                {
-                                    <span class="badge rounded-pill @statusClass px-3 x-small">@status.ToUpper()</span>
-                                }
-                            </div>
-                        </div>
-                        
-                        @if (promo.ApprovalStatus == "Rejected" && !string.IsNullOrEmpty(promo.RejectionReason))
-                        {
-                            <div class="alert alert-danger border-0 bg-danger bg-opacity-10 p-2 mb-3">
-                                <small class="text-danger d-flex align-items-start gap-2">
-                                    <i class="fas fa-exclamation-triangle mt-1"></i>
-                                    <span><strong>Rejected:</strong> @promo.RejectionReason</span>
-                                </small>
-                            </div>
-                        }
-                        else if (promo.ApprovalStatus == "Pending")
-                        {
-                            <div class="alert alert-warning border-0 bg-warning bg-opacity-10 p-2 mb-3">
-                                <small class="text-warning d-flex align-items-center gap-2">
-                                    <i class="fas fa-hourglass-half"></i>
-                                    <span>Awaiting manager approval to activate in POS</span>
-                                </small>
-                            </div>
-                        }
-                        
-                        <div class="promo-discount-display p-3 bg-light rounded-4 mb-4 text-center border border-white shadow-sm border-2">
-                            <span class="h1 fw-bold text-primary mb-0">
-                                @(promo.DiscountType == "Percentage" ? $"{promo.DiscountValue}%" : $"₱{promo.DiscountValue}")
-                            </span>
-                            <span class="fw-bold text-muted small ms-1 uppercase tracking-wider">Discount</span>
-                        </div>
-
-                        <div class="promo-meta mb-4">
-                            <div class="row g-2">
-                                <div class="col-12">
-                                    <div class="d-flex align-items-center gap-2 p-2 bg-white rounded-3 small">
-                                        <i class="far fa-calendar-alt text-primary opacity-50"></i>
-                                        <span class="text-dark fw-medium">@promo.StartDate.ToString("MMM dd") — @promo.EndDate.ToString("MMM dd, yyyy")</span>
-                                    </div>
+                                <div class="d-flex flex-column gap-1">
+                                    <span class="badge rounded-pill @approvalBadge px-2 py-1 x-small fw-bold" style="width: fit-content;">
+                                        <i class="fas @approvalIcon me-1"></i>@promo.ApprovalStatus.ToUpper()
+                                    </span>
+                                    @if (promo.ApprovalStatus == "Approved")
+                                    {
+                                        <span class="badge rounded-pill @statusClass px-2 py-1 x-small fw-bold" style="width: fit-content;">@status.ToUpper()</span>
+                                    }
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-light border-0 flex-fill btn-sm rounded-pill py-2 fw-bold shadow-none edit-promo-btn"
-                                    data-id="@promo.PromotionID"
-                                    data-name="@promo.PromotionName"
-                                    data-type="@promo.DiscountType"
-                                    data-value="@promo.DiscountValue"
-                                    data-start="@promo.StartDate.ToString("yyyy-MM-dd")"
-                                    data-end="@promo.EndDate.ToString("yyyy-MM-dd")"
-                                    data-active="@promo.IsActive.ToString().ToLower()">
-                                Modify
-                            </button>
-                            <form asp-action="DeleteCampaign" method="post" onsubmit="return confirm('Delete this campaign?');">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@promo.PromotionID" />
-                                <button type="submit" class="btn btn-white border flex-fill btn-sm rounded-pill py-2 fw-bold text-danger">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                            <a asp-action="PromotionPerformance" class="btn btn-white border flex-fill btn-sm rounded-pill py-2 fw-bold text-primary hvr-light">
-                                <i class="fas fa-chart-pie me-1 x-small opacity-50"></i> Analytics
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
+                            </td>
+                            <td class="pe-4 py-3 text-end action-cell">
+                                <div class="d-flex gap-2 justify-content-end align-items-center">
+                                    <button class="btn btn-light btn-sm rounded-pill fw-bold shadow-none edit-promo-btn px-3 text-muted hvr-light"
+                                            data-id="@promo.PromotionID"
+                                            data-name="@promo.PromotionName"
+                                            data-type="@promo.DiscountType"
+                                            data-value="@promo.DiscountValue"
+                                            data-start="@promo.StartDate.ToString("yyyy-MM-dd")"
+                                            data-end="@promo.EndDate.ToString("yyyy-MM-dd")"
+                                            data-active="@promo.IsActive.ToString().ToLower()"
+                                            data-max-redemptions="@(promo.MaxRedemptions?.ToString() ?? "")"
+                                            data-one-time="@promo.OneTimePerCustomer.ToString().ToLower()">
+                                        Modify
+                                    </button>
+                                    <a asp-action="PromotionPerformance" class="btn btn-light btn-sm rounded-pill fw-bold text-primary px-3 hvr-light">
+                                        Analytics
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -188,6 +197,21 @@
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-0 text-muted ps-3"><i class="far fa-calendar-times"></i></span>
                                 <input name="EndDate" type="date" class="form-control bg-light border-0 py-2" value="@DateTime.Now.AddDays(30).ToString("yyyy-MM-dd")" required />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted uppercase">Max Redemptions <span class="text-muted fw-normal">(Optional)</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0 text-muted ps-3"><i class="fas fa-users"></i></span>
+                                <input name="MaxRedemptions" type="number" class="form-control bg-light border-0 py-2" placeholder="Leave empty for unlimited" />
+                            </div>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end mb-2">
+                             <div class="form-check form-switch p-2 bg-light rounded-3 w-100">
+                                <input class="form-check-input ms-0 me-2" name="OneTimePerCustomer" type="checkbox" value="true" id="createOneTimeSwitch">
+                                <label class="form-check-label fw-bold small text-dark mt-1" for="createOneTimeSwitch">1 Use Per Customer</label>
                             </div>
                         </div>
                     </div>
@@ -270,6 +294,21 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted uppercase">Max Redemptions <span class="text-muted fw-normal">(Optional)</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0 text-muted ps-3"><i class="fas fa-users"></i></span>
+                                <input name="MaxRedemptions" id="edit-promo-max" type="number" class="form-control bg-light border-0 py-2" placeholder="Leave empty for unlimited" />
+                            </div>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end mb-2">
+                             <div class="form-check form-switch p-2 bg-light rounded-3 w-100">
+                                <input class="form-check-input ms-0 me-2" name="OneTimePerCustomer" type="checkbox" value="true" id="edit-promo-onetime">
+                                <label class="form-check-label fw-bold small text-dark mt-1" for="edit-promo-onetime">1 Use Per Customer</label>
+                            </div>
+                        </div>
+                    </div>
                     <div class="p-3 bg-light rounded-3 border border-light">
                         <div class="form-check form-switch">
                             <input class="form-check-input" name="IsActive" id="edit-promo-active" type="checkbox" value="true">
@@ -287,6 +326,69 @@
     </div>
 </div>
 
+<!-- View Campaign Modal -->
+<div class="modal fade" id="viewDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header border-0 px-4 pt-4 pb-2">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar-sm bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary border border-primary border-opacity-25">
+                        <i class="fas fa-bullhorn fw-bold"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bolder text-dark mb-0" id="vd-name">Campaign Details</h5>
+                        <p class="text-muted small mb-0 uppercase tracking-widest fw-bold text-primary" id="vd-code">CODE</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 pt-3">
+                <div class="bg-light rounded-4 p-4 text-center mb-4 border border-white shadow-sm">
+                    <span class="h1 fw-bolder text-primary mb-0" id="vd-discount">0%</span>
+                    <span class="fw-bold text-muted small ms-1 uppercase tracking-wider">Discount</span>
+                </div>
+                
+                <div class="row g-4">
+                    <div class="col-6">
+                        <label class="text-muted small fw-bold uppercase tracking-widest mb-1 d-block">Start Date</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="far fa-calendar-alt text-primary opacity-50"></i>
+                            <span class="text-dark fw-bold" id="vd-start"></span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="text-muted small fw-bold uppercase tracking-widest mb-1 d-block">End Date</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="far fa-calendar-times text-primary opacity-50"></i>
+                            <span class="text-dark fw-bold" id="vd-end"></span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="text-muted small fw-bold uppercase tracking-widest mb-1 d-block">Current Status</label>
+                        <span class="badge bg-success rounded-pill px-3 py-2 fw-bold text-uppercase" id="vd-status">ACTIVE</span>
+                    </div>
+                    <div class="col-6">
+                        <label class="text-muted small fw-bold uppercase tracking-widest mb-1 d-block">Redemptions</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-users text-primary opacity-50"></i>
+                            <span class="text-dark fw-bold" id="vd-usage"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-warning bg-opacity-10 rounded-3 d-none border border-warning border-opacity-25" id="vd-onetime-container">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-user-shield text-warning border border-warning p-1 rounded-circle bg-white"></i>
+                        <span class="text-warning fw-bolder small uppercase tracking-widest">Strictly 1 Use Per Customer</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold flex-fill py-3" data-bs-dismiss="modal">Close Details</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         $(document).ready(function() {
@@ -297,7 +399,7 @@
                 $('.promo-item').each(function() {
                     var item = $(this);
                     var title = item.find('.search-title').text().toLowerCase();
-                    var code = item.find('p.text-muted span').text().toLowerCase();
+                    var code = item.find('.code-span').text().toLowerCase();
                     var status = item.data('status');
 
                     var matchesSearch = title.includes(searchTerm) || code.includes(searchTerm);
@@ -312,7 +414,7 @@
 
                 if ($('.promo-item:visible').length === 0) {
                     if ($('#noResults').length === 0) {
-                        $('#promoContainer').append('<div id="noResults" class="col-12 text-center py-5 text-muted"><i class="fas fa-bullhorn fa-3x mb-3 opacity-25"></i><p>No campaigns match your specific criteria.</p></div>');
+                        $('#promoContainer').append('<tr id="noResults"><td colspan="6" class="text-center py-5 text-muted border-0"><i class="fas fa-bullhorn fa-3x mb-3 opacity-25"></i><p>No campaigns match your specific criteria.</p></td></tr>');
                     }
                 } else {
                     $('#noResults').remove();
@@ -330,6 +432,8 @@
                 const start = $(this).data('start');
                 const end = $(this).data('end');
                 const active = $(this).data('active');
+                const maxRedemps = $(this).data('max-redemptions');
+                const oneTime = $(this).data('one-time');
 
                 $('#edit-promo-id').val(id);
                 $('#edit-promo-name').val(name);
@@ -338,8 +442,43 @@
                 $('#edit-promo-start').val(start);
                 $('#edit-promo-end').val(end);
                 $('#edit-promo-active').prop('checked', active);
+                $('#edit-promo-max').val(maxRedemps);
+                $('#edit-promo-onetime').prop('checked', oneTime);
 
                 new bootstrap.Modal(document.getElementById('editCampaignModal')).show();
+            });
+
+            // Prevent modal from opening when clicking buttons
+            $('.action-cell, .action-cell button, .action-cell a').click(function(e) {
+                e.stopPropagation();
+            });
+
+            // View Details Modal Trigger
+            $('.promo-item').click(function() {
+                var btn = $(this);
+                $('#vd-name').text(btn.data('view-name'));
+                $('#vd-code').text("CODE: " + btn.data('view-code'));
+                $('#vd-discount').text(btn.data('view-discount'));
+                $('#vd-start').text(btn.data('view-start'));
+                $('#vd-end').text(btn.data('view-end'));
+                $('#vd-usage').text(btn.data('view-usage'));
+
+                // Status Badge coloring
+                var status = btn.data('view-status');
+                var statusBadge = $('#vd-status');
+                statusBadge.text(status);
+                statusBadge.removeClass('bg-success bg-info bg-secondary');
+                if (status === 'Active') statusBadge.addClass('bg-success');
+                else if (status === 'Scheduled') statusBadge.addClass('bg-info');
+                else statusBadge.addClass('bg-secondary');
+
+                if (btn.data('view-onetime') === true) {
+                    $('#vd-onetime-container').removeClass('d-none');
+                } else {
+                    $('#vd-onetime-container').addClass('d-none');
+                }
+
+                new bootstrap.Modal(document.getElementById('viewDetailsModal')).show();
             });
         });
     </script>

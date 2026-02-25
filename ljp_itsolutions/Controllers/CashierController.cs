@@ -98,16 +98,52 @@ namespace ljp_itsolutions.Controllers
                 Promotion? promotion = null;
                 if (!string.IsNullOrEmpty(promoCode))
                 {
-                    promotion = await _db.Promotions.FirstOrDefaultAsync(p => 
-                        p.PromotionName == promoCode && 
-                        p.IsActive && 
-                        p.ApprovalStatus == "Approved" && 
-                        p.StartDate <= DateTime.UtcNow && 
-                        p.EndDate >= DateTime.UtcNow);
-                    
+                    promotion = await _db.Promotions
+                        .Include(p => p.Orders)
+                        .FirstOrDefaultAsync(p =>
+                            p.PromotionName == promoCode &&
+                            p.IsActive &&
+                            p.ApprovalStatus == "Approved" &&
+                            p.StartDate <= DateTime.UtcNow &&
+                            p.EndDate >= DateTime.UtcNow);
+
                     if (promotion != null)
                     {
+                        int currentUsages = promotion.Orders.Count;
+
+                        // 1. Check total redemption cap
+                        if (promotion.MaxRedemptions.HasValue && currentUsages >= promotion.MaxRedemptions.Value)
+                        {
+                            var msg = $"Sorry, this promotion has reached its maximum redemption limit ({promotion.MaxRedemptions.Value} uses).";
+                            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                                return Json(new { success = false, message = msg });
+                            TempData["ErrorMessage"] = msg;
+                            return RedirectToAction("CreateOrder");
+                        }
+
+                        // 2. Check one-time-per-customer rule
+                        if (promotion.OneTimePerCustomer && customerId.HasValue)
+                        {
+                            bool alreadyUsed = promotion.Orders.Any(o => o.CustomerID == customerId.Value);
+                            if (alreadyUsed)
+                            {
+                                var msg = "You have already used this promotion code. It can only be used once per customer.";
+                                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                                    return Json(new { success = false, message = msg });
+                                TempData["ErrorMessage"] = msg;
+                                return RedirectToAction("CreateOrder");
+                            }
+                        }
+
                         order.PromotionID = promotion.PromotionID;
+                    }
+                    else if (!string.IsNullOrEmpty(promoCode))
+                    {
+                        var msg = "Invalid or expired promotion code.";
+                        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                            return Json(new { success = false, message = msg });
+                        TempData["ErrorMessage"] = msg;
+                        return RedirectToAction("CreateOrder");
                     }
                 }
 
@@ -288,6 +324,12 @@ namespace ljp_itsolutions.Controllers
 
                 if (discount > total) discount = total;
 
+                // 3. Deactivate one-time reward codes immediately after use
+                if (promotion != null && promotion.IsOneTimeReward)
+                {
+                    promotion.IsActive = false;
+                }
+
                 order.TotalAmount = total;
                 order.DiscountAmount = discount;
                 order.FinalAmount = total - discount;
@@ -438,16 +480,40 @@ namespace ljp_itsolutions.Controllers
             Promotion? promotion = null;
             if (!string.IsNullOrEmpty(request.PromoCode))
             {
-                promotion = await _db.Promotions.FirstOrDefaultAsync(p => 
-                    p.PromotionName == request.PromoCode && 
-                    p.IsActive && 
-                    p.ApprovalStatus == "Approved" && 
-                    p.StartDate <= DateTime.UtcNow && 
-                    p.EndDate >= DateTime.UtcNow);
-                
+                promotion = await _db.Promotions
+                    .Include(p => p.Orders)
+                    .FirstOrDefaultAsync(p =>
+                        p.PromotionName == request.PromoCode &&
+                        p.IsActive &&
+                        p.ApprovalStatus == "Approved" &&
+                        p.StartDate <= DateTime.UtcNow &&
+                        p.EndDate >= DateTime.UtcNow);
+
                 if (promotion != null)
                 {
+                    int currentUsages = promotion.Orders.Count;
+
+                    // 1. Check total redemption cap
+                    if (promotion.MaxRedemptions.HasValue && currentUsages >= promotion.MaxRedemptions.Value)
+                    {
+                        return BadRequest($"Sorry, this promotion reached its maximum redemption limit ({promotion.MaxRedemptions.Value} uses).");
+                    }
+
+                    // 2. Check one-time-per-customer rule
+                    if (promotion.OneTimePerCustomer && request.CustomerId.HasValue)
+                    {
+                        bool alreadyUsed = promotion.Orders.Any(o => o.CustomerID == request.CustomerId.Value);
+                        if (alreadyUsed)
+                        {
+                            return BadRequest("You have already used this promotion code.");
+                        }
+                    }
+
                     order.PromotionID = promotion.PromotionID;
+                }
+                else
+                {
+                    return BadRequest("Invalid or expired promotion code.");
                 }
             }
 
@@ -646,6 +712,12 @@ namespace ljp_itsolutions.Controllers
             }
 
             if (discount > total) discount = total;
+
+            // 3. Deactivate one-time reward codes immediately after use
+            if (promotion != null && promotion.IsOneTimeReward)
+            {
+                promotion.IsActive = false;
+            }
 
             order.TotalAmount = total;
             order.DiscountAmount = discount;
