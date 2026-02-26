@@ -17,87 +17,53 @@ namespace ljp_itsolutions.Controllers
     {
         private readonly IReceiptService _receiptService;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IAnalyticsService _analyticsService;
 
-        public MarketingController(ApplicationDbContext db, IReceiptService receiptService, IServiceScopeFactory scopeFactory)
+        public MarketingController(ApplicationDbContext db, IReceiptService receiptService, IServiceScopeFactory scopeFactory, IAnalyticsService analyticsService)
             : base(db)
         {
             _receiptService = receiptService;
             _scopeFactory = scopeFactory;
+            _analyticsService = analyticsService;
         }
 
-        //  Dashboard (Analytics Overview)
+        //  Dashboard
         public async Task<IActionResult> Dashboard()
         {
-            var totalCustomers = await _db.Customers.CountAsync();
-            var activePromotions = await _db.Promotions.CountAsync(p => p.IsActive && p.EndDate >= DateTime.UtcNow);
-            var totalOrders = await _db.Orders.CountAsync();
-            var totalPointsAwarded = await _db.Customers.SumAsync(c => (long)c.Points);
+            var data = await _analyticsService.GetMarketingDashboardDataAsync();
+            return View(data);
+        }
 
-            var topCustomers = await _db.Customers
-                .OrderByDescending(c => c.Points)
-                .Take(5)
-                .Select(c => new { c.CustomerID, c.FullName, c.Points })
-                .ToListAsync();
 
-            // Prepare Chart Data: Last 7 days of sales activity
-            var last7Days = Enumerable.Range(0, 7)
-                .Select(i => DateTime.Today.AddDays(-i))
-                .OrderBy(d => d)
-                .ToList();
-
-            var salesActivity = await _db.Orders
-                .Where(o => o.OrderDate >= last7Days.First())
-                .GroupBy(o => o.OrderDate.Date)
-                .Select(g => new { Date = g.Key, Count = g.Count() })
-                .ToListAsync();
-
-            var chartLabels = last7Days.Select(d => d.ToString("MMM dd")).ToList();
-            var chartData = last7Days.Select(d => salesActivity.FirstOrDefault(s => s.Date == d)?.Count ?? 0).ToList();
-
-            // Customer Retention: New vs Returning
-            // Returning customers = customers who have placed at least one order
-            var orderingCustomerIds = await _db.Orders.Select(o => o.CustomerID).Distinct().ToListAsync();
-            var returningCustomersCount = orderingCustomerIds.Count;
-            var newCustomersCount = totalCustomers - returningCustomersCount;
-
-            var model = new
-            {
-                TotalCustomers = totalCustomers,
-                ActivePromotions = activePromotions,
-                TotalOrders = totalOrders,
-                TotalPointsAwarded = totalPointsAwarded,
-                TopCustomers = topCustomers,
-                ChartLabels = chartLabels,
-                ChartData = chartData,
-                NewCustomersCount = newCustomersCount,
-                ReturningCustomersCount = returningCustomersCount
-            };
-
-            return View(model);
+        public class RewardRequest
+        {
+            public int CustomerId { get; set; }
+            public int PointsToDeduct { get; set; }
+            public decimal DiscountValue { get; set; }
+            public string RewardName { get; set; } = string.Empty;
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> GenerateReward(int customerId)
+        public async Task<IActionResult> GenerateReward([FromBody] RewardRequest req)
         {
-            var customer = await _db.Customers.FindAsync(customerId);
+            var customer = await _db.Customers.FindAsync(req.CustomerId);
             if (customer == null) return NotFound();
 
-            if (customer.Points < 10)
-                return Json(new { success = false, message = "Customer needs at least 10 points for a reward." });
+            if (customer.Points < req.PointsToDeduct)
+                return Json(new { success = false, message = $"Customer needs at least {req.PointsToDeduct} points for a reward." });
 
-            // Build a unique, readable promo code
+            // Build a promo code
             var cleanName = customer.FullName.Replace(" ", "").ToUpper();
             if (cleanName.Length > 5) cleanName = cleanName.Substring(0, 5);
             var promoCode = $"REWARD-{cleanName}-{Guid.NewGuid().ToString().Substring(0, 4).ToUpper()}";
-            const decimal discountValue = 15m;
 
             // Create the promotion entry
             var promotion = new Promotion
             {
                 PromotionName = promoCode,
                 DiscountType  = "Percentage",
-                DiscountValue = discountValue,
+                DiscountValue = req.DiscountValue,
                 StartDate     = DateTime.UtcNow,
                 EndDate       = DateTime.UtcNow.AddDays(30),
                 IsActive      = true,
@@ -105,37 +71,39 @@ namespace ljp_itsolutions.Controllers
                 ApprovedDate  = DateTime.UtcNow,
                 MaxRedemptions = 1,
                 OneTimePerCustomer = true,
-                IsOneTimeReward = true
+                IsOneTimeReward = true,
+                TargetAudience = "Specific VIP"
             };
             _db.Promotions.Add(promotion);
 
-            // Deduct 10 points from customer
-            customer.Points -= 10;
+            // Deduct points from customer
+            customer.Points -= req.PointsToDeduct;
 
             // Log the redemption event
             _db.RewardRedemptions.Add(new RewardRedemption
             {
                 CustomerID      = customer.CustomerID,
-                RewardName      = $"{discountValue}% Discount Code",
-                PointsRedeemed  = 10,
+                RewardName      = req.RewardName,
+                PointsRedeemed  = req.PointsToDeduct,
                 RedemptionDate  = DateTime.Now
             });
 
             await _db.SaveChangesAsync();
-            await LogAudit("Generated Loyalty Reward", $"Customer: {customer.FullName}, Code: {promoCode}");
+            await LogAudit("Generated VIP Loyalty Reward", $"Customer: {customer.FullName}, Code: {promoCode} for {req.RewardName}");
 
             // Send reward code to customer email in background
             if (!string.IsNullOrEmpty(customer.Email))
             {
                 var capturedCustomer = customer;
                 var capturedCode     = promoCode;
+                var capturedDiscount = req.DiscountValue;
                 _ = Task.Run(async () =>
                 {
                     try
                     {
                         using var scope = _scopeFactory.CreateScope();
                         var svc = scope.ServiceProvider.GetRequiredService<IReceiptService>();
-                        await svc.SendRedemptionCodeEmailAsync(capturedCustomer, capturedCode, discountValue);
+                        await svc.SendRedemptionCodeEmailAsync(capturedCustomer, capturedCode, capturedDiscount);
                     }
                     catch (Exception ex)
                     {
@@ -146,14 +114,14 @@ namespace ljp_itsolutions.Controllers
 
             bool emailSent = !string.IsNullOrEmpty(customer.Email);
             string emailNote = emailSent
-                ? $" A copy has been sent to {customer.Email}."
-                : " (No email on file — show code manually.)"
-            ;
+                ? $" A copy has been sent to {customer.Email} with a scannable QR code."
+                : " (No email on file — show code manually.)";
+
             return Json(new
             {
                 success   = true,
                 promoCode = promoCode,
-                message   = $"{discountValue}% Discount code generated for {customer.FullName}!{emailNote}"
+                message   = $"Reward provsioned successfully for {customer.FullName}!{emailNote}"
             });
         }
 
@@ -178,10 +146,22 @@ namespace ljp_itsolutions.Controllers
             if (ModelState.IsValid)
             {
                 promotion.ApprovalStatus = "Pending";
-                promotion.ApprovedBy = null;
                 promotion.ApprovedDate = null;
+                promotion.CreatedBy = GetCurrentUserId();
                 
                 _db.Promotions.Add(promotion);
+                
+                // Notify Management
+                _db.Notifications.Add(new Notification
+                {
+                    Title = "Promotion Approval Needed",
+                    Message = $"Campaign '{promotion.PromotionName}' was created by {User.Identity?.Name} and is pending approval.",
+                    Type = "info",
+                    IconClass = "fas fa-bullhorn",
+                    CreatedAt = DateTime.UtcNow,
+                    TargetUrl = "/Manager/Promotions"
+                });
+
                 await _db.SaveChangesAsync();
                 await LogAudit($"Created Campaign: {promotion.PromotionName}");
                 
@@ -211,6 +191,18 @@ namespace ljp_itsolutions.Controllers
             existing.ApprovalStatus = "Pending";
             existing.ApprovedBy = null;
             existing.ApprovedDate = null;
+            existing.CreatedBy = GetCurrentUserId();
+
+            // Notify Management
+            _db.Notifications.Add(new Notification
+            {
+                Title = "Promotion Approval Needed",
+                Message = $"Campaign '{existing.PromotionName}' was edited and requires re-approval.",
+                Type = "warning",
+                IconClass = "fas fa-edit",
+                CreatedAt = DateTime.UtcNow,
+                TargetUrl = "/Manager/Promotions"
+            });
 
             await _db.SaveChangesAsync();
             await LogAudit($"Edited Campaign: {promotion.PromotionName}");
@@ -240,12 +232,30 @@ namespace ljp_itsolutions.Controllers
                 .Include(p => p.Orders)
                 .Select(p => new
                 {
+                    p.PromotionID,
                     p.PromotionName,
+                    p.TargetAudience,
+                    p.StartDate,
+                    p.EndDate,
+                    p.IsActive,
                     UsageCount = p.Orders.Count,
-                    TotalDiscountedAmount = p.Orders.Sum(o => o.DiscountAmount)
+                    TotalSalesValue = p.Orders.Sum(o => o.FinalAmount),
+                    TotalDiscountGiven = p.Orders.Sum(o => o.DiscountAmount)
                 })
                 .ToListAsync();
             return View(performance);
+        }
+
+        public async Task<IActionResult> CampaignAnalytics(int id)
+        {
+            var campaign = await _db.Promotions
+                .Include(p => p.Orders)
+                    .ThenInclude(o => o.Customer)
+                .FirstOrDefaultAsync(p => p.PromotionID == id);
+
+            if (campaign == null) return NotFound();
+
+            return View(campaign);
         }
 
         //  Customer Engagement
@@ -334,33 +344,47 @@ namespace ljp_itsolutions.Controllers
         }
 
         //  Reports
-        public async Task<IActionResult> SalesTrends()
+        public async Task<IActionResult> SalesTrends(string month)
         {
+            DateTime selectedMonth = DateTime.Today;
+            if (!string.IsNullOrEmpty(month) && DateTime.TryParse(month + "-01", out var parsedMonth))
+            {
+                selectedMonth = parsedMonth;
+            }
+
+            var startOfMonth = new DateTime(selectedMonth.Year, selectedMonth.Month, 1);
+            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+
             var salesData = await _db.Orders
+                .Where(o => o.OrderDate >= startOfMonth && o.OrderDate <= endOfMonth && 
+                           (o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)" || o.PaymentStatus == "Completed"))
                 .GroupBy(o => o.OrderDate.Date)
                 .Select(g => new { Date = g.Key, TotalSales = g.Sum(o => o.FinalAmount) })
                 .OrderBy(g => g.Date)
                 .ToListAsync();
+
+            ViewBag.SelectedMonth = selectedMonth.ToString("yyyy-MM");
             return View(salesData);
         }
 
-        public async Task<IActionResult> CampaignReports()
+        [HttpGet]
+        public async Task<IActionResult> ExportTacticalROI()
         {
-            var campaigns = await _db.Promotions
-                .Include(p => p.Orders)
-                .Select(p => new
-                {
-                    p.PromotionName,
-                    p.StartDate,
-                    p.EndDate,
-                    p.IsActive,
-                    UsageCount = p.Orders.Count,
-                    TotalSalesValue = p.Orders.Sum(o => o.FinalAmount),
-                    TotalDiscountGiven = p.Orders.Sum(o => o.DiscountAmount)
-                })
-                .ToListAsync();
-            return View(campaigns);
+            byte[] buffer = await _analyticsService.GenerateTacticalROICSVAsync();
+            return File(buffer, "text/csv", $"LJP_Marketing_ROI_{DateTime.Now:yyyyMMdd}.csv");
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportSalesTrends(string month)
+        {
+            DateTime selectedMonth = DateTime.Today;
+            if (!string.IsNullOrEmpty(month) && DateTime.TryParse(month + "-01", out var parsedMonth))
+            {
+                selectedMonth = parsedMonth;
+            }
+
+            byte[] buffer = await _analyticsService.GenerateSalesTrendsCSVAsync(selectedMonth);
+            return File(buffer, "text/csv", $"LJP_Sales_Trend_{selectedMonth:yyyyMM}.csv");
+        }
     }
 }

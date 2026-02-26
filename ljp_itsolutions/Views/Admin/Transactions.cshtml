@@ -20,9 +20,14 @@
                 </select>
                 <input type="date" id="dateFilter" class="form-control bg-light border-0" style="max-width: 150px;">
             </div>
-            <button class="btn btn-light shadow-sm" onclick="location.reload()">
-                <i class="fas fa-sync-alt text-primary"></i>
-            </button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary shadow-sm rounded-pill px-4 fw-bold" onclick="location.href='@Url.Action("ExportTransactions", "Cashier")'">
+                    <i class="fas fa-file-export me-2"></i>Export CSV
+                </button>
+                <button class="btn btn-light shadow-sm" onclick="location.reload()">
+                    <i class="fas fa-sync-alt text-primary"></i>
+                </button>
+            </div>
         </div>
     </div>
 

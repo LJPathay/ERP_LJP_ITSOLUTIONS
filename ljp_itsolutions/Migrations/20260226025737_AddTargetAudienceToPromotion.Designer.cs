@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ljp_itsolutions.Data;
 
@@ -11,9 +12,11 @@ using ljp_itsolutions.Data;
 namespace ljp_itsolutions.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260226025737_AddTargetAudienceToPromotion")]
+    partial class AddTargetAudienceToPromotion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -312,9 +315,6 @@ namespace ljp_itsolutions.Migrations
                     b.Property<DateTime?>("ExpiryDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsArchived")
-                        .HasColumnType("bit");
-
                     b.Property<DateTime?>("LastStockedDate")
                         .HasColumnType("datetime2");
 
@@ -344,7 +344,6 @@ namespace ljp_itsolutions.Migrations
                         new
                         {
                             IngredientID = 1,
-                            IsArchived = false,
                             LowStockThreshold = 2m,
                             Name = "Espresso Beans",
                             StockQuantity = 10m,
@@ -353,7 +352,6 @@ namespace ljp_itsolutions.Migrations
                         new
                         {
                             IngredientID = 2,
-                            IsArchived = false,
                             LowStockThreshold = 5m,
                             Name = "Fresh Milk",
                             StockQuantity = 20m,
@@ -362,7 +360,6 @@ namespace ljp_itsolutions.Migrations
                         new
                         {
                             IngredientID = 3,
-                            IsArchived = false,
                             LowStockThreshold = 1000m,
                             Name = "Caramel Syrup",
                             StockQuantity = 5000m,
@@ -371,7 +368,6 @@ namespace ljp_itsolutions.Migrations
                         new
                         {
                             IngredientID = 4,
-                            IsArchived = false,
                             LowStockThreshold = 1000m,
                             Name = "Fructose",
                             StockQuantity = 5000m,
@@ -380,7 +376,6 @@ namespace ljp_itsolutions.Migrations
                         new
                         {
                             IngredientID = 5,
-                            IsArchived = false,
                             LowStockThreshold = 10m,
                             Name = "Pastry Flour",
                             StockQuantity = 50m,
@@ -621,9 +616,6 @@ namespace ljp_itsolutions.Migrations
                     b.Property<string>("ImageURL")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsArchived")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("bit");
 
@@ -653,7 +645,6 @@ namespace ljp_itsolutions.Migrations
                         {
                             ProductID = 1,
                             CategoryID = 1,
-                            IsArchived = false,
                             IsAvailable = true,
                             LowStockThreshold = 5,
                             Price = 3.50m,
@@ -664,7 +655,6 @@ namespace ljp_itsolutions.Migrations
                         {
                             ProductID = 2,
                             CategoryID = 1,
-                            IsArchived = false,
                             IsAvailable = true,
                             LowStockThreshold = 5,
                             Price = 5.25m,
@@ -675,7 +665,6 @@ namespace ljp_itsolutions.Migrations
                         {
                             ProductID = 3,
                             CategoryID = 2,
-                            IsArchived = false,
                             IsAvailable = true,
                             LowStockThreshold = 5,
                             Price = 4.00m,
@@ -686,7 +675,6 @@ namespace ljp_itsolutions.Migrations
                         {
                             ProductID = 4,
                             CategoryID = 3,
-                            IsArchived = false,
                             IsAvailable = true,
                             LowStockThreshold = 5,
                             Price = 4.50m,
@@ -697,7 +685,6 @@ namespace ljp_itsolutions.Migrations
                         {
                             ProductID = 5,
                             CategoryID = 3,
-                            IsArchived = false,
                             IsAvailable = true,
                             LowStockThreshold = 5,
                             Price = 3.75m,
@@ -788,9 +775,6 @@ namespace ljp_itsolutions.Migrations
 
                     b.Property<DateTime?>("ApprovedDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DiscountType")
                         .IsRequired()
@@ -1036,7 +1020,7 @@ namespace ljp_itsolutions.Migrations
                         {
                             UserID = new Guid("4f7b6d1a-5b6c-4d8e-a9f2-0a1b2c3d4e5f"),
                             AccessFailedCount = 0,
-                            CreatedAt = new DateTime(2026, 2, 26, 22, 35, 1, 344, DateTimeKind.Local).AddTicks(6285),
+                            CreatedAt = new DateTime(2026, 2, 26, 10, 57, 36, 17, DateTimeKind.Local).AddTicks(4255),
                             Email = "admin@coffee.local",
                             FontSize = "default",
                             FullName = "System Admin",

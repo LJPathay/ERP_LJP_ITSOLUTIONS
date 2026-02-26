@@ -80,6 +80,11 @@ namespace ljp_itsolutions.Models
         /// <summary>Auto-set for loyalty reward codes. Deactivates the promotion after its first use.</summary>
         public bool IsOneTimeReward { get; set; } = false;
 
+        [StringLength(50)]
+        public string TargetAudience { get; set; } = "All Patrons";
+
+        public Guid? CreatedBy { get; set; }
+
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
     }
 

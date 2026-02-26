@@ -1,155 +1,260 @@
-@model dynamic
+@model ljp_itsolutions.Services.MarketingDashboardData
 @{
-    ViewData["Title"] = "Marketing Strategic Overview";
+    ViewData["Title"] = "Marketing Dashboard";
+    Layout = "_Layout";
 }
 
-<div class="marketing-dashboard py-2">
-    <!-- Quick Stats (Compact Premium Style) -->
+<div class="container-fluid px-4 py-3">
+
+    <!-- KPI Strip -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #4f46e5 !important;">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Total Reach</p>
-                            <h4 class="fw-bold mb-0">@Model.TotalCustomers</h4>
-                            <span class="text-success xx-small fw-bold"><i class="fas fa-arrow-up me-1"></i>+12% Trend</span>
-                        </div>
-                        <div class="bg-primary bg-opacity-10 rounded-3 p-2 text-primary">
-                            <i class="fas fa-user-friends"></i>
-                        </div>
+            <div class="kpi-card-premium brand-primary">
+                <div class="kpi-content">
+                    <p class="kpi-title">Active Campaigns</p>
+                    <span class="kpi-main-val">@Model.ActiveCampaigns</span>
+                    <div class="kpi-trend text-success">
+                        <i class="fas fa-check-circle"></i> Live
                     </div>
+                </div>
+                <div class="kpi-icon-box">
+                    <i class="fas fa-bullhorn"></i>
                 </div>
             </div>
         </div>
+
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #10b981 !important;">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Active Offers</p>
-                            <h4 class="fw-bold mb-0">@Model.ActivePromotions</h4>
-                            <span class="text-success xx-small fw-bold"><i class="fas fa-check-circle me-1"></i>Operational</span>
-                        </div>
-                        <div class="bg-success bg-opacity-10 rounded-3 p-2 text-success">
-                            <i class="fas fa-tags"></i>
-                        </div>
+            <div class="kpi-card-premium brand-success">
+                <div class="kpi-content">
+                    <p class="kpi-title">Conversion Volume</p>
+                    <span class="kpi-main-val">@Model.ConversionVolume</span>
+                    <div class="kpi-trend text-success">
+                        <i class="fas fa-arrow-up"></i> @Model.ReachGrowth.ToString("N1")% Growth
                     </div>
+                </div>
+                <div class="kpi-icon-box">
+                    <i class="fas fa-filter"></i>
                 </div>
             </div>
         </div>
+
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #f59e0b !important;">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Loyalty Points</p>
-                            <h4 class="fw-bold mb-0">@Model.TotalPointsAwarded</h4>
-                            <span class="text-warning xx-small fw-bold">Network Equity</span>
-                        </div>
-                        <div class="bg-warning bg-opacity-10 rounded-3 p-2 text-warning">
-                            <i class="fas fa-star"></i>
-                        </div>
+            <div class="kpi-card-premium brand-indigo">
+                <div class="kpi-content">
+                    <p class="kpi-title">Conversion Rate</p>
+                    <span class="kpi-main-val">@Model.ConversionRate.ToString("N1")%</span>
+                    <div class="progress" style="height: 4px; border-radius: 10px; background-color: rgba(0, 0, 0, 0.05); margin-top: 8px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: @Model.ConversionRate%"></div>
                     </div>
+                </div>
+                <div class="kpi-icon-box">
+                    <i class="fas fa-percentage"></i>
                 </div>
             </div>
         </div>
+
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left: 3px solid #0ea5e9 !important;">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <p class="text-muted x-small fw-bold text-uppercase tracking-wider mb-1">Conversions</p>
-                            <h4 class="fw-bold mb-0">@Model.TotalOrders</h4>
-                            <span class="text-info xx-small fw-bold"><i class="fas fa-caret-up me-1"></i>4.2% Growth</span>
-                        </div>
-                        <div class="bg-info bg-opacity-10 rounded-3 p-2 text-info">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
+            <div class="kpi-card-premium brand-warning">
+                <div class="kpi-content">
+                    <p class="kpi-title">Total Patron Audience</p>
+                    <span class="kpi-main-val">@Model.AudiencePenetration</span>
+                    <div class="kpi-trend text-muted">
+                        Loyalty Network Size
                     </div>
+                </div>
+                <div class="kpi-icon-box">
+                    <i class="fas fa-users"></i>
                 </div>
             </div>
         </div>
     </div>
 
+
+
+    <!-- Analysis Row -->
     <div class="row g-4 mb-4">
-        <!-- Performance Chart -->
+        <!-- Growth Chart -->
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
-                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="fw-bold mb-0">Engagement Velocity</h6>
-                        <p class="text-muted x-small mb-0">Weekly campaign transaction volume</p>
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0">Engagement Velocity & Conversion Trends</h6>
+                    <div class="dropdown">
+                        <button class="btn btn-link btn-sm p-0 text-decoration-none" data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-h text-muted"></i>
+                        </button>
                     </div>
-                    <div class="badge rounded-pill bg-light text-dark border px-3">Real-time Data</div>
                 </div>
                 <div class="card-body p-4">
-                    <canvas id="performanceChart" style="min-height: 300px; width: 100%;"></canvas>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Customer Retention -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
-                <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h6 class="fw-bold mb-0">Audience Composition</h6>
-                </div>
-                <div class="card-body p-4 d-flex flex-column align-items-center justify-content-center">
-                    <div style="height: 220px; width: 100%;">
-                        <canvas id="retentionChart"></canvas>
-                    </div>
-                    <div class="mt-4 w-100 p-3 bg-light rounded-4">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="x-small fw-bold text-muted text-uppercase tracking-wider">Returning Loyalty</span>
-                            <span class="fw-bold text-primary">@Model.ReturningCustomersCount</span>
-                        </div>
-                        <div class="progress rounded-pill shadow-none" style="height: 8px;">
-                            <div class="progress-bar bg-primary rounded-pill shadow-none" role="progressbar" 
-                                 style="width: @(Model.TotalCustomers > 0 ? (Model.ReturningCustomersCount * 100 / Model.TotalCustomers) : 0)%; 
-                                        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)) !important;"></div>
-                        </div>
+                    <div style="height: 350px;">
+                        <canvas id="performanceChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="row g-4">
-        <!-- Top Customers -->
-        <div class="col-lg-12">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0">VIP Performance Index</h6>
-                    <a asp-action="Customers" class="btn btn-sm btn-light rounded-pill px-3 border-0 shadow-none">
-                        All Personas <i class="fas fa-chevron-right ms-1 x-small opacity-50"></i>
-                    </a>
+        <!-- VIP Performance -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 bg-white">
+                <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-dark">VIP Performance Index</h6>
+                    <span class="badge bg-light text-muted fw-normal">Top Patrons</span>
                 </div>
-                <div class="card-body px-0 pt-2">
-                    <div class="row px-4 g-3">
-                        @foreach (var customer in Model.TopCustomers)
+                <div class="card-body p-4 pt-0">
+                    <div class="vip-list">
+                        @foreach (var customer in Model.VIPPerformance)
                         {
-                            <div class="col-xl-3 col-md-6 mb-2">
-                                <div class="p-3 border-0 bg-light rounded-4 d-flex align-items-center gap-3 transition-hover shadow-sm-hover border border-white">
-                                    <div class="avatar-sm bg-white text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 44px; height: 44px; font-size: 1.1rem; border: 2px solid #fff;">
-                                        @customer.FullName.Substring(0, 1)
-                                    </div>
-                                    <div class="flex-fill">
-                                        <p class="mb-0 fw-bold x-small text-dark">@customer.FullName</p>
-                                        <p class="text-success x-small fw-bold mb-0">@customer.Points pts</p>
-                                    </div>
-                                    <button class="btn btn-sm btn-white rounded-circle shadow-sm d-flex align-items-center justify-content-center ms-auto" 
-                                            onclick="generateReward(@customer.CustomerID)" style="width: 32px; height: 32px;">
-                                        <i class="fas fa-gift text-primary x-small"></i>
-                                    </button>
+                            <div class="d-flex align-items-center gap-3 p-2 mb-2 rounded-3 hover-bg-light transition-all">
+                                <div class="avatar-sm bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center fw-bold text-primary shadow-sm" style="width: 36px; height: 36px; border: 1px solid rgba(59, 130, 246, 0.1);">
+                                    @customer.FullName.Substring(0, 1)
                                 </div>
+                                <div class="flex-grow-1">
+                                    <p class="mb-0 fw-bold small text-dark">@customer.FullName</p>
+                                    <p class="text-muted xx-small mb-0">ID: #@customer.CustomerID • <span class="text-primary fw-bold">@customer.Points</span> PTS</p>
+                                </div>
+                                <button class="btn btn-sm btn-light border-0 rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" onclick="openRewardModal(@customer.CustomerID, '@customer.FullName', @customer.Points)" title="Provision Reward">
+                                    <i class="fas fa-gift text-primary" style="font-size: 0.85rem;"></i>
+                                </button>
                             </div>
                         }
                     </div>
+                    <div class="mt-4 pt-3 border-top text-center">
+                        <a asp-action="Customers" class="text-decoration-none xx-small fw-bold text-primary opacity-75">View Complete Patron Database <i class="fas fa-chevron-right ms-1"></i></a>
+                    </div>
                 </div>
-                <div class="card-footer bg-light bg-opacity-50 border-0 text-center py-3">
-                    <span class="x-small text-muted italic">Click the gift icon to provision immediate loyalty benefits to top-tier patrons.</span>
+            </div>
+        </div>
+    <!-- Secondary Analysis Row -->
+    <div class="row g-4 mb-4">
+        <!-- Patron Composition -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white h-100">
+                <div class="card-header bg-white border-0 py-3 px-4">
+                    <h6 class="fw-bold mb-0 text-dark">Patron Composition</h6>
                 </div>
+                <div class="card-body p-4 pt-0">
+                    <div style="height: 250px;">
+                        <canvas id="patronChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Marketing Reach Details -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white h-100">
+                <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-dark">Campaign Performance Index</h6>
+                    <span class="badge bg-soft-blue text-primary px-3">Aggregated Data</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light bg-opacity-50">
+                                <tr>
+                                    <th class="xx-small fw-bold text-uppercase">Metric</th>
+                                    <th class="xx-small fw-bold text-uppercase">Current Status</th>
+                                    <th class="xx-small fw-bold text-uppercase text-end">Volume</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="small fw-medium">Audience Reach</span></td>
+                                    <td><span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Active</span></td>
+                                    <td class="text-end fw-bold">@Model.AudiencePenetration</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="small fw-medium">New Patrons</span></td>
+                                    <td><span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">Gaining</span></td>
+                                    <td class="text-end fw-bold">@Model.NewPatronsCount</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="small fw-medium">Returning Loyalty</span></td>
+                                    <td><span class="badge bg-indigo bg-opacity-10 text-indigo rounded-pill px-3">Stable</span></td>
+                                    <td class="text-end fw-bold">@Model.ReturningPatronsCount</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+    .kpi-card { transition: transform 0.2s ease; cursor: pointer; }
+    .kpi-card:hover { transform: translateY(-3px); }
+    .kpi-icon-bg { position: absolute; right: -10px; bottom: -10px; font-size: 5rem; color: rgba(0,0,0,0.03); transform: rotate(-15deg); pointer-events: none; }
+    .bg-soft-blue { background-color: rgba(59, 130, 246, 0.1); }
+    .bg-indigo-900 { background-color: #1e1b4b; }
+    .hover-bg-light:hover { background-color: #f8fafc; cursor: pointer; }
+    .transition-all { transition: all 0.2s ease; }
+    .live-pulse { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 0 rgba(16, 185, 129, 0.4); animation: pulse 2s infinite; }
+    @@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+    .xx-small { font-size: 0.65rem; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    .reward-item { transition: all 0.2s ease; border: 1px solid #f1f5f9; background: white; }
+    .reward-item:hover { border-color: #3b82f6; background: #f8fafc; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .reward-item:active { transform: translateY(0); }
+</style>
+
+<!-- Reward Selection Modal -->
+<div class="modal fade" id="rewardSelectionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar-sm bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 42px; height: 42px; flex-shrink: 0;">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    @Html.AntiForgeryToken()
+                    <div>
+                        <h5 class="modal-title fw-bolder text-dark mb-0">Provision Loyalty Reward</h5>
+                        <p class="text-muted small mb-0 uppercase tracking-widest fw-bold" id="rewardCustomerName">Customer Name</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted small mb-3">Select an incentive tier to immediately provision for this patron. They currently have <strong class="text-success" id="rewardCustomerPoints">0</strong> points available.</p>
+                
+                <input type="hidden" id="rewardSelectedCustomerId" />
+
+                <!-- Tier 1 -->
+                <button class="btn w-100 text-start d-flex align-items-center gap-3 p-3 mb-2 rounded-3 reward-item" onclick="processReward(5, 5, '5% Patron Discount')">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">5% Discount</h6>
+                        <span class="xx-small text-muted">Deducts 5 points</span>
+                    </div>
+                </button>
+
+                <!-- Tier 2 -->
+                <button class="btn w-100 text-start d-flex align-items-center gap-3 p-3 mb-2 rounded-3 reward-item" onclick="processReward(10, 15, '15% Elite Discount')">
+                    <div class="bg-success bg-opacity-10 text-success rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">15% Discount</h6>
+                        <span class="xx-small text-muted">Deducts 10 points</span>
+                    </div>
+                </button>
+
+                <!-- Tier 3 -->
+                <button class="btn w-100 text-start d-flex align-items-center gap-3 p-3 mb-2 rounded-3 reward-item" onclick="processReward(20, 25, '25% VIP Discount')">
+                    <div class="bg-warning bg-opacity-10 text-warning rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">25% Discount</h6>
+                        <span class="xx-small text-muted">Deducts 20 points</span>
+                    </div>
+                </button>
+
             </div>
         </div>
     </div>
@@ -158,71 +263,73 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#4f46e5';
-        const secondaryColor = getComputedStyle(document.documentElement).getPropertyValue('--secondary-color').trim() || '#fbbf24';
-
-        // Performance Chart Initialization
-        const ctxPerformance = document.getElementById('performanceChart').getContext('2d');
-        new Chart(ctxPerformance, {
+        // Performance Chart
+        const perfCtx = document.getElementById('performanceChart').getContext('2d');
+        new Chart(perfCtx, {
             type: 'line',
             data: {
-                labels: @Html.Raw(Json.Serialize(Model.ChartLabels)),
+                labels: @Html.Raw(Json.Serialize(Model.PerformanceLabels)),
                 datasets: [{
-                    label: 'Engagement Volume',
-                    data: @Html.Raw(Json.Serialize(Model.ChartData)),
-                    borderColor: primaryColor,
+                    label: 'Conversion Velocity',
+                    data: @Html.Raw(Json.Serialize(Model.PerformanceData)),
+                    borderColor: '#4f46e5',
                     backgroundColor: 'rgba(79, 70, 229, 0.05)',
                     fill: true,
-                    tension: 0.45,
-                    borderWidth: 3.5,
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: primaryColor,
-                    pointBorderWidth: 2,
+                    tension: 0.4,
                     pointRadius: 4,
-                    pointHoverRadius: 6
+                    pointBackgroundColor: '#4f46e5',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#4f46e5',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
+                plugins: { 
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#fff',
-                        titleColor: '#1e293b',
-                        bodyColor: '#1e293b',
-                        borderColor: '#e2e8f0',
-                        borderWidth: 1,
+                        enabled: true,
+                        backgroundColor: '#1E293B',
                         padding: 12,
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        cornerRadius: 8,
                         displayColors: false
                     }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
                 },
                 scales: {
                     y: { 
                         beginAtZero: true, 
                         grid: { color: '#f1f5f9', drawBorder: false },
-                        ticks: { color: '#64748b', font: { size: 10 } }
+                        ticks: { font: { size: 11 } }
                     },
                     x: { 
                         grid: { display: false },
-                        ticks: { color: '#64748b', font: { size: 10 } }
+                        ticks: { font: { size: 11 } }
                     }
                 }
             }
         });
 
-        // Retention Chart Initialization
-        const ctxRetention = document.getElementById('retentionChart').getContext('2d');
-        new Chart(ctxRetention, {
+        // Patron Composition Chart
+        const patronCtx = document.getElementById('patronChart').getContext('2d');
+        new Chart(patronCtx, {
             type: 'doughnut',
             data: {
-                labels: ['New Patrons', 'Returning Patrons'],
+                labels: ['New Patrons', 'Returning'],
                 datasets: [{
-                    data: [@Model.NewCustomersCount, @Model.ReturningCustomersCount],
-                    backgroundColor: ['#e2e8f0', primaryColor],
-                    borderWidth: 8,
-                    borderColor: '#fff',
-                    hoverOffset: 12
+                    data: [@Model.NewPatronsCount, @Model.ReturningPatronsCount],
+                    backgroundColor: ['#3b82f6', '#6366f1'],
+                    borderWidth: 0,
+                    hoverOffset: 4
                 }]
             },
             options: {
@@ -234,42 +341,59 @@
                         position: 'bottom',
                         labels: {
                             usePointStyle: true,
-                            pointStyle: 'circle',
-                            padding: 25,
-                            font: { size: 11, weight: 'bold' },
-                            color: '#64748b'
+                            padding: 20,
+                            font: { size: 12, weight: '500' }
                         }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1E293B',
+                        padding: 10,
+                        cornerRadius: 8
                     }
                 }
             }
         });
 
-        async function generateReward(customerId) {
-            if (!confirm('Provision a strategic 15% incentive for this customer?')) return;
+        let currentRewardCustomerId = 0;
+        let currentRewardCustomerPoints = 0;
+        const rewardModal = new bootstrap.Modal(document.getElementById('rewardSelectionModal'));
+
+        function openRewardModal(customerId, customerName, points) {
+            currentRewardCustomerId = customerId;
+            currentRewardCustomerPoints = points;
+            document.getElementById('rewardCustomerName').textContent = customerName;
+            document.getElementById('rewardCustomerPoints').textContent = points;
+            rewardModal.show();
+        }
+
+        async function processReward(reqPts, discountVal, rewardName) {
+            if (currentRewardCustomerPoints < reqPts) {
+                alert("Insufficient loyalty capital.");
+                return;
+            }
+
+            if (!confirm(`Provision ${rewardName}?`)) return;
             
             try {
-                const response = await fetch('@Url.Action("GenerateReward", "Marketing")?customerId=' + customerId, {
+                const response = await fetch('@Url.Action("GenerateReward", "Marketing")', {
                     method: 'POST',
-                    headers: {
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
-                    }
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ CustomerId: currentRewardCustomerId, PointsToDeduct: reqPts, DiscountValue: discountVal, RewardName: rewardName })
                 });
-                
+
                 const data = await response.json();
                 if (data.success) {
-                    alert('Provisioned! Automated Promo Code: ' + data.promoCode);
+                    alert('Provisioned successfully.');
+                    location.reload();
                 } else {
                     alert(data.message);
                 }
             } catch (err) {
-                alert('Network error during reward provisioning.');
+                alert('Network failure.');
             }
         }
     </script>
 }
-
-<style>
-    .x-small { font-size: 0.75rem; }
-    .tracking-wider { letter-spacing: 0.05em; }
-    .shadow-sm-hover:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important; transform: translateY(-2px); }
-</style>

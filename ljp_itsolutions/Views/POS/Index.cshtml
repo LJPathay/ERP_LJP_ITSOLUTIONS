@@ -118,13 +118,13 @@
 
         <div class="cart-items" id="cartItems" style="display:none">
         </div>
-        <div class="text-center text-muted py-5" id="emptyCartMsg">
-            <i class="fas fa-shopping-basket fa-3x mb-3 opacity-20"></i>
-            <p>No items in cart</p>
+        <div class="text-center text-muted py-3" id="emptyCartMsg">
+            <i class="fas fa-shopping-basket fa-3x mb-2 opacity-20"></i>
+            <p class="mb-0 small">No items in cart</p>
         </div>
 
         <div class="cart-footer">
-            <div class="promotion-area mb-3">
+            <div class="promotion-area mb-2">
                 <div class="input-group input-group-sm">
                     <input type="text" id="promoCode" class="form-control" placeholder="Promo code">
                     <button class="btn btn-outline-secondary" onclick="applyPromo()">Apply</button>
@@ -137,7 +137,7 @@
                 <span id="subtotal">₱0.00</span>
             </div>
             <div class="summary-row">
-                <span>Tax (5%)</span>
+                <span>Tax (@(ViewBag.TaxRate != null ? (ViewBag.TaxRate * 100).ToString("N0") : "5")%)</span>
                 <span id="tax">₱0.00</span>
             </div>
             <div class="summary-row total">
@@ -156,7 +156,7 @@
                 </button>
             </div>
 
-            <div id="cashDetails" class="payment-details-box mt-3">
+            <div id="cashDetails" class="payment-details-box mt-2">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="text-muted">Cash Received:</span>
                     <div class="input-group input-group-sm w-50">
@@ -292,6 +292,7 @@
         let totalAmount = 0;
         let selectedCustomerEmail = null;
         let currentOrderId = null;
+        const TAX_RATE = @(ViewBag.TaxRate ?? 0.05);
 
         // Cart loss protection
         window.onbeforeunload = function() {
@@ -383,7 +384,7 @@
             let discountFromPoints = isRedeeming ? 50 : 0;
             if (discountFromPoints > subtotal) discountFromPoints = subtotal;
 
-            const tax = (subtotal - discountFromPoints) * 0.05;
+            const tax = (subtotal - discountFromPoints) * TAX_RATE;
             totalAmount = (subtotal - discountFromPoints) + tax;
 
             document.getElementById('subtotal').innerText = `₱${subtotal.toFixed(2)}`;
@@ -461,17 +462,33 @@
             }, 300);
         }
 
-        function applyPromo() {
+        async function applyPromo() {
             const code = document.getElementById('promoCode').value;
             const status = document.getElementById('promoStatus');
-            if (code.toUpperCase() === 'FIRSTBUY') {
-                status.innerText = 'Promo applied: 10% Off';
-                status.style.display = 'block';
-                status.classList.replace('text-danger', 'text-success');
-            } else {
-                status.innerText = 'Invalid code';
-                status.style.display = 'block';
-                status.classList.replace('text-success', 'text-danger');
+            
+            if (!code) {
+                status.style.display = 'none';
+                return;
+            }
+
+            status.innerText = 'Validating...';
+            status.style.display = 'block';
+            status.className = 'text-muted';
+
+            try {
+                const response = await fetch(`@Url.Action("ValidatePromoCode", "Cashier")?code=${encodeURIComponent(code)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    status.innerText = data.message;
+                    status.className = 'text-success mt-1 small d-block';
+                } else {
+                    status.innerText = data.message || 'Invalid code';
+                    status.className = 'text-danger mt-1 small d-block';
+                }
+            } catch (err) {
+                status.innerText = 'Connection error. Could not validate code.';
+                status.className = 'text-danger mt-1 small d-block';
             }
         }
 

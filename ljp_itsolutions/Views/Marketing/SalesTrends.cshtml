@@ -12,13 +12,18 @@
             <p class="text-muted x-small mb-0">Temporal analysis of gross transaction value and growth acceleration</p>
         </div>
         <div class="col-md-6 d-flex justify-content-md-end gap-2">
-            <div class="input-group input-group-sm shadow-sm rounded-pill overflow-hidden border bg-white" style="max-width: 240px;">
-                <span class="input-group-text bg-transparent border-0 ps-3">
-                    <i class="far fa-calendar-alt text-muted"></i>
-                </span>
-                <input type="month" class="form-control border-0 shadow-none ps-2 py-2 x-small fw-bold" value="@DateTime.Now.ToString("yyyy-MM")">
-            </div>
-            <button class="btn btn-primary rounded-pill px-4 shadow-sm btn-sm fw-bold x-small">GENERATE INTEL</button>
+            <form id="filterForm" method="get" class="d-flex gap-2 align-items-center">
+                <div class="input-group input-group-sm shadow-sm rounded-pill overflow-hidden border bg-white" style="max-width: 240px;">
+                    <span class="input-group-text bg-transparent border-0 ps-3">
+                        <i class="far fa-calendar-alt text-muted"></i>
+                    </span>
+                    <input type="month" name="month" id="monthFilter" class="form-control border-0 shadow-none ps-2 py-2 x-small fw-bold" value="@(ViewBag.SelectedMonth ?? DateTime.Now.ToString("yyyy-MM"))">
+                </div>
+                <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm btn-sm fw-bold x-small">GENERATE INTEL</button>
+            </form>
+            <button class="btn btn-outline-primary rounded-pill px-4 shadow-sm btn-sm fw-bold x-small" onclick="exportData()">
+                <i class="fas fa-file-export me-1"></i> EXPORT
+            </button>
         </div>
     </div>
 
@@ -160,6 +165,11 @@
                 }
             }
         });
+
+        function exportData() {
+            const month = document.getElementById('monthFilter').value;
+            window.location.href = `@Url.Action("ExportSalesTrends", "Marketing")?month=${month}`;
+        }
     </script>
 }
 

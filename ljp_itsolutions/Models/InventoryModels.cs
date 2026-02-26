@@ -21,6 +21,7 @@ namespace ljp_itsolutions.Models
 
         public DateTime? ExpiryDate { get; set; }
         public DateTime? LastStockedDate { get; set; }
+        public bool IsArchived { get; set; } = false;
 
         public virtual ICollection<ProductRecipe> ProductRecipes { get; set; } = new List<ProductRecipe>();
     }

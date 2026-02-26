@@ -16,39 +16,26 @@ namespace ljp_itsolutions.Controllers
         private readonly IPasswordHasher<ljp_itsolutions.Models.User> _hasher;
         private readonly IReceiptService _receiptService;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IAnalyticsService _analyticsService;
 
-        public SuperAdminController(InMemoryStore store, ljp_itsolutions.Data.ApplicationDbContext db, IPasswordHasher<ljp_itsolutions.Models.User> hasher, IReceiptService receiptService, IServiceScopeFactory scopeFactory)
+        public SuperAdminController(InMemoryStore store, ljp_itsolutions.Data.ApplicationDbContext db, IPasswordHasher<ljp_itsolutions.Models.User> hasher, IReceiptService receiptService, IServiceScopeFactory scopeFactory, IAnalyticsService analyticsService)
             : base(db)
         {
             _store = store;
             _hasher = hasher;
             _receiptService = receiptService;
             _scopeFactory = scopeFactory;
+            _analyticsService = analyticsService;
         }
 
 
 
-        public IActionResult Dashboard()
+        public async Task<IActionResult> Dashboard()
         {
-            var auditLogs = _db.AuditLogs.Include(a => a.User).OrderByDescending(a => a.Timestamp).Take(10).ToList();
-            var userCount = _db.Users.Count();
-            var activeUsers = _db.Users.Count(u => u.IsActive);
-            
-            // Security metrics
-            var failedLoginsCount = _db.AuditLogs.Count(a => a.Action.Contains("Failed login"));
-            var lockedOutUsersCount = _db.Users.Count(u => u.LockoutEnd != null && u.LockoutEnd > DateTime.UtcNow);
-
-            var model = new {
-                AuditLogs = auditLogs,
-                UserCount = userCount,
-                ActiveUsers = activeUsers,
-                FailedLoginsCount = failedLoginsCount,
-                LockedOutUsersCount = lockedOutUsersCount,
-                SystemUptime = "99.9%",
-                GrowthIndex = "+12.5%"
-            };
-            return View(model);
+            var data = await _analyticsService.GetSuperAdminDashboardDataAsync();
+            return View(data);
         }
+
 
         // --- User Management ---
         public IActionResult Users(bool showArchived = false)
@@ -73,58 +60,42 @@ namespace ljp_itsolutions.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateUser(User user, string Password)
+        public async Task<IActionResult> CreateUser([FromBody] User user)
         {
-            if (ModelState.IsValid)
+            if (string.IsNullOrEmpty(user.Username))
+                return BadRequest("Username is required.");
+
+            if (_db.Users.Any(u => u.Username == user.Username))
             {
-                if (_db.Users.Any(u => u.Username == user.Username))
-                {
-                    TempData["Error"] = "Username already exists.";
-                    return RedirectToAction("Users");
-                }
-
-                // SECURITY: Prevent creating another SuperAdmin
-                if (user.Role == UserRoles.SuperAdmin)
-                {
-                    TempData["Error"] = "Unauthorized role assignment.";
-                    return RedirectToAction("Users");
-                }
-
-                user.UserID = Guid.NewGuid();
-                user.CreatedAt = DateTime.UtcNow;
-                user.IsActive = true;
-                
-                // Secure Invite Link flow
-                var token = Guid.NewGuid().ToString("N");
-                user.PasswordResetToken = token;
-                user.ResetTokenExpiry = DateTime.UtcNow.AddHours(2);
-                user.Password = "LOCKED_INITIALLY"; 
-
-                _db.Users.Add(user);
-                await _db.SaveChangesAsync();
-
-                // Send Invite Email
-                if (!string.IsNullOrEmpty(user.Email))
-                {
-                    var inviteLink = Url.Action("ResetPassword", "Account", new { userId = user.UserID, token = token }, protocol: Request.Scheme) ?? "";
-                    // Send welcome email invite in background
-                    _ = Task.Run(async () => {
-                        try {
-                            using (var scope = _scopeFactory.CreateScope()) {
-                                var scopedReceiptService = scope.ServiceProvider.GetRequiredService<IReceiptService>();
-                                await scopedReceiptService.SendStaffInviteAsync(user, inviteLink);
-                            }
-                        } catch (Exception ex) {
-                            // Log locally but don't block
-                            Console.WriteLine($"[Email Failure]: {ex.Message}");
-                        }
-                    });
-                }
-
-                await LogAudit($"Created user: {user.Username} as {user.Role}", $"Target User ID: {user.UserID}");
-                TempData["Success"] = "User created successfully. Secure invite link sent to their email.";
+                return BadRequest("Username already exists.");
             }
-            return RedirectToAction("Users");
+
+            // SECURITY: Prevent creating another SuperAdmin
+            if (user.Role == UserRoles.SuperAdmin)
+            {
+                return Forbid("Unauthorized role assignment.");
+            }
+
+            user.UserID = Guid.NewGuid();
+            
+            if (!string.IsNullOrEmpty(user.Password))
+            {
+                user.Password = _hasher.HashPassword(user, user.Password);
+            }
+            else
+            {
+                user.Password = _hasher.HashPassword(user, "Default123!");
+            }
+
+            user.CreatedAt = DateTime.UtcNow;
+            user.IsActive = true;
+
+            _db.Users.Add(user);
+            await _db.SaveChangesAsync();
+
+            await LogAudit($"Created user: {user.Username} as {user.Role}", $"Target User ID: {user.UserID}");
+            
+            return Ok();
         }
 
         [HttpPost]
@@ -279,6 +250,32 @@ namespace ljp_itsolutions.Controllers
                 await LogAudit("Created system backup");
                 TempData["Success"] = "Backup created.";
             } catch (Exception ex) { TempData["Error"] = ex.Message; }
+            return RedirectToAction("Backups");
+        }
+
+        [HttpGet]
+        public IActionResult DownloadBackup(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName)) return BadRequest();
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "Backups", fileName);
+            if (!System.IO.File.Exists(path)) return NotFound();
+
+            var bytes = System.IO.File.ReadAllBytes(path);
+            return File(bytes, "application/json", fileName);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteBackup(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName)) return BadRequest();
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "Backups", fileName);
+            if (System.IO.File.Exists(path))
+            {
+                System.IO.File.Delete(path);
+                await LogAudit($"Deleted backup snapshot: {fileName}");
+                TempData["Success"] = "Snapshot deleted successfully.";
+            }
             return RedirectToAction("Backups");
         }
     }

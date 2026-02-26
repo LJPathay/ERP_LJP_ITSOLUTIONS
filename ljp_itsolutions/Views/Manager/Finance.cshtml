@@ -1,4 +1,4 @@
-@model ljp_itsolutions.Models.FinanceViewModel
+@model ljp_itsolutions.Services.FinanceData
 @{
     ViewData["Title"] = "Profit & Expense Summary";
 }
@@ -97,7 +97,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var exp in Model.Expenses)
+                            @foreach (var exp in Model.RecentExpenses)
                             {
                                 <tr>
                                     <td class="ps-4">
@@ -132,7 +132,7 @@
                                     </td>
                                 </tr>
                             }
-                            @if (!Model.Expenses.Any())
+                            @if (!Model.RecentExpenses.Any())
                             {
                                 <tr>
                                     <td colspan="5">
@@ -299,11 +299,11 @@
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: @Html.Raw(Json.Serialize(ViewBag.TrendLabels)),
+                    labels: @Html.Raw(Json.Serialize(Model.TrendLabels)),
                     datasets: [
                         {
                             label: 'Income (₱)',
-                            data: @Html.Raw(Json.Serialize(ViewBag.IncomeTrend)),
+                            data: @Html.Raw(Json.Serialize(Model.IncomeTrend)),
                             borderColor: '#3b82f6', // Premium Blue
                             backgroundColor: 'rgba(59, 130, 246, 0.1)',
                             fill: true,
@@ -314,7 +314,7 @@
                         },
                         {
                             label: 'Expenses (₱)',
-                            data: @Html.Raw(Json.Serialize(ViewBag.ExpenseTrend)),
+                            data: @Html.Raw(Json.Serialize(Model.ExpenseTrend)),
                             borderColor: '#ef4444', // Premium Red
                             backgroundColor: 'rgba(239, 68, 68, 0.1)',
                             fill: true,

@@ -307,6 +307,7 @@ tr:hover .sticky-action-col {
     align-items: center !important;
     gap: 12px !important;
     flex-direction: row !important;
+    padding: 0.5rem 0.8rem !important;
 }
 
 .sidebar .nav-link:hover {

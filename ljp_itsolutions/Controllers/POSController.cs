@@ -44,6 +44,14 @@ namespace ljp_itsolutions.Controllers
                 return p.StockQuantity > 0;
             }).ToList();
 
+            var taxSetting = await _db.SystemSettings.FirstOrDefaultAsync(s => s.SettingKey == "TaxRate");
+            decimal taxRate = 0.05m;
+            if (taxSetting != null && decimal.TryParse(taxSetting.SettingValue, out var parsedTax))
+            {
+                taxRate = parsedTax / 100m; 
+            }
+            ViewBag.TaxRate = taxRate;
+
             return View(availableProducts);
         }
 

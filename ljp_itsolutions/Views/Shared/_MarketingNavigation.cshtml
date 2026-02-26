@@ -3,7 +3,7 @@
     <div class="nav-item">
         <a class="nav-link d-flex align-items-center gap-3 @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")" asp-controller="Marketing" asp-action="Dashboard">
             <i class="fas fa-th-large opacity-75"></i>
-            <span>Overview Dashboard</span>
+            <span>Dashboard</span>
         </a>
     </div>
 
@@ -68,12 +68,6 @@
                 <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "SalesTrends" ? "active" : "") d-flex align-items-center gap-3" asp-controller="Marketing" asp-action="SalesTrends">
                     <i class="fas fa-chart-area opacity-75"></i>
                     <span>Sales Trends</span>
-                </a>
-            </li>
-            <li>
-                <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "CampaignReports" ? "active" : "") d-flex align-items-center gap-3" asp-controller="Marketing" asp-action="CampaignReports">
-                    <i class="fas fa-file-pdf opacity-75"></i>
-                    <span>Campaign Analysis</span>
                 </a>
             </li>
         </ul>

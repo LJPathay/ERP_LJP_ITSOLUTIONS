@@ -86,6 +86,30 @@ namespace ljp_itsolutions.Controllers
 
                         if (order != null)
                         {
+                            // CRITICAL SECURITY FIX: Verify payment amount
+                            if (attributes.TryGetProperty("amount", out var amountProp))
+                            {
+                                long amountInCentavos = amountProp.GetInt64();
+                                decimal amountInPesos = amountInCentavos / 100m;
+
+                                // Check if the amount paid matches the order total (FinalAmount)
+                                // We allow for a 1-peso tolerance to handle potential rounding issues in extremely rare cases, 
+                                // but ideally they should match exactly.
+                                if (Math.Abs(amountInPesos - order.FinalAmount) > 0.01m)
+                                {
+                                    _logger.LogWarning("PayMongo Webhook Amount Mismatch! Order: {OrderId}, Expected: {Expected}, Received: {Received}", 
+                                        orderId, order.FinalAmount, amountInPesos);
+                                    
+                                    await LogAudit($"PayMongo Security Alert: Amount mismatch for Order #{orderId.ToString().Substring(0, 8)}. Expected {order.FinalAmount}, Received {amountInPesos}");
+                                    return BadRequest("Amount Mismatch");
+                                }
+                            }
+                            else 
+                            {
+                                _logger.LogWarning("PayMongo Webhook Missing Amount! Order: {OrderId}", orderId);
+                                return BadRequest("Missing Amount in Payload");
+                            }
+
                             order.PaymentStatus = "Paid"; 
                             
                             // Update or Add Payment record
@@ -94,13 +118,14 @@ namespace ljp_itsolutions.Controllers
                             {
                                 payment.PaymentStatus = "Completed";
                                 payment.ReferenceNumber = dataObj.GetProperty("id").GetString(); 
+                                payment.AmountPaid = order.FinalAmount; // Update with actual amount
                             }
                             else
                             {
                                 _db.Payments.Add(new Payment
                                 {
                                     OrderID = order.OrderID,
-                                    AmountPaid = order.TotalAmount,
+                                    AmountPaid = order.FinalAmount,
                                     PaymentMethod = "Paymongo E-Wallet",
                                     PaymentStatus = "Completed",
                                     PaymentDate = DateTime.Now,
@@ -114,7 +139,6 @@ namespace ljp_itsolutions.Controllers
                             _logger.LogInformation("Order {OrderId} marked as paid via webhook.", orderId);
 
                             // Auto-send e-receipt if customer has an email
-                             // Auto-send e-receipt if customer has an email in background
                              if (order.CustomerID.HasValue)
                              {
                                  _ = Task.Run(async () => {
@@ -146,7 +170,7 @@ namespace ljp_itsolutions.Controllers
         {
             try
             {
-                // PayMongo signature format: t=<timestamp>,te=<test_signature>,li=<live_signature>
+                // PayMongo signature
                 var parts = signatureHeader.Split(',');
                 var timestamp = parts.FirstOrDefault(p => p.StartsWith("t="))?.Substring(2);
                 var liveSignature = parts.FirstOrDefault(p => p.StartsWith("li="))?.Substring(3);
@@ -157,7 +181,6 @@ namespace ljp_itsolutions.Controllers
                 if (string.IsNullOrEmpty(timestamp) || string.IsNullOrEmpty(signatureToCompare))
                     return false;
 
-                // Concatenate timestamp and dot as bytes, then append raw payload bytes
                 var timestampBytes = Encoding.UTF8.GetBytes(timestamp);
                 var dotBytes = Encoding.UTF8.GetBytes(".");
                 

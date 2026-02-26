@@ -15,14 +15,19 @@ namespace ljp_itsolutions.Controllers
         private readonly IPhotoService _photoService;
         private readonly IRecipeService _recipeService;
         private readonly IReceiptService _receiptService;
+        private readonly IInventoryService _inventoryService;
+        private readonly IAnalyticsService _analyticsService;
         private readonly IServiceScopeFactory _scopeFactory;
 
-        public ManagerController(ApplicationDbContext db, IPhotoService photoService, IRecipeService recipeService, IReceiptService receiptService, IServiceScopeFactory scopeFactory)
+        public ManagerController(ApplicationDbContext db, IPhotoService photoService, IRecipeService recipeService, 
+            IReceiptService receiptService, IInventoryService inventoryService, IAnalyticsService analyticsService, IServiceScopeFactory scopeFactory)
             : base(db)
         {
             _photoService = photoService;
             _recipeService = recipeService;
             _receiptService = receiptService;
+            _inventoryService = inventoryService;
+            _analyticsService = analyticsService;
             _scopeFactory = scopeFactory;
         }
 
@@ -33,107 +38,14 @@ namespace ljp_itsolutions.Controllers
 
         public async Task<IActionResult> Dashboard()
         {
-            var today = DateTime.Today;
-            var sevenDaysAgo = today.AddDays(-6);
-            var thirtyDaysAgo = today.AddDays(-29);
-
-            // Chart Data: Daily Revenue (Last 7 Days)
-            var recentOrders = await _db.Orders
-                .Where(o => o.OrderDate >= sevenDaysAgo)
-                .ToListAsync();
-
-            var dailyRevenueLabels = new List<string>();
-            var dailyRevenueData = new List<decimal>();
-
-            for (int i = 0; i < 7; i++)
-            {
-                var date = sevenDaysAgo.AddDays(i);
-                dailyRevenueLabels.Add(date.ToString("MMM dd"));
-                dailyRevenueData.Add(recentOrders.Where(o => o.OrderDate.Date == date.Date && (o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)" || o.PaymentStatus == "Completed")).Sum(o => o.FinalAmount));
-            }
-
-            // Category Distribution
-            var categoryData = await _db.OrderDetails
-                .Include(od => od.Product)
-                    .ThenInclude(p => p.Category)
-                .GroupBy(od => od.Product.Category.CategoryName)
-                .Select(g => new { Name = g.Key, Count = g.Count() })
-                .OrderByDescending(g => g.Count)
-                .Take(5)
-                .ToListAsync();
-
-            // Growth Calculations (Last 30 days vs Previous 30 days)
-            var sixtyDaysAgo = thirtyDaysAgo.AddDays(-30);
-            
-            var currentRevenue = await _db.Orders.Where(o => o.OrderDate >= thirtyDaysAgo && (o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)" || o.PaymentStatus == "Completed")).SumAsync(o => o.FinalAmount);
-            var previousRevenue = await _db.Orders.Where(o => o.OrderDate >= sixtyDaysAgo && o.OrderDate < thirtyDaysAgo && (o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)" || o.PaymentStatus == "Completed")).SumAsync(o => o.FinalAmount);
-            double revenueGrowth = previousRevenue > 0 ? (double)((currentRevenue - previousRevenue) / previousRevenue * 100) : 0;
-
-            var currentOrdersCount = await _db.Orders.Where(o => o.OrderDate >= thirtyDaysAgo).CountAsync();
-            var previousOrdersCount = await _db.Orders.Where(o => o.OrderDate >= sixtyDaysAgo && o.OrderDate < thirtyDaysAgo).CountAsync();
-            double orderGrowth = previousOrdersCount > 0 ? (double)(currentOrdersCount - previousOrdersCount) / (double)previousOrdersCount * 100 : 0;
-
-            var viewModel = new ManagerDashboardViewModel
-            {
-                TotalProducts = await _db.Products.CountAsync(),
-                TotalUsers = await _db.Users.CountAsync(),
-                TotalOrders = await _db.Orders.CountAsync(),
-                TotalRevenue = await _db.Orders.Where(o => (o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)" || o.PaymentStatus == "Completed")).SumAsync(o => o.FinalAmount),
-                
-                RevenueGrowth = revenueGrowth,
-                OrderGrowth = orderGrowth,
-                
-                DailyRevenueLabels = dailyRevenueLabels,
-                DailyRevenueData = dailyRevenueData,
-                CategoryLabels = categoryData.Select(c => c.Name).ToList(),
-                CategoryData = categoryData.Select(c => c.Count).ToList(),
-
-                LowStockIngredients = await _db.Ingredients
-                    .Where(i => i.StockQuantity > 0 && i.StockQuantity < i.LowStockThreshold)
-                    .OrderBy(i => i.StockQuantity)
-                    .Take(5)
-                    .ToListAsync(),
-                RecentOrders = await _db.Orders
-                    .Include(o => o.Cashier)
-                    .OrderByDescending(o => o.OrderDate)
-                    .Take(5)
-                    .ToListAsync(),
-                TopProducts = await _db.OrderDetails
-                    .GroupBy(od => od.Product.ProductName)
-                    .Select(g => new ProductSalesSummary
-                    {
-                        ProductName = g.Key,
-                        TotalSold = g.Sum(od => od.Quantity),
-                        Revenue = g.Sum(od => od.Subtotal)
-                    })
-                    .OrderByDescending(s => s.TotalSold)
-                    .Take(5)
-                    .ToListAsync()
-            };
-
-            // Hourly Sales Performance (Last 30 days)
-            var hourlyData = await _db.Orders
-                .Where(o => o.OrderDate >= thirtyDaysAgo)
-                .GroupBy(o => o.OrderDate.Hour)
-                .Select(g => new { Hour = g.Key, Count = g.Count() })
-                .ToListAsync();
-
-            var peakHoursLabels = Enumerable.Range(0, 24).Select(h => DateTime.Today.AddHours(h).ToString("hh tt")).ToList();
-            var peakHoursData = Enumerable.Range(0, 24).Select(h => hourlyData.FirstOrDefault(x => x.Hour == h)?.Count ?? 0).ToList();
-
-            ViewBag.PeakHoursLabels = peakHoursLabels;
-            ViewBag.PeakHoursData = peakHoursData;
-
-            return View(viewModel);
+            var data = await _analyticsService.GetManagerDashboardDataAsync();
+            return View(data);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> IntakeStock(int IngredientID, decimal Quantity, string Remarks, DateTime? IntakeDate, DateTime? ExpiryDate)
         {
-            var ingredient = await _db.Ingredients.FindAsync(IngredientID);
-            if (ingredient == null) return NotFound();
-
             if (Quantity <= 0)
             {
                 TempData["ErrorMessage"] = "Intake quantity must be greater than zero.";
@@ -141,35 +53,19 @@ namespace ljp_itsolutions.Controllers
             }
 
             var actualDate = IntakeDate ?? DateTime.UtcNow;
-
-            ingredient.StockQuantity += Quantity;
-            ingredient.LastStockedDate = actualDate;
-            
-            if (ExpiryDate.HasValue)
-            {
-                ingredient.ExpiryDate = ExpiryDate.Value;
-            }
-
-            // Log to InventoryLogs
             string logRemarks = string.IsNullOrEmpty(Remarks) ? "Manual stock intake" : Remarks;
-            if (ExpiryDate.HasValue)
+            if (ExpiryDate.HasValue) logRemarks += $" (Expiry: {ExpiryDate.Value:yyyy-MM-dd})";
+
+            var success = await _inventoryService.IntakeStockAsync(IngredientID, Quantity, actualDate, logRemarks, ExpiryDate);
+            if (!success) return NotFound();
+
+            var ingredient = await _db.Ingredients.FindAsync(IngredientID);
+            if (ingredient != null)
             {
-                logRemarks += $" (Expiry: {ExpiryDate.Value:yyyy-MM-dd})";
+                await LogAudit($"Stock Intake: Added {Quantity} {ingredient.Unit} to {ingredient.Name} on {actualDate:yyyy-MM-dd}");
+                TempData["SuccessMessage"] = $"Stock updated! Added {Quantity} {ingredient.Unit} to {ingredient.Name}.";
             }
-
-            _db.InventoryLogs.Add(new InventoryLog
-            {
-                IngredientID = IngredientID,
-                QuantityChange = Quantity,
-                ChangeType = "Intake",
-                LogDate = actualDate,
-                Remarks = logRemarks
-            });
-
-            await _db.SaveChangesAsync();
-            await LogAudit($"Stock Intake: Added {Quantity} {ingredient.Unit} to {ingredient.Name} on {actualDate:yyyy-MM-dd}");
             
-            TempData["SuccessMessage"] = $"Stock updated! Added {Quantity} {ingredient.Unit} to {ingredient.Name}.";
             return RedirectToAction("Inventory");
         }
 
@@ -336,32 +232,46 @@ namespace ljp_itsolutions.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ArchiveProduct(int id)
         {
-            var product = await _db.Products
-                .Include(p => p.Category)
-                .FirstOrDefaultAsync(p => p.ProductID == id);
-
+            var product = await _db.Products.FindAsync(id);
             if (product != null)
             {
-                var archived = new ArchivedProduct
-                {
-                    OriginalProductID = product.ProductID,
-                    ProductName = product.ProductName,
-                    CategoryID = product.CategoryID,
-                    CategoryName = product.Category?.CategoryName,
-                    Price = product.Price,
-                    ImageURL = product.ImageURL,
-                    ArchivedAt = DateTime.UtcNow,
-                    Reason = "User requested archive"
-                };
-
-                _db.ArchivedProducts.Add(archived);
-                _db.Products.Remove(product);
-                
+                product.IsArchived = true;
+                _db.Products.Update(product);
                 await _db.SaveChangesAsync();
                 await LogAudit($"Archived Product: {product.ProductName}");
-                TempData["SuccessMessage"] = "Product moved to archives successfully!";
+                TempData["SuccessMessage"] = $"Product '{product.ProductName}' archived successfully!";
             }
             return RedirectToAction("Products");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ArchiveIngredient(int id)
+        {
+            var ingredient = await _db.Ingredients.FindAsync(id);
+            if (ingredient != null)
+            {
+                ingredient.IsArchived = true;
+                _db.Ingredients.Update(ingredient);
+                await _db.SaveChangesAsync();
+                await LogAudit($"Archived Ingredient: {ingredient.Name}");
+                TempData["SuccessMessage"] = $"Ingredient '{ingredient.Name}' archived successfully!";
+            }
+            return RedirectToAction("Inventory");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleIngredientArchive(int id)
+        {
+            var ingredient = await _db.Ingredients.FindAsync(id);
+            if (ingredient == null) return NotFound();
+
+            ingredient.IsArchived = !ingredient.IsArchived;
+            await _db.SaveChangesAsync();
+            await LogAudit((ingredient.IsArchived ? "Archived" : "Restored") + " Ingredient: " + ingredient.Name);
+
+            return Ok();
         }
 
         [HttpPost]
@@ -383,8 +293,8 @@ namespace ljp_itsolutions.Controllers
 
         public async Task<IActionResult> Inventory()
         {
-            var products = await _db.Products.Include(p => p.Category).ToListAsync();
-            var ingredients = await _db.Ingredients.OrderBy(i => i.Name).ToListAsync();
+            var products = await _db.Products.Include(p => p.Category).Where(p => !p.IsArchived).ToListAsync();
+            var ingredients = await _db.Ingredients.Where(i => !i.IsArchived).OrderBy(i => i.Name).ToListAsync();
 
             var viewModel = new InventoryViewModel
             {
@@ -400,17 +310,7 @@ namespace ljp_itsolutions.Controllers
 
         public async Task<IActionResult> Reports()
         {
-            var topProducts = await _db.OrderDetails
-                .GroupBy(od => od.Product.ProductName)
-                .Select(g => new ProductSalesSummary
-                {
-                    ProductName = g.Key,
-                    TotalSold = g.Sum(od => od.Quantity),
-                    Revenue = g.Sum(od => od.Subtotal)
-                })
-                .OrderByDescending(s => s.TotalSold)
-                .Take(10)
-                .ToListAsync();
+            var topProducts = await _analyticsService.GetTopProductsAsync(10);
 
             ViewBag.ChartLabels = topProducts.Select(p => p.ProductName).ToList();
             ViewBag.ChartData = topProducts.Select(p => p.TotalSold).ToList();
@@ -440,94 +340,14 @@ namespace ljp_itsolutions.Controllers
             DateTime start = startDate ?? DateTime.Today.AddDays(-30);
             DateTime end = endDate ?? DateTime.UtcNow;
 
-            var data = await _db.OrderDetails
-                .Include(od => od.Order)
-                .Include(od => od.Product)
-                    .ThenInclude(p => p.Category)
-                .Where(od => od.Order.OrderDate >= start && od.Order.OrderDate <= end && 
-                            (od.Order.PaymentStatus == "Paid" || od.Order.PaymentStatus == "Paid (Digital)" || od.Order.PaymentStatus == "Completed"))
-                .GroupBy(od => new { od.Product.ProductName, Category = od.Product.Category != null ? od.Product.Category.CategoryName : "Uncategorized" })
-                .Select(g => new
-                {
-                    Product = g.Key.ProductName,
-                    Category = g.Key.Category,
-                    TotalSold = g.Sum(od => od.Quantity),
-                    Revenue = g.Sum(od => od.Subtotal)
-                })
-                .OrderByDescending(s => s.TotalSold)
-                .ToListAsync();
-
-            var totalRevenue = data.Sum(x => x.Revenue);
-            var totalUnits = data.Sum(x => x.TotalSold);
-
-            var csv = new System.Text.StringBuilder();
-            // Add UTF-8 BOM for Excel compatibility
-            csv.Append('\uFEFF');
-
-            // Business Header
-            csv.AppendLine("LJP IT SOLUTIONS - COFFEE ERP");
-            csv.AppendLine("SALES PERFORMANCE REPORT");
-            csv.AppendLine($"Period: {start:yyyy-MM-dd} to {end:yyyy-MM-dd}");
-            csv.AppendLine($"Generated: {DateTime.UtcNow:f}");
-            csv.AppendLine();
-
-            // Executive Summary Stats
-            csv.AppendLine("EXECUTIVE SUMMARY");
-            csv.AppendLine($"Total Gross Revenue,\"₱{totalRevenue:N2}\"");
-            csv.AppendLine($"Total Inventory Units Sold,{totalUnits:N0}");
-            csv.AppendLine($"Average Sale Value Per Product,\"₱{(totalUnits > 0 ? (totalRevenue / totalUnits) : 0):N2}\"");
-            csv.AppendLine();
-
-            // Detailed Data Table
-            csv.AppendLine("ITEMIZED PERFORMANCE");
-            csv.AppendLine("Product Name,Category,Units Sold,Sales Mix %,Revenue (PHP)");
-
-            foreach (var item in data)
-            {
-                var salesMix = totalUnits > 0 ? (decimal)item.TotalSold / totalUnits : 0;
-                csv.AppendLine($"\"{item.Product}\",\"{item.Category}\",{item.TotalSold},{salesMix:P2},\"{item.Revenue:N2}\"");
-            }
-
-            csv.AppendLine();
-            csv.AppendLine("--- END OF REPORT ---");
-
-            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+            byte[] buffer = await _analyticsService.GenerateSalesCSVAsync(start, end);
             return File(buffer, "text/csv", $"LJP_Sales_Report_{start:yyyyMMdd}.csv");
         }
 
         public async Task<IActionResult> Finance()
         {
-            var revenue = await _db.Orders.Where(o => (o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)" || o.PaymentStatus == "Completed")).SumAsync(o => o.FinalAmount);
-            var expenses = await _db.Expenses.SumAsync(e => e.Amount);
-            
-            var last6Months = Enumerable.Range(0, 6).Select(i => DateTime.Today.AddMonths(-5 + i)).ToList();
-            var trendLabels = new List<string>();
-            var incomeTrend = new List<decimal>();
-            var expenseTrend = new List<decimal>();
-
-            foreach (var month in last6Months)
-            {
-                var start = new DateTime(month.Year, month.Month, 1);
-                var end = start.AddMonths(1).AddSeconds(-1);
-                
-                trendLabels.Add(month.ToString("MMM"));
-                incomeTrend.Add(await _db.Orders.Where(o => o.OrderDate >= start && o.OrderDate <= end).SumAsync(o => o.FinalAmount));
-                expenseTrend.Add(await _db.Expenses.Where(e => e.ExpenseDate >= start && e.ExpenseDate <= end).SumAsync(e => e.Amount));
-            }
-
-            ViewBag.TrendLabels = trendLabels;
-            ViewBag.IncomeTrend = incomeTrend;
-            ViewBag.ExpenseTrend = expenseTrend;
-
-            var viewModel = new FinanceViewModel
-            {
-                TotalRevenue = revenue,
-                TotalExpenses = expenses,
-                Expenses = await _db.Expenses.Include(e => e.User).OrderByDescending(e => e.ExpenseDate).Take(50).ToListAsync(),
-                RecentTransactions = await _db.Orders.OrderByDescending(o => o.OrderDate).Take(50).ToListAsync()
-            };
-
-            return View(viewModel);
+            var data = await _analyticsService.GetFinanceDataAsync();
+            return View(data);
         }
 
         public async Task<IActionResult> Promotions()
@@ -587,7 +407,7 @@ namespace ljp_itsolutions.Controllers
 
             if (order != null && order.PaymentStatus != "Voided" && order.PaymentStatus != "Refunded")
             {
-                await RevertOrderInventory(order);
+                await _inventoryService.RevertOrderInventoryAsync(order);
                 
                 // Reverse Loyalty Points
                 if (order.CustomerID.HasValue && order.Customer != null)
@@ -628,7 +448,7 @@ namespace ljp_itsolutions.Controllers
 
             if (order != null && order.PaymentStatus != "Voided" && order.PaymentStatus != "Refunded")
             {
-                await RevertOrderInventory(order);
+                await _inventoryService.RevertOrderInventoryAsync(order);
 
                 // Reverse Loyalty Points
                 if (order.CustomerID.HasValue && order.Customer != null)
@@ -656,52 +476,7 @@ namespace ljp_itsolutions.Controllers
             return RedirectToAction("Transactions");
         }
 
-        private async Task RevertOrderInventory(Order order)
-        {
-            if (order == null || order.OrderDetails == null) return;
 
-            foreach (var detail in order.OrderDetails)
-            {
-                var product = await _db.Products
-                    .Include(p => p.ProductRecipes)
-                    .ThenInclude(pr => pr.Ingredient)
-                    .FirstOrDefaultAsync(p => p.ProductID == detail.ProductID);
-
-                if (product != null)
-                {
-                    if (product.ProductRecipes != null && product.ProductRecipes.Any())
-                    {
-                        foreach (var recipe in product.ProductRecipes)
-                        {
-                            recipe.Ingredient.StockQuantity += (recipe.QuantityRequired * detail.Quantity);
-                            
-                            // Log ingredient reversal
-                            _db.InventoryLogs.Add(new InventoryLog
-                            {
-                                IngredientID = recipe.IngredientID,
-                                QuantityChange = (recipe.QuantityRequired * detail.Quantity),
-                                ChangeType = "Reversal",
-                                LogDate = DateTime.UtcNow,
-                                Remarks = $"Restored from Voided/Refunded Order #{order.OrderID.ToString().Substring(0, 8)} ({product.ProductName})"
-                            });
-                        }
-                    }
-                    else
-                    {
-                        product.StockQuantity += detail.Quantity;
-                        
-                        _db.InventoryLogs.Add(new InventoryLog
-                        {
-                            ProductID = product.ProductID,
-                            QuantityChange = detail.Quantity,
-                            ChangeType = "Reversal",
-                            LogDate = DateTime.UtcNow,
-                            Remarks = $"Stock restored from Order #{order.OrderID.ToString().Substring(0, 8)}"
-                        });
-                    }
-                }
-            }
-        }
 
         // --- EXPENSE CRUD ---
         [HttpPost]
@@ -1024,6 +799,26 @@ namespace ljp_itsolutions.Controllers
             
             await _db.SaveChangesAsync();
             await LogAudit($"Approved Campaign: {campaign.PromotionName}");
+
+            // Mark existing "Approval Needed" notifications for this campaign as read
+            var pendingNotifications = await _db.Notifications
+                .Where(n => !n.IsRead && n.TargetUrl == "/Manager/Promotions" && n.Message.Contains($"'{campaign.PromotionName}'"))
+                .ToListAsync();
+            foreach (var pn in pendingNotifications) pn.IsRead = true;
+
+            // Notify Marketing Staff via In-App Notification (Broadcast to Role via null UserID)
+            _db.Notifications.Add(new Notification
+            {
+                Title = "Campaign Approved",
+                Message = $"The campaign '{campaign.PromotionName}' has been approved and is now active.",
+                Type = "success",
+                IconClass = "fas fa-check-circle",
+                CreatedAt = DateTime.UtcNow,
+                TargetUrl = "/Marketing/Promotions",
+                UserID = null // Shown to Marketing role in ViewComponent
+            });
+
+            await _db.SaveChangesAsync();
             
             // Email 1: Notify Marketing/Admin staff of the approval
             _ = Task.Run(async () => {
@@ -1068,7 +863,25 @@ namespace ljp_itsolutions.Controllers
             await _db.SaveChangesAsync();
             await LogAudit($"Rejected Campaign: {campaign.PromotionName} (Reason: {dto.Reason})");
 
-            // Email Notification to Marketing/Admins
+            var pendingNotifications = await _db.Notifications
+                .Where(n => !n.IsRead && n.TargetUrl == "/Manager/Promotions" && n.Message.Contains($"'{campaign.PromotionName}'"))
+                .ToListAsync();
+            foreach (var pn in pendingNotifications) pn.IsRead = true;
+
+            // Notify Marketing Staff via In-App Notification 
+            _db.Notifications.Add(new Notification
+            {
+                Title = "Campaign Rejected",
+                Message = $"The campaign '{campaign.PromotionName}' was rejected. Reason: {dto.Reason}",
+                Type = "danger",
+                IconClass = "fas fa-times-circle",
+                CreatedAt = DateTime.UtcNow,
+                TargetUrl = "/Marketing/Promotions",
+                UserID = null 
+            });
+
+            await _db.SaveChangesAsync();
+
             // Send status alert in background
             _ = Task.Run(async () => {
                 try {

@@ -5,7 +5,13 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Coffee ERP - @ViewData["Title"]</title>
+    @{
+        var pageTitle = ViewData["Title"]?.ToString();
+        var brandName = "Coffee LJP";
+        var finalTitle = string.IsNullOrEmpty(pageTitle) || pageTitle.Contains(brandName) ? brandName : $"{pageTitle} | {brandName}";
+    }
+    <title>@finalTitle</title>
+    <link rel="icon" type="image/png" href="~/images/logo.png" />
     <!-- Premium Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,7 +46,7 @@
         <aside class="sidebar p-3 d-flex flex-column">
             <div class="brand mb-4">
                 <div class="d-flex align-items-center justify-content-center mb-3">
-                    <img src="@(Url.Content("~/images/logo.png"))" alt="Coffee ERP" class="sidebar-logo" />
+                    <img src="@(Url.Content("~/images/logo.png"))" alt="Coffee LJP" class="sidebar-logo" />
                 </div>
             </div>
             <nav class="nav flex-column gap-2 h-100">
@@ -125,6 +131,9 @@
                     <button class="btn btn-link link-dark d-lg-none p-0 border-0" id="sidebarToggle">
                         <i class="fas fa-bars fa-lg"></i>
                     </button>
+                    <div class="header-brand d-lg-none">
+                        <img src="~/images/logo.png" alt="Coffee LJP" height="30">
+                    </div>
                     <div>
                         <h1 class="h4 mb-0 fw-bold text-dark tracking-tight">@ViewData["Title"]</h1>
                         <div class="text-muted x-small d-flex align-items-center gap-2 mt-1">

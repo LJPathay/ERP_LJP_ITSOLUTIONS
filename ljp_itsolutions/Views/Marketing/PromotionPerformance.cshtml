@@ -1,7 +1,7 @@
 @model IEnumerable<dynamic>
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Campaign ROI Analysis";
+    ViewData["Title"] = "Campaign Tactical Analysis";
 }
 
 <div class="container-fluid py-2">
@@ -9,74 +9,97 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h6 class="fw-bold mb-0 text-dark">Tactical ROI Analysis</h6>
-            <p class="text-muted x-small mb-0">Return on investment and conversion metrics for active promotions</p>
+            <p class="text-muted xx-small mb-0">Detailed return on investment and lifecycle metrics for marketing initiatives</p>
         </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-light border rounded-pill px-4 shadow-none btn-sm fw-bold x-small">DOWNLOAD AUDIT</button>
-        </div>
+        <button onclick="location.href='@Url.Action("ExportTacticalROI", "Marketing")'" class="btn btn-light border rounded-pill px-4 shadow-none btn-sm fw-bold xx-small">
+            <i class="fas fa-file-export me-2 text-muted"></i>EXPORT TACTICAL DATA
+        </button>
     </div>
 
-    <!-- Main Performance Table -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table align-middle mb-0">
-                    <thead class="bg-light bg-opacity-50">
-                        <tr>
-                            <th class="ps-4 py-3 text-uppercase x-small fw-bold text-muted">Strategic Campaign</th>
-                            <th class="py-3 text-uppercase x-small fw-bold text-muted text-center">Engagement count</th>
-                            <th class="py-3 text-uppercase x-small fw-bold text-muted text-end">Equity Utilization</th>
-                            <th class="py-3 text-uppercase x-small fw-bold text-muted text-center">ROI Efficiency</th>
-                            <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold text-muted">Management</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model)
+    <div class="premium-table-container">
+        <div class="table-responsive">
+            <table class="table premium-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Campaign Initiative</th>
+                        <th class="text-center">Lifecycle Status</th>
+                        <th class="text-center">Engagement</th>
+                        <th class="text-end">Gross Value</th>
+                        <th class="text-end">Equity Utilization</th>
+                        <th class="text-end pe-4">Intelligence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var campaign in Model)
                         {
-                            var roiClass = item.UsageCount > 50 ? "bg-success text-success" : (item.UsageCount > 10 ? "bg-warning text-warning" : "bg-danger text-danger");
-                            var roiLabel = item.UsageCount > 50 ? "HIGH EFFICIENCY" : (item.UsageCount > 10 ? "OPTIMAL ROI" : "LOW CONVERSION");
+                            var isEnded = campaign.EndDate < DateTime.Now;
+                            var statusClass = campaign.IsActive ? (isEnded ? "bg-slate-400" : "bg-emerald-500") : "bg-slate-400";
+                            var statusText = campaign.IsActive ? (isEnded ? "COMPLETED" : "OPERATIONAL") : "TERMINATED";
+                            var utilizationPercent = campaign.TotalSalesValue > 0 ? (campaign.TotalDiscountGiven * 100 / campaign.TotalSalesValue) : 0;
 
-                            <tr>
+                            <tr class="campaign-row" onclick="window.location='@Url.Action("CampaignAnalytics", "Marketing", new { id = campaign.PromotionID })'">
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center gap-3">
-                                        <div class="avatar-xs rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                                            <i class="fas fa-bullseye x-small"></i>
+                                        <div class="kpi-icon-box brand-primary" style="margin-left: 0; width: 32px; height: 32px; font-size: 0.8rem;">
+                                            <i class="fas fa-bullhorn"></i>
                                         </div>
                                         <div>
-                                            <p class="mb-0 fw-bold text-dark small">@item.PromotionName</p>
-                                            <p class="text-muted x-small mb-0 uppercase tracking-wider">Tactical Initiative</p>
+                                            <p class="mb-0 fw-bold text-dark small">@campaign.PromotionName</p>
+                                            <p class="text-muted xx-small mb-0 uppercase tracking-widest">
+                                                @campaign.StartDate.ToString("MMM dd") — @campaign.EndDate.ToString("MMM dd, yyyy")
+                                            </p>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="text-center">
-                                    <div class="fw-bold text-dark">@item.UsageCount</div>
-                                    <div class="text-muted x-small">Unique redemptions</div>
-                                </td>
-                                <td class="text-end">
-                                    <span class="fw-bold text-danger">-₱@item.TotalDiscountedAmount.ToString("N2")</span>
-                                    <p class="text-muted x-small mb-0">Capital incentive</p>
+                                    <span class="badge rounded-pill @statusClass px-3 xx-small fw-bold text-white">@statusText</span>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge rounded-pill @roiClass border px-3 x-small bg-opacity-10 border-opacity-10 fw-bold">
-                                        @roiLabel
-                                    </span>
+                                    <span class="fw-bold text-dark small">@campaign.UsageCount</span>
+                                    <p class="xx-small text-muted mb-0">Redemptions</p>
                                 </td>
-                                <td class="pe-4 text-end">
-                                    <button class="btn btn-sm btn-light border-0 rounded-pill px-3 shadow-none text-primary fw-bold x-small">
-                                        FULL DRILLDOWN
-                                    </button>
+                                <td class="text-end">
+                                    <span class="fw-bold text-dark small">₱@campaign.TotalSalesValue.ToString("N0")</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex flex-column align-items-end">
+                                        <span class="fw-bold text-danger small">₱@campaign.TotalDiscountGiven.ToString("N2")</span>
+                                        <div class="progress rounded-pill mt-1" style="height: 4px; width: 60px;">
+                                            <div class="progress-bar bg-danger" role="progressbar" style="width: @utilizationPercent%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="@Url.Action("CampaignAnalytics", "Marketing", new { id = campaign.PromotionID })" class="btn btn-sm btn-light border-0 rounded-pill px-3 shadow-none text-primary fw-bold xx-small">
+                                        DRILLDOWN
+                                    </a>
                                 </td>
                             </tr>
                         }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <i class="fas fa-chart-pie fa-3x text-muted opacity-25 mb-4"></i>
+                                <h5 class="fw-bold text-dark">No Strategic Data Available</h5>
+                                <p class="text-muted x-small mx-auto">Commit your first marketing initiative to begin accumulating metrics.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
 <style>
+    .xx-small { font-size: 0.65rem; }
     .x-small { font-size: 0.75rem; }
     .uppercase { text-transform: uppercase; }
-    .tracking-wider { letter-spacing: 0.05em; }
+    .tracking-widest { letter-spacing: 0.1em; }
+    .campaign-row { cursor: pointer; transition: all 0.2s ease; }
+    .campaign-row:hover { background-color: rgba(0,0,0,0.02); }
 </style>

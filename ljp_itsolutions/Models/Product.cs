@@ -25,6 +25,7 @@ namespace ljp_itsolutions.Models
         public string? ImageURL { get; set; }
 
         public bool IsAvailable { get; set; } = true;
+        public bool IsArchived { get; set; } = false;
         public virtual ICollection<ProductRecipe> ProductRecipes { get; set; } = new List<ProductRecipe>();
 
         // Legacy compatibility

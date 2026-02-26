@@ -1,215 +1,158 @@
-@model dynamic
+@model ljp_itsolutions.Services.AdminDashboardData
 @{
     ViewData["Title"] = "Admin Dashboard";
-    ViewBag.ModuleCount = 4;
+    Layout = "_Layout";
 }
 
-<!-- Dashboard Content -->
-<div class="container-fluid">
-    <!-- Quick Actions moved to top for better hierarchy -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card-custom border-0 shadow-sm" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);">
-                <div class="card-body">
-                    <h6 class="fw-bold mb-3">
-                        <i class="fas fa-bolt text-amber me-2"></i>Primary Operations
-                    </h6>
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <a href="@Url.Action("Transactions", "Admin")" class="btn btn-white w-100 d-flex align-items-center justify-content-center py-3 shadow-sm border border-light transition-hover">
-                                <i class="fas fa-receipt me-2 text-primary"></i>Sales History
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="@Url.Action("InventoryOverview", "Admin")" class="btn btn-white w-100 d-flex align-items-center justify-content-center py-3 shadow-sm border border-light transition-hover">
-                                <i class="fas fa-boxes me-2 text-info"></i>Product Inventory
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="@Url.Action("Users", "Admin")" class="btn btn-white w-100 d-flex align-items-center justify-content-center py-3 shadow-sm border border-light transition-hover">
-                                <i class="fas fa-users-cog me-2 text-success"></i>User Access
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="@Url.Action("Reports", "Admin")" class="btn btn-white w-100 d-flex align-items-center justify-content-center py-3 shadow-sm border border-light transition-hover">
-                                <i class="fas fa-chart-line me-2 text-danger"></i>Financial Reports
-                            </a>
-                        </div>
+<div class="container-fluid px-4 py-3">
+
+    <!-- Risk Alert Banner -->
+    @if (Model.RiskAlerts != null && Model.RiskAlerts.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-danger border-0 shadow-sm rounded-3 py-3 px-4 d-flex align-items-center mb-0">
+                    <div class="stats-icon bg-danger text-white rounded-circle me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">System Intelligence: Risk Exposure Detected</h6>
+                        @foreach (var alert in Model.RiskAlerts)
+                        {
+                            <p class="mb-0 small text-danger">@alert</p>
+                        }
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    }
 
-    <div class="mb-4 d-none">
-        <p class="text-muted mb-0">Welcome back! Here's what's happening with your system today.</p>
-    </div>
-
-    <!-- Statistics Cards  -->
+    <!-- KPI Strip -->
     <div class="row g-3 mb-4">
-        <div class="col-xl-6 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100" style="background: linear-gradient(135deg, var(--white) 0%, #f1f5f9 100%);">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <p class="text-secondary x-small fw-bold text-uppercase mb-1">Inventory Health</p>
-                            <h4 class="fw-bold mb-0">@Model.TotalProducts</h4>
-                            <p class="text-muted xx-small mt-1 mb-0">Total Products Managed</p>
-                        </div>
-                        <div class="stat-icon bg-info bg-opacity-10 rounded-3 p-2 text-info" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-boxes fa-lg"></i>
-                        </div>
+        <!-- Portfolio Card -->
+        <div class="col-md-3">
+            <div class="kpi-card-premium brand-primary">
+                <div class="kpi-content">
+                    <p class="kpi-title">Product Portfolio</p>
+                    <span class="kpi-main-val">@Model.PortfolioValue</span>
+                    <div class="kpi-trend text-muted">
+                        Active Catalog Items
                     </div>
+                </div>
+                <div class="kpi-icon-box">
+                    <i class="fas fa-boxes"></i>
                 </div>
             </div>
         </div>
-        <div class="col-xl-6 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100" style="background: linear-gradient(135deg, var(--white) 0%, #f0fdf4 100%);">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <p class="text-secondary x-small fw-bold text-uppercase mb-1">Daily Pulse</p>
-                            <h4 class="fw-bold mb-0">@Model.TodayTransactions</h4>
-                            <p class="text-success xx-small mt-1 mb-0">
-                                <i class="fas fa-bolt me-1"></i>Active operations
-                            </p>
-                        </div>
-                        <div class="stat-icon bg-success bg-opacity-10 rounded-3 p-2 text-success" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-cash-register fa-lg"></i>
-                        </div>
+
+        <!-- Throughput Card -->
+        <div class="col-md-3">
+            <div class="kpi-card-premium brand-success">
+                <div class="kpi-content">
+                    <p class="kpi-title">Daily Throughput</p>
+                    <span class="kpi-main-val">@Model.DailyThroughput</span>
+                    <div class="kpi-trend @(Model.ThroughputGrowth >= 0 ? "text-success" : "text-danger")">
+                        <i class="fas @(Model.ThroughputGrowth >= 0 ? "fa-arrow-up" : "fa-arrow-down")"></i>
+                        @Math.Abs(Model.ThroughputGrowth).ToString("N1")% Flow Velocity
                     </div>
+                </div>
+                <div class="kpi-icon-box">
+                    <i class="fas fa-bolt"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Card -->
+        <div class="col-md-6">
+            <div class="kpi-card-premium brand-indigo">
+                <div class="kpi-content">
+                    <p class="kpi-title">Gross Operating Revenue</p>
+                    <span class="kpi-main-val">₱@Model.TotalGrossRevenue.ToString("N2")</span>
+                    <div class="kpi-trend text-muted">
+                        System-wide Consolidated Revenue
+                    </div>
+                </div>
+                <div class="kpi-icon-box">
+                    <i class="fas fa-chart-line"></i>
                 </div>
             </div>
         </div>
     </div>
 
 
-    <!-- Charts Row -->
+
+    <!-- Main Analytics Row -->
     <div class="row g-4 mb-4">
+        <!-- Sales Trend Column -->
         <div class="col-lg-8">
-            <div class="card-custom h-100">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-chart-line text-primary me-2"></i>Sales & Revenue Trends
-                    </h5>
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            Last 7 Days
-                        </button>
-                    </div>
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0">Sales & Throughput Velocity</h6>
+                    <button class="btn btn-link btn-sm text-decoration-none p-0 text-muted">Details <i class="fas fa-chevron-right ms-1 small"></i></button>
                 </div>
-                <div class="card-body">
-                    @if (Model.SalesTrendLabels != null && ((IEnumerable<string>)Model.SalesTrendLabels).Any())
-                    {
-                        <div style="height: 300px; width: 100%;">
-                            <canvas id="salesTrendsChart"></canvas>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="text-center py-5">
-                            <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">No sales data available for this period</p>
-                        </div>
-                    }
+                <div class="card-body p-4">
+                    <div style="height: 350px;">
+                        <canvas id="salesTrendsChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Composition Column -->
         <div class="col-lg-4">
-            <div class="card-custom h-100">
-                <div class="card-header bg-white">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-chart-pie text-success me-2"></i>Roles Overview
-                    </h5>
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 px-4">
+                    <h6 class="fw-bold mb-0">Identity Distribution</h6>
                 </div>
-                <div class="card-body">
-                    @if (Model.RoleDistribution != null && ((IEnumerable<dynamic>)Model.RoleDistribution).Any())
-                    {
-                        <div style="height: 300px; width: 100%; display: flex; justify-content: center; align-items: center;">
-                            <canvas id="userRolesChart"></canvas>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="text-center py-5">
-                            <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
-                            <p class="text-muted mb-0">No data available</p>
-                        </div>
-                    }
+                <div class="card-body p-4">
+                    <div style="height: 250px;">
+                        <canvas id="userRolesChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Recent Activities Table -->
-    <div class="row">
+    <!-- Recent Transitions & Logs -->
+    <div class="row g-4">
         <div class="col-12">
-            <div class="card-custom">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-history text-info me-2"></i>Recent User Activities
-                    </h5>
-                    <a href="@Url.Action("AuditLogs", "Admin")" class="btn btn-sm btn-primary">
-                        View All Logs <i class="fas fa-arrow-right ms-1"></i>
-                    </a>
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0">Executive Audit Trail</h6>
+                    <a href="@Url.Action("AuditLogs")" class="btn btn-link btn-sm text-decoration-none p-0">Detailed Logs <i class="fas fa-external-link-alt ms-1 x-small"></i></a>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-custom mb-0">
-                            <thead>
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-slate-50">
                                 <tr>
-                                    <th>User</th>
-                                    <th>Role</th>
-                                    <th>Action</th>
-                                    <th>Timestamp</th>
+                                    <th class="ps-4 border-0 x-small text-uppercase text-muted fw-bold">Operator</th>
+                                    <th class="border-0 x-small text-uppercase text-muted fw-bold">Classification</th>
+                                    <th class="border-0 x-small text-uppercase text-muted fw-bold">Action Event</th>
+                                    <th class="pe-4 border-0 x-small text-uppercase text-muted fw-bold text-end">Execution Time</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @if (Model.RecentActivityLogs != null && Model.RecentActivityLogs.Count > 0)
-                                {
-                                    foreach (var log in Model.RecentActivityLogs)
-                                    {
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <div class="user-avatar-sm bg-primary bg-opacity-10">
-                                                        <i class="fas fa-user text-primary small"></i>
-                                                    </div>
-                                                    <span class="fw-semibold">@(log.User?.FullName ?? "System")</span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                @if (log.User?.Role != null)
-                                                {
-                                                    <span class="badge bg-primary">@log.User.Role</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-secondary">System</span>
-                                                }
-                                            </td>
-                                            <td>@log.Action</td>
-                                            <td>
-                                                <small class="text-muted">
-                                                    <i class="far fa-clock me-1"></i>@log.Timestamp.ToString("MMM dd, yyyy HH:mm")
-                                                </small>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                                else
+                                @foreach (var log in Model.RecentActivityLogs)
                                 {
                                     <tr>
-                                        <td colspan="4" class="text-center py-5">
-                                            <div class="d-flex flex-column align-items-center">
-                                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                                <h6 class="text-muted mb-2">No Recent Activity</h6>
-                                                <p class="text-muted small mb-3">Activity logs will appear here as users interact with the system</p>
-                                                <a href="@Url.Action("Users", "Admin")" class="btn btn-sm btn-primary">
-                                                    <i class="fas fa-plus me-1"></i>Add First User
-                                                </a>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="avatar-sm rounded-circle bg-slate-100 d-flex align-items-center justify-content-center text-slate-600 fw-bold border">
+                                                    @(log.User?.FullName?[0] ?? 'S')
+                                                </div>
+                                                <div>
+                                                    <p class="mb-0 small fw-bold">@(log.User?.FullName ?? "System Core")</p>
+                                                    <p class="xx-small text-muted mb-0">ID: #@log.AuditID</p>
+                                                </div>
                                             </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge rounded-pill bg-blue-50 text-blue-600 border border-blue-100">@(string.IsNullOrEmpty(log.User?.Role) ? "Internal" : log.User.Role)</span>
+                                        </td>
+                                        <td><span class="small text-slate-700">@log.Action</span></td>
+                                        <td class="pe-4 text-end">
+                                            <span class="text-muted small">@log.Timestamp.ToString("MMM dd • HH:mm")</span>
                                         </td>
                                     </tr>
                                 }
@@ -222,149 +165,121 @@
     </div>
 </div>
 
+<style>
+    :root {
+        --primary-blue: #3b82f6;
+        --secondary-slate: #64748b;
+        --border-color: #e2e8f0;
+        --bg-slate-50: #f8fafc;
+    }
+
+    .kpi-card { transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; }
+    .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important; }
+    .kpi-icon-bg { position: absolute; right: -10px; bottom: -10px; font-size: 5rem; color: rgba(0,0,0,0.03); transform: rotate(-15deg); pointer-events: none; }
+    .kpi-badge { background: rgba(59, 130, 246, 0.1); color: var(--primary-blue); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+    
+    .live-pulse { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 0 rgba(16, 185, 129, 0.4); animation: pulse 2s infinite; }
+    @@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+
+    .btn-white { background: white; border: 1px solid var(--border-color); color: var(--secondary-slate); font-weight: 500; }
+    .btn-white.active { background: #f1f5f9; color: var(--primary-blue); border-color: var(--primary-blue); }
+
+    .bg-slate-50 { background-color: var(--bg-slate-50); }
+    .text-slate-400 { color: #94a3b8; }
+    .text-slate-700 { color: #334155; }
+    .bg-blue-500 { background-color: #3b82f6; }
+    .avatar-sm { width: 32px; height: 32px; font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+</style>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Sales Trends Chart
-        @if (Model.SalesTrendLabels != null && ((IEnumerable<string>)Model.SalesTrendLabels).Any())
-        {
-            <text>
-            const ctxSales = document.getElementById('salesTrendsChart');
-            if (ctxSales) {
-                const salesCtx = ctxSales.getContext('2d');
-                
-                // Create gradient
-                let gradient = salesCtx.createLinearGradient(0, 0, 0, 400);
-                gradient.addColorStop(0, 'rgba(13, 110, 253, 0.2)');   
-                gradient.addColorStop(1, 'rgba(13, 110, 253, 0.0)');
+        const chartColors = {
+            blue: '#3b82f6',
+            indigo: '#6366f1',
+            emerald: '#10b981',
+            amber: '#f59e0b',
+            rose: '#f43f5e',
+            slate: '#94a3b8'
+        };
 
-                new Chart(salesCtx, {
-                    type: 'line',
-                    data: {
-                        labels: [@Html.Raw(string.Join(", ", ((IEnumerable<string>)Model.SalesTrendLabels).Select(l => $"'{l}'")))],
-                        datasets: [{
-                            label: 'Revenue (₱)',
-                            data: [@string.Join(", ", (IEnumerable<decimal>)Model.SalesTrendData)],
-                            borderColor: '#0d6efd',
-                            backgroundColor: gradient,
-                            borderWidth: 2,
-                            tension: 0.4, // Smooth curves
-                            fill: true,
-                            pointBackgroundColor: '#ffffff',
-                            pointBorderColor: '#0d6efd',
-                            pointBorderWidth: 2,
-                            pointRadius: 4,
-                            pointHoverRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                intersect: false,
-                                mode: 'index',
-                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                padding: 12,
-                                cornerRadius: 6,
-                                titleFont: { size: 14, weight: 'bold' },
-                                bodyFont: { size: 13 },
-                                callbacks: {
-                                    label: function(context) {
-                                        let value = context.parsed.y;
-                                        return 'Revenue: ₱' + value.toLocaleString('en-US', { minimumFractionDigits: 2 });
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: {
-                                    borderDash: [2, 4],
-                                    color: 'rgba(0, 0, 0, 0.05)',
-                                    drawBorder: false
-                                },
-                                ticks: {
-                                    font: { size: 11 },
-                                    callback: function(value) {
-                                        return '₱' + value;
-                                    }
-                                }
-                            },
-                            x: {
-                                grid: { display: false },
-                                ticks: { font: { size: 11 } }
-                            }
-                        },
-                        interaction: {
-                            intersect: false,
+        // Sales Trends Chart
+        const ctxSales = document.getElementById('salesTrendsChart');
+        if (ctxSales) {
+            const gradient = ctxSales.getContext('2d').createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.1)');
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+            new Chart(ctxSales, {
+                type: 'line',
+                data: {
+                    labels: [@Html.Raw(string.Join(", ", Model.SalesTrendLabels.Select(l => $"'{l}'")))],
+                    datasets: [{
+                        label: 'Throughput Value',
+                        data: [@string.Join(", ", Model.SalesTrendData)],
+                        borderColor: chartColors.blue,
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
                             mode: 'index',
-                        },
+                            intersect: false,
+                            padding: 12,
+                            backgroundColor: '#0f172a',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                label: (ctx) => ` ₱${ctx.parsed.y.toLocaleString()}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { 
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { callback: (val) => '₱' + val.toLocaleString() }
+                        }
                     }
-                });
-            }
-            </text>
+                }
+            });
         }
 
-        @if (Model.RoleDistribution != null && ((IEnumerable<dynamic>)Model.RoleDistribution).Any())
-        {
-            <text>
-            // Prepare role distribution data
-            var roleLabels = [@Html.Raw(string.Join(", ", ((IEnumerable<dynamic>)Model.RoleDistribution).Select(r => $"\"{r.Role}\"")))];
-            var roleCounts = [@Html.Raw(string.Join(", ", ((IEnumerable<dynamic>)Model.RoleDistribution).Select(r => r.Count)))];
-            var roleColors = ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6c757d', '#0dcaf0'];
-
-            // User Roles Doughnut Chart
-            const ctx2 = document.getElementById('userRolesChart');
-            if (ctx2) {
-                new Chart(ctx2.getContext('2d'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: roleLabels,
-                        datasets: [{
-                            data: roleCounts,
-                            backgroundColor: roleColors,
-                            borderWidth: 0,
-                            hoverOffset: 15
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        layout: {
-                            padding: 10
-                        },
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    padding: 20,
-                                    usePointStyle: true,
-                                    pointStyle: 'circle',
-                                    font: { size: 11 }
-                                }
-                            },
-                            tooltip: {
-                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                padding: 12,
-                                cornerRadius: 8,
-                                callbacks: {
-                                    label: function(context) {
-                                        let value = context.parsed || 0;
-                                        let total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        let percentage = ((value / total) * 100).toFixed(1);
-                                        return ` ${context.label}: ${value} users (${percentage}%)`;
-                                    }
-                                }
-                            }
-                        },
-                        cutout: '70%'
+        // Roles Composition
+        const ctxRoles = document.getElementById('userRolesChart');
+        if (ctxRoles) {
+            new Chart(ctxRoles, {
+                type: 'doughnut',
+                data: {
+                    labels: [@Html.Raw(string.Join(", ", Model.RoleDistribution.Select(r => $"'{r.Role}'")))],
+                    datasets: [{
+                        data: [@string.Join(", ", Model.RoleDistribution.Select(r => r.Count))],
+                        backgroundColor: [chartColors.blue, chartColors.indigo, chartColors.emerald, chartColors.rose, chartColors.amber, chartColors.slate],
+                        borderWidth: 0,
+                        cutout: '75%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
                     }
-                });
-            }
-            </text>
+                }
+            });
         }
     </script>
 }

@@ -1,0 +1,289 @@
+@model ljp_itsolutions.Models.Promotion
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Campaign Drilldown";
+    ViewData["Subtitle"] = Model.PromotionName;
+    
+    var totalUses = Model.Orders.Count;
+    var totalDiscount = Model.Orders.Sum(o => o.DiscountAmount);
+    var generatedRevenue = Model.Orders.Sum(o => o.FinalAmount);
+    
+    // Chart Data Preparation
+    var dailyMetrics = Model.Orders
+        .GroupBy(o => o.OrderDate.Date)
+        .OrderBy(g => g.Key)
+        .Select(g => new {
+            Date = g.Key.ToString("MMM dd"),
+            Revenue = g.Sum(o => o.FinalAmount),
+            Discount = g.Sum(o => o.DiscountAmount)
+        })
+        .ToList();
+
+    var chartLabels = dailyMetrics.Select(m => m.Date).ToList();
+    var revenueData = dailyMetrics.Select(m => m.Revenue).ToList();
+    var discountData = dailyMetrics.Select(m => m.Discount).ToList();
+}
+
+<div class="container-fluid py-2">
+    <!-- Breadcrumb & Actions (Consolidated Header) -->
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 xx-small text-uppercase tracking-widest">
+                    <li class="breadcrumb-item"><a href="@Url.Action("PromotionPerformance", "Marketing")" class="text-decoration-none text-muted">Tactical ROI Analysis</a></li>
+                    <li class="breadcrumb-item active fw-bold text-primary" aria-current="page">Intelligence Drilldown</li>
+                </ol>
+            </nav>
+            <h5 class="fw-bold mb-0 text-dark">Strategic Intelligence: @Model.PromotionName</h5>
+        </div>
+        <div class="d-flex gap-2">
+            @if (Model.ApprovalStatus == "Pending")
+            {
+                <span class="badge bg-warning text-dark rounded-pill px-3 py-2 x-small fw-bold border border-warning border-opacity-25 mr-2">
+                    <i class="fas fa-clock me-1"></i>Awaiting Management Approval
+                </span>
+            }
+            <a href="@Url.Action("Promotions", "Marketing")" class="btn btn-primary rounded-pill px-4 shadow-none fw-bold btn-sm">
+                <i class="fas fa-edit me-2"></i>Configure Campaign
+            </a>
+        </div>
+    </div>
+
+    <!-- Premium KPI Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="kpi-card-premium brand-primary">
+                <div class="kpi-content">
+                    <p class="kpi-title">Target Audience</p>
+                    <span class="kpi-main-val" style="font-size: 1.25rem;">@Model.TargetAudience</span>
+                    <div class="kpi-trend text-muted">Strategic Segment</div>
+                </div>
+                <div class="kpi-icon-box">
+                    <i class="fas fa-bullseye"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="kpi-card-premium brand-indigo">
+                <div class="kpi-content">
+                    <p class="kpi-title">Total conversions</p>
+                    <span class="kpi-main-val">@totalUses</span>
+                    <div class="kpi-trend text-muted">Redemptions recorded</div>
+                </div>
+                <div class="kpi-icon-box">
+                    <i class="fas fa-ticket-alt"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="kpi-card-premium brand-danger">
+                <div class="kpi-content">
+                    <p class="kpi-title">Equity Utilization</p>
+                    <span class="kpi-main-val">₱@totalDiscount.ToString("N0")</span>
+                    <div class="kpi-trend text-danger">Total capital cost</div>
+                </div>
+                <div class="kpi-icon-box">
+                    <i class="fas fa-hand-holding-usd"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="kpi-card-premium brand-success">
+                <div class="kpi-content">
+                    <p class="kpi-title">Gross attribution</p>
+                    <span class="kpi-main-val">₱@generatedRevenue.ToString("N0")</span>
+                    <div class="kpi-trend text-success">Driven revenue</div>
+                </div>
+                <div class="kpi-icon-box">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visual Analytics Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold mb-0">Strategic Traction Velocity</h6>
+                        <p class="text-muted xx-small mb-0">Timeline analysis of revenue vs capital incentive allocation</p>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div style="height: 350px;">
+                        <canvas id="campaignChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversion Trail Table -->
+    <div class="premium-table-container">
+        <div class="card-header bg-white border-0 p-4 pb-0">
+            <h6 class="fw-bold mb-0">Detailed Conversion Trail</h6>
+            <p class="text-muted x-small mb-3">Individual audit of all orders leveraging this strategic initiative</p>
+        </div>
+        <div class="table-responsive">
+            <table class="table premium-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Reference ID</th>
+                        <th>Execution Date</th>
+                        <th>Patron Context</th>
+                        <th class="text-end">Equity Applied</th>
+                        <th class="text-end pe-4">Final Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Orders != null && Model.Orders.Any())
+                    {
+                        foreach (var order in Model.Orders.OrderByDescending(o => o.OrderDate))
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <span class="fw-bold text-dark font-monospace xx-small">#@order.OrderID.ToString().Substring(0, 8).ToUpper()</span>
+                                </td>
+                                <td>
+                                    <p class="mb-0 small text-dark">@order.OrderDate.ToString("MMM dd, yyyy")</p>
+                                    <p class="xx-small text-muted mb-0">@order.OrderDate.ToString("HH:mm tt")</p>
+                                </td>
+                                <td>
+                                    @if (order.Customer != null)
+                                    {
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="avatar-xxs rounded-circle bg-light border d-flex align-items-center justify-content-center fw-bold text-muted" style="width: 24px; height: 24px; font-size: 0.6rem;">
+                                                @order.Customer.FullName.Substring(0, 1)
+                                            </div>
+                                            <span class="small fw-bold">@order.Customer.FullName</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small border px-2 border-opacity-25 rounded-pill bg-light xx-small">Guest Token</span>
+                                    }
+                                </td>
+                                <td class="text-end text-danger fw-bold small">-₱@order.DiscountAmount.ToString("N2")</td>
+                                <td class="text-end pe-4 fw-bold text-success small">₱@order.FinalAmount.ToString("N2")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <i class="fas fa-ghost fa-3x text-muted opacity-25 mb-3"></i>
+                                <p class="text-muted small">No conversion data stream detected for this initiative.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('campaignChart');
+            if (ctx) {
+                const gradientRevenue = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
+                gradientRevenue.addColorStop(0, 'rgba(16, 185, 129, 0.15)');
+                gradientRevenue.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+                const gradientDiscount = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
+                gradientDiscount.addColorStop(0, 'rgba(239, 68, 68, 0.1)');
+                gradientDiscount.addColorStop(1, 'rgba(239, 68, 68, 0)');
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: @Html.Raw(Json.Serialize(chartLabels)),
+                        datasets: [
+                            {
+                                label: 'Attributed Revenue',
+                                data: @Html.Raw(Json.Serialize(revenueData)),
+                                borderColor: '#10b981',
+                                backgroundColor: gradientRevenue,
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#fff',
+                                pointBorderWidth: 2,
+                                pointRadius: 4,
+                                pointHoverRadius: 6
+                            },
+                            {
+                                label: 'Equity Cost (Discount)',
+                                data: @Html.Raw(Json.Serialize(discountData)),
+                                borderColor: '#ef4444',
+                                backgroundColor: gradientDiscount,
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#fff',
+                                pointBorderWidth: 1,
+                                pointRadius: 3
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                align: 'end',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20,
+                                    font: { size: 12, weight: '600' }
+                                }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                padding: 12,
+                                backgroundColor: '#1e293b',
+                                titleMarginBottom: 8,
+                                callbacks: {
+                                    label: (ctx) => ` ${ctx.dataset.label}: ₱${ctx.parsed.y.toLocaleString()}`
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: '#f1f5f9' },
+                                ticks: {
+                                    font: { size: 11 },
+                                    callback: (val) => '₱' + val.toLocaleString()
+                                }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { size: 11 } }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}
+
+<style>
+    .xx-small { font-size: 0.65rem; }
+    .x-small { font-size: 0.75rem; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .avatar-xxs { display: inline-flex; }
+</style>

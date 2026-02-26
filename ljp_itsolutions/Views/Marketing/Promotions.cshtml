@@ -64,6 +64,7 @@
                             <td class="ps-4 py-3">
                                 <h6 class="fw-bold text-dark mb-1 search-title">@promo.PromotionName</h6>
                                 <p class="text-muted x-small mb-0 search-code">Code: <span class="fw-bold text-primary code-span">@promo.PromotionName.Replace(" ", "").ToUpper()</span></p>
+                                <span class="badge bg-light text-dark border px-2 mt-1 fw-bold x-small">@promo.TargetAudience</span>
                             </td>
                             <td class="py-3">
                                 <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold">
@@ -123,7 +124,8 @@
                                             data-end="@promo.EndDate.ToString("yyyy-MM-dd")"
                                             data-active="@promo.IsActive.ToString().ToLower()"
                                             data-max-redemptions="@(promo.MaxRedemptions?.ToString() ?? "")"
-                                            data-one-time="@promo.OneTimePerCustomer.ToString().ToLower()">
+                                            data-one-time="@promo.OneTimePerCustomer.ToString().ToLower()"
+                                            data-audience="@promo.TargetAudience">
                                         Modify
                                     </button>
                                     <a asp-action="PromotionPerformance" class="btn btn-light btn-sm rounded-pill fw-bold text-primary px-3 hvr-light">
@@ -163,6 +165,17 @@
                         <div class="input-group">
                             <span class="input-group-text bg-light border-0 text-muted ps-3"><i class="fas fa-tag"></i></span>
                             <input name="PromotionName" class="form-control bg-light border-0 py-2" placeholder="e.g. Summer Sale 2026" required />
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted uppercase">Target Audience</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0 text-muted ps-3"><i class="fas fa-bullseye"></i></span>
+                            <select name="TargetAudience" class="form-select bg-light border-0 py-2">
+                                <option value="All Patrons">All Patrons (General Announcement)</option>
+                                <option value="VIP/Gold Patrons">VIP/Gold Patrons Only (>1000 pts)</option>
+                                <option value="Inactive Patrons">Inactive Patrons (Win-back)</option>
+                            </select>
                         </div>
                     </div>
                     <div class="row g-3 mb-4">
@@ -257,6 +270,18 @@
                         <div class="input-group">
                             <span class="input-group-text bg-light border-0 text-muted ps-3"><i class="fas fa-tag"></i></span>
                             <input name="PromotionName" id="edit-promo-name" class="form-control bg-light border-0 py-2" required />
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted uppercase">Target Audience</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0 text-muted ps-3"><i class="fas fa-bullseye"></i></span>
+                            <select name="TargetAudience" id="edit-promo-audience" class="form-select bg-light border-0 py-2">
+                                <option value="All Patrons">All Patrons (General Announcement)</option>
+                                <option value="VIP/Gold Patrons">VIP/Gold Patrons Only (>1000 pts)</option>
+                                <option value="Inactive Patrons">Inactive Patrons (Win-back)</option>
+                                <option value="Specific VIP">Specific VIP (Reward)</option>
+                            </select>
                         </div>
                     </div>
                     <div class="row g-3 mb-4">
@@ -434,6 +459,7 @@
                 const active = $(this).data('active');
                 const maxRedemps = $(this).data('max-redemptions');
                 const oneTime = $(this).data('one-time');
+                const audience = $(this).data('audience');
 
                 $('#edit-promo-id').val(id);
                 $('#edit-promo-name').val(name);
@@ -444,8 +470,11 @@
                 $('#edit-promo-active').prop('checked', active);
                 $('#edit-promo-max').val(maxRedemps);
                 $('#edit-promo-onetime').prop('checked', oneTime);
+                $('#edit-promo-audience').val(audience || "All Patrons");
 
-                new bootstrap.Modal(document.getElementById('editCampaignModal')).show();
+                const editModalEl = document.getElementById('editCampaignModal');
+                const editModal = bootstrap.Modal.getInstance(editModalEl) || new bootstrap.Modal(editModalEl);
+                editModal.show();
             });
 
             // Prevent modal from opening when clicking buttons

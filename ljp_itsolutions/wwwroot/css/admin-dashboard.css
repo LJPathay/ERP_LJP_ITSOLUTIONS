@@ -144,7 +144,7 @@ body {
 
 .sidebar .nav-link {
     color: rgba(255, 255, 255, 0.85) !important;
-    padding: 12px 18px !important;
+    padding: 12px 20px !important;
     border-radius: 12px !important;
     transition: all 0.2s ease !important;
     display: flex !important;

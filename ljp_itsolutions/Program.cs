@@ -34,6 +34,8 @@ builder.Services.AddScoped<ljp_itsolutions.Services.IPayMongoService, ljp_itsolu
 builder.Services.AddScoped<ljp_itsolutions.Services.IPhotoService, ljp_itsolutions.Services.PhotoService>();
 builder.Services.AddHttpClient<ljp_itsolutions.Services.IRecipeService, ljp_itsolutions.Services.RecipeService>();
 builder.Services.AddScoped<ljp_itsolutions.Services.IReceiptService, ljp_itsolutions.Services.ReceiptService>();
+builder.Services.AddScoped<ljp_itsolutions.Services.IInventoryService, ljp_itsolutions.Services.InventoryService>();
+builder.Services.AddScoped<ljp_itsolutions.Services.IAnalyticsService, ljp_itsolutions.Services.AnalyticsService>();
 builder.Services.AddHostedService<ljp_itsolutions.Services.OrderCleanupService>();
 builder.Services.Configure<ljp_itsolutions.Services.CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 

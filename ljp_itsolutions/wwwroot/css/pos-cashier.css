@@ -167,10 +167,11 @@
     flex-direction: column;
     overflow: hidden;
     min-width: 350px;
+    min-height: 0;
 }
 
 .cart-header {
-    padding: 20px;
+    padding: 15px 20px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
@@ -184,12 +185,12 @@
 }
 
 .cart-items {
-    flex-grow: 1;
+    flex: 1 1 0;
     overflow-y: auto;
-    padding: 20px;
+    padding: 10px 20px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 10px;
 }
 
 .cart-item {
@@ -235,7 +236,7 @@
 }
 
 .cart-footer {
-    padding: 20px;
+    padding: 15px 20px;
     background: #fcfcfc;
     border-top: 1px solid var(--border-color);
 }
@@ -243,14 +244,14 @@
 .summary-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
 }
 
 .summary-row.total {
-    margin-top: 15px;
-    padding-top: 15px;
+    margin-top: 10px;
+    padding-top: 10px;
     border-top: 2px dashed var(--border-color);
-    font-size: 1.4rem;
+    font-size: 1.25rem;
     font-weight: 900;
     color: var(--accent-color);
 }
@@ -258,17 +259,17 @@
 .payment-methods {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin: 20px 0;
+    gap: 8px;
+    margin: 10px 0;
 }
 
 .payment-details-box {
-    padding: 15px;
+    padding: 10px;
     background: #ffffff;
     border: 1px solid var(--border-color);
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    margin-bottom: 15px;
     animation: fadeIn 0.3s ease;
 }
 
@@ -294,26 +295,26 @@
 
 .pay-now-btn {
     width: 100%;
-    padding: 20px;
+    padding: 15px;
     border: none;
-    border-radius: 18px;
+    border-radius: 14px;
     background: var(--secondary-gradient);
     color: white;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 10px 15px -3px rgba(217, 119, 6, 0.3);
+    box-shadow: 0 6px 10px -3px rgba(217, 119, 6, 0.3);
 }
 
 .pay-now-btn:hover {
     background: #b45309;
     transform: translateY(-2px);
-    box-shadow: 0 20px 25px -5px rgba(217, 119, 6, 0.4);
+    box-shadow: 0 12px 18px -5px rgba(217, 119, 6, 0.4);
 }
 
 .pay-now-btn:active {
@@ -373,9 +374,53 @@
     justify-content: center;
 }
 
+@media (max-width: 1200px) {
+    .pos-container {
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+    }
+
+    .products-section {
+        flex: none;
+        width: 100%;
+    }
+
+    .cart-section {
+        flex: none;
+        width: 100%;
+        min-width: 0;
+        min-height: 400px;
+        position: sticky;
+        bottom: 0;
+        z-index: 100;
+        box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .products-grid {
+        overflow-y: visible;
+        height: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .pos-header-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-bar {
+        max-width: 100%;
+    }
+
+    .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+}
+
 @media print {
 
-    /* Hide everything except the receipt paper */
+    /* ... existing print styles ... */
     .sidebar,
     .layout-header,
     .cart-section,
@@ -394,7 +439,6 @@
         background: white;
     }
 
-    /* Target the receipt specifically if it's inside a modal */
     #receiptModalContent {
         display: block !important;
         width: 100% !important;
