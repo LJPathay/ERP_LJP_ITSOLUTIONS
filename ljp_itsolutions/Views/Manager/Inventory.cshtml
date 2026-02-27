@@ -640,86 +640,88 @@
                 loadIngredientDetails(id);
             });
 
-            async function loadIngredientDetails(id) {
-                try {
-                    const response = await fetch(`/Manager/GetIngredientDetails?id=${id}`);
-                    const data = await response.json();
-                    
-                    if (data) {
-                        const ing = data.ingredient;
-                        const logs = data.logs;
-
-                        $('#detail-name').text(ing.name || ing.Name);
-                        $('#detail-stock').text(`${(ing.stockQuantity || ing.StockQuantity || 0).toFixed(2)} ${ing.unit || ing.Unit}`);
-                        $('#detail-threshold').text(`${(ing.lowStockThreshold || ing.LowStockThreshold || 0).toFixed(2)} ${ing.unit || ing.Unit}`);
-                        $('#detail-last-stocked').text((ing.lastStockedDate || ing.LastStockedDate) ? new Date(ing.lastStockedDate || ing.LastStockedDate).toLocaleDateString() : 'Never');
-                        $('#detail-expiry').text((ing.expiryDate || ing.ExpiryDate) ? new Date(ing.expiryDate || ing.ExpiryDate).toLocaleDateString() : 'N/A');
-
-                        // Status Badge Logic
-                        const stock = ing.stockQuantity || ing.StockQuantity || 0;
-                        const threshold = ing.lowStockThreshold || ing.LowStockThreshold || 0;
-                        const statusContainer = $('#detail-status-badge');
-                        
-                        if (stock < 0) {
-                            statusContainer.html('<span class="badge bg-danger rounded-pill px-3 py-2 text-white"><i class="fas fa-exclamation-circle me-2"></i>Critical Stock</span>');
-                        } else if (stock == 0) {
-                            statusContainer.html('<span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2"><i class="fas fa-times-circle me-2"></i>Out of Stock</span>');
-                        } else if (stock <= threshold) {
-                            statusContainer.html('<span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2"><i class="fas fa-exclamation-triangle me-2"></i>Low Stock</span>');
-                        } else {
-                            statusContainer.html('<span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2"><i class="fas fa-check-circle me-2"></i>In Stock</span>');
-                        }
-
-                        const logsBody = $('#detail-logs-body');
-                        logsBody.empty();
-
-                        if (logs && logs.length > 0) {
-                            logs.forEach(log => {
-                                const date = new Date(log.logDate).toLocaleDateString();
-                                const isPositive = log.quantityChange > 0;
-                                const changeColor = isPositive ? 'text-success' : 'text-danger';
-                                const prefix = isPositive ? '+' : '';
-                                const bgClass = isPositive ? 'bg-success' : 'bg-danger';
-                                
-                                logsBody.append(`
-                                    <tr>
-                                        <td class="text-muted" style="width: 100px;">${date}</td>
-                                        <td style="width: 120px;">
-                                            <span class="badge ${bgClass} bg-opacity-10 ${changeColor} rounded-pill px-2">
-                                                ${prefix}${log.quantityChange.toFixed(2)}
-                                            </span>
-                                        </td>
-                                        <td class="fw-bold text-dark">${log.changeType}</td>
-                                        <td class="text-muted text-break small fst-italic">${log.remarks || '-'}</td>
-                                    </tr>
-                                `);
-                            });
-                        } else {
-                            logsBody.append('<tr><td colspan="4" class="text-center text-muted py-4"><i class="fas fa-history mb-2 d-block opacity-50"></i>No activity logs found.</td></tr>');
-                        }
-
-                        // Set up "Edit" button in detail modal
-                        $('.btn-edit-from-detail').off('click').on('click', function() {
-                            const detailsModalEl = document.getElementById('ingredientDetailsModal');
-                            const detailsModal = bootstrap.Modal.getOrCreateInstance(detailsModalEl);
-                            
-                            detailsModalEl.addEventListener('hidden.bs.modal', function onHidden() {
-                                $(`.btn-edit-ingredient[data-id="${id}"]`).click();
-                                detailsModalEl.removeEventListener('hidden.bs.modal', onHidden);
-                            }, { once: true });
-                            
-                            detailsModal.hide();
-                        });
-
-                        var detailModalEl = document.getElementById('ingredientDetailsModal');
-                        var detailModal = bootstrap.Modal.getOrCreateInstance(detailModalEl);
-                        detailModal.show();
-                    }
-                } catch (error) {
-                    console.error('Error loading ingredient details:', error);
-                }
-            }
         });
+
+        async function loadIngredientDetails(id) {
+            try {
+                const response = await fetch(`/Manager/GetIngredientDetails?id=${id}`);
+                const data = await response.json();
+                
+                if (data) {
+                    const ing = data.ingredient;
+                    const logs = data.logs;
+
+                    $('#detail-name').text(ing.name || ing.Name);
+                    $('#detail-stock').text(`${(ing.stockQuantity || ing.StockQuantity || 0).toFixed(2)} ${ing.unit || ing.Unit}`);
+                    $('#detail-threshold').text(`${(ing.lowStockThreshold || ing.LowStockThreshold || 0).toFixed(2)} ${ing.unit || ing.Unit}`);
+                    $('#detail-last-stocked').text((ing.lastStockedDate || ing.LastStockedDate) ? new Date(ing.lastStockedDate || ing.LastStockedDate).toLocaleDateString() : 'Never');
+                    $('#detail-expiry').text((ing.expiryDate || ing.ExpiryDate) ? new Date(ing.expiryDate || ing.ExpiryDate).toLocaleDateString() : 'N/A');
+
+                    // Status Badge Logic
+                    const stock = ing.stockQuantity || ing.StockQuantity || 0;
+                    const threshold = ing.lowStockThreshold || ing.LowStockThreshold || 0;
+                    const statusContainer = $('#detail-status-badge');
+                    
+                    if (stock < 0) {
+                        statusContainer.html('<span class="badge bg-danger rounded-pill px-3 py-2 text-white"><i class="fas fa-exclamation-circle me-2"></i>Critical Stock</span>');
+                    } else if (stock == 0) {
+                        statusContainer.html('<span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2"><i class="fas fa-times-circle me-2"></i>Out of Stock</span>');
+                    } else if (stock <= threshold) {
+                        statusContainer.html('<span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2"><i class="fas fa-exclamation-triangle me-2"></i>Low Stock</span>');
+                    } else {
+                        statusContainer.html('<span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2"><i class="fas fa-check-circle me-2"></i>In Stock</span>');
+                    }
+
+                    const logsBody = $('#detail-logs-body');
+                    logsBody.empty();
+
+                    if (logs && logs.length > 0) {
+                        logs.forEach(log => {
+                            const date = new Date(log.logDate).toLocaleDateString();
+                            const isPositive = log.quantityChange > 0;
+                            const changeColor = isPositive ? 'text-success' : 'text-danger';
+                            const prefix = isPositive ? '+' : '';
+                            const bgClass = isPositive ? 'bg-success' : 'bg-danger';
+                            
+                            logsBody.append(`
+                                <tr>
+                                    <td class="text-muted" style="width: 100px;">${date}</td>
+                                    <td style="width: 120px;">
+                                        <span class="badge ${bgClass} bg-opacity-10 ${changeColor} rounded-pill px-2">
+                                            ${prefix}${log.quantityChange.toFixed(2)}
+                                        </span>
+                                    </td>
+                                    <td class="fw-bold text-dark">${log.changeType}</td>
+                                    <td class="text-muted text-break small fst-italic">${log.remarks || '-'}</td>
+                                </tr>
+                            `);
+                        });
+                    } else {
+                        logsBody.append('<tr><td colspan="4" class="text-center text-muted py-4"><i class="fas fa-history mb-2 d-block opacity-50"></i>No activity logs found.</td></tr>');
+                    }
+
+                    // Set up "Edit" button in detail modal
+                    $('.btn-edit-from-detail').off('click').on('click', function() {
+                        const detailsModalEl = document.getElementById('ingredientDetailsModal');
+                        const detailsModal = bootstrap.Modal.getOrCreateInstance(detailsModalEl);
+                        
+                        detailsModalEl.addEventListener('hidden.bs.modal', function onHidden() {
+                            $(`.btn-edit-ingredient[data-id="${id}"]`).click();
+                            detailsModalEl.removeEventListener('hidden.bs.modal', onHidden);
+                        }, { once: true });
+                        
+                        detailsModal.hide();
+                    });
+
+                    var detailModalEl = document.getElementById('ingredientDetailsModal');
+                    var detailModal = bootstrap.Modal.getOrCreateInstance(detailModalEl);
+                    detailModal.show();
+                }
+            } catch (error) {
+                console.error('Error loading ingredient details:', error);
+            }
+        }
+    </script>
     </script>
 }
 

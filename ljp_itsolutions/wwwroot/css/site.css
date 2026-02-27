@@ -104,53 +104,72 @@ html {
 
 /* Font Size Scaling */
 .app.access-font-large {
-  font-size: 1.2rem !important;
+  font-size: 1.15rem !important;
+  line-height: 1.6;
 }
 
 .app.access-font-large h1,
 .app.access-font-large .h1 {
-  font-size: 2.5rem;
+  font-size: 2.25rem;
 }
 
 .app.access-font-large h2,
 .app.access-font-large .h2 {
-  font-size: 2rem;
+  font-size: 1.85rem;
 }
 
 .app.access-font-large h3,
 .app.access-font-large .h3 {
-  font-size: 1.75rem;
+  font-size: 1.6rem;
 }
 
 .app.access-font-large p,
 .app.access-font-large span,
-.app.access-font-large div {
+.app.access-font-large label,
+.app.access-font-large .nav-link,
+.app.access-font-large .dropdown-item {
   font-size: 1.1rem;
 }
 
+/* Sidebar Specific Scaling */
+.app.access-font-large .sidebar .nav-link {
+  padding: 0.75rem 1rem !important;
+  margin: 4px 0 !important;
+  gap: 16px !important;
+}
+
 .app.access-font-extra-large {
-  font-size: 1.4rem !important;
+  font-size: 1.3rem !important;
+  line-height: 1.7;
 }
 
 .app.access-font-extra-large h1,
 .app.access-font-extra-large .h1 {
-  font-size: 3rem;
+  font-size: 2.75rem;
 }
 
 .app.access-font-extra-large h2,
 .app.access-font-extra-large .h2 {
-  font-size: 2.5rem;
+  font-size: 2.25rem;
 }
 
 .app.access-font-extra-large h3,
 .app.access-font-extra-large .h3 {
-  font-size: 2rem;
+  font-size: 1.85rem;
 }
 
 .app.access-font-extra-large p,
 .app.access-font-extra-large span,
-.app.access-font-extra-large div {
+.app.access-font-extra-large label,
+.app.access-font-extra-large .nav-link,
+.app.access-font-extra-large .dropdown-item {
   font-size: 1.25rem;
+}
+
+.app.access-font-extra-large .sidebar .nav-link {
+  padding: 1rem 1.25rem !important;
+  margin: 8px 0 !important;
+  gap: 20px !important;
 }
 
 /* High Contrast mode */
