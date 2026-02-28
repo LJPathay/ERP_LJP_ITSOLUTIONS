@@ -6,6 +6,8 @@ using System.Security.Claims;
 using ljp_itsolutions.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc.ViewEngines;
+using System.IO;
 
 namespace ljp_itsolutions.Controllers
 {
@@ -18,8 +20,9 @@ namespace ljp_itsolutions.Controllers
         private readonly IReceiptService _receiptService;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IAnalyticsService _analyticsService;
+        private readonly ICompositeViewEngine _viewEngine;
 
-        public CashierController(ApplicationDbContext db, InMemoryStore store, IPayMongoService payMongoService, ILogger<CashierController> logger, IReceiptService receiptService, IServiceScopeFactory scopeFactory, IAnalyticsService analyticsService)
+        public CashierController(ApplicationDbContext db, InMemoryStore store, IPayMongoService payMongoService, ILogger<CashierController> logger, IReceiptService receiptService, IServiceScopeFactory scopeFactory, IAnalyticsService analyticsService, ICompositeViewEngine viewEngine)
             : base(db)
         {
             _store = store;
@@ -28,6 +31,7 @@ namespace ljp_itsolutions.Controllers
             _receiptService = receiptService;
             _scopeFactory = scopeFactory;
             _analyticsService = analyticsService;
+            _viewEngine = viewEngine;
         }
 
         public class OrderRequest
@@ -416,20 +420,25 @@ namespace ljp_itsolutions.Controllers
                         PaymentStatus = "Success"
                     });
 
-                    // Loyalty Points Earning
+                    // Loyalty Points Earning (1 pt per ₱100 spent)
                     if (order.CustomerID.HasValue)
                     {
                         var customer = await _db.Customers.FindAsync(order.CustomerID.Value);
                         if (customer != null)
                         {
-                            var coffeeCount = order.OrderDetails
-                                .Where(d => d.Product != null && d.Product.Category != null && d.Product.Category.CategoryName == "Coffee")
-                                .Sum(d => d.Quantity);
+                            // Base points: 1 point per ₱100
+                            decimal basePoints = order.FinalAmount / 100m;
                             
-                            if (coffeeCount >= 3)
+                            decimal multiplier = 1.0m;
+                            if (customer.Points >= 500) multiplier = 1.5m;
+                            else if (customer.Points >= 300) multiplier = 1.25m;
+                            else if (customer.Points >= 100) multiplier = 1.1m;
+                            
+                            int earnedPoints = (int)Math.Floor(basePoints * multiplier);
+                            if (earnedPoints > 0)
                             {
-                                decimal multiplier = customer.Points > 1000 ? 1.5m : (customer.Points > 500 ? 1.25m : 1.0m);
-                                customer.Points += (int)((coffeeCount / 3) * multiplier);
+                                customer.Points += earnedPoints;
+                                await LogAudit($"Loyalty Points Earned", $"Customer: {customer.FullName}, Final Amount: ₱{order.FinalAmount:N2}, Earned: {earnedPoints} pts");
                             }
                         }
                     }
@@ -438,19 +447,27 @@ namespace ljp_itsolutions.Controllers
                     await _db.SaveChangesAsync();
                     await transaction.CommitAsync();
 
+                    // Optimized: Returning receipt HTML directly for "instant" load
+                    var orderWithDetails = await _db.Orders
+                        .Include(o => o.OrderDetails).ThenInclude(d => d.Product)
+                        .Include(o => o.Cashier)
+                        .Include(o => o.Payments)
+                        .FirstOrDefaultAsync(o => o.OrderID == order.OrderID);
+
+                    string receiptHtml = "";
+                    if (orderWithDetails != null) {
+                        try {
+                            receiptHtml = await RenderViewToStringAsync("_ReceiptPartial", orderWithDetails);
+                        } catch (Exception ex) {
+                            _logger.LogError(ex, "Failed to render receipt HTML for Order {OrderId}", order.OrderID);
+                        }
+                    }
+
                     // Fire-and-forget background tasks (Post-Commit)
                     _ = Task.Run(async () => {
                         try {
                             using (var scope = _scopeFactory.CreateScope()) {
                                 var scopedReceiptService = scope.ServiceProvider.GetRequiredService<IReceiptService>();
-                                if (order.CustomerID.HasValue) await scopedReceiptService.SendOrderReceiptAsync(order.OrderID);
-                                
-                                // Check which ingredients hit low stock and send alerts
-                                foreach (var entry in requiredIngredients)
-                                {
-                                    if (entry.Value.Ingredient.StockQuantity <= entry.Value.Ingredient.LowStockThreshold)
-                                        await scopedReceiptService.SendLowStockAlertAsync(entry.Key);
-                                }
                             }
                         } catch (Exception ex) {
                             _logger.LogError(ex, "Background processing failed for order {OrderId}", order.OrderID);
@@ -460,7 +477,7 @@ namespace ljp_itsolutions.Controllers
                     await LogAudit($"Placed Order #{order.OrderID.ToString().Substring(0, 8)}", $"Total: ₱{order.FinalAmount:N2}, Items: {order.OrderDetails.Count}");
 
                     if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                        return Json(new { success = true, orderId = order.OrderID });
+                        return Json(new { success = true, orderId = order.OrderID, receiptHtml = receiptHtml });
 
                     TempData["SuccessMessage"] = "Order placed successfully!";
                     return RedirectToAction("Receipt", new { id = order.OrderID });
@@ -772,20 +789,26 @@ namespace ljp_itsolutions.Controllers
                         });
                     }
 
-                    // Customer Loyalty Points EARNING (1 pt per 3 coffees)
+                    // Customer Loyalty Points EARNING (1 pt per ₱100 spent, across all categories)
                     if (order.CustomerID.HasValue)
                     {
                         var customer = await _db.Customers.FindAsync(order.CustomerID.Value);
                         if (customer != null)
                         {
-                            var coffeeCount = order.OrderDetails
-                                .Where(d => d.Product != null && d.Product.Category != null && d.Product.Category.CategoryName == "Coffee")
-                                .Sum(d => d.Quantity);
+                            // Base points: 1 point per ₱100
+                            decimal basePoints = order.FinalAmount / 100m;
                             
-                            if (coffeeCount >= 3)
+                            // Tier-based multipliers (Gold: 1.5x, Silver: 1.25x, Bronze: 1.1x)
+                            decimal multiplier = 1.0m;
+                            if (customer.Points >= 500) multiplier = 1.5m;
+                            else if (customer.Points >= 300) multiplier = 1.25m;
+                            else if (customer.Points >= 100) multiplier = 1.1m;
+                            
+                            int earnedPoints = (int)Math.Floor(basePoints * multiplier);
+                            if (earnedPoints > 0)
                             {
-                                decimal multiplier = customer.Points > 1000 ? 1.5m : (customer.Points > 500 ? 1.25m : 1.0m);
-                                customer.Points += (int)((coffeeCount / 3) * multiplier);
+                                customer.Points += earnedPoints;
+                                await LogAudit($"Loyalty Points Earned (Digital)", $"Customer: {customer.FullName}, Final Amount: ₱{order.FinalAmount:N2}, Earned: {earnedPoints} pts");
                             }
                         }
                     }
@@ -1026,6 +1049,31 @@ namespace ljp_itsolutions.Controllers
         {
             byte[] buffer = await _analyticsService.GenerateTransactionsCSVAsync();
             return File(buffer, "text/csv", $"LJP_Transactions_{DateTime.Now:yyyyMMdd}.csv");
+        }
+        private async Task<string> RenderViewToStringAsync(string viewName, object model)
+        {
+            ViewData.Model = model;
+            using (var sw = new StringWriter())
+            {
+                var viewResult = _viewEngine.FindView(ControllerContext, viewName, false);
+                if (!viewResult.Success)
+                {
+                    viewResult = _viewEngine.GetView(null, viewName, false);
+                    if (!viewResult.Success) return string.Empty;
+                }
+
+                var viewContext = new Microsoft.AspNetCore.Mvc.Rendering.ViewContext(
+                    ControllerContext,
+                    viewResult.View,
+                    ViewData,
+                    TempData,
+                    sw,
+                    new Microsoft.AspNetCore.Mvc.ViewFeatures.HtmlHelperOptions()
+                );
+
+                await viewResult.View.RenderAsync(viewContext);
+                return sw.ToString();
+            }
         }
     }
 }

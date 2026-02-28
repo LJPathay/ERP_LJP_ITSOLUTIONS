@@ -98,18 +98,25 @@
                             </td>
                             <td class="py-3">
                                 @{
-                                    var approvalBadge = promo.ApprovalStatus == "Approved" ? "bg-success" : 
-                                                       (promo.ApprovalStatus == "Rejected" ? "bg-danger" : "bg-warning");
-                                    var approvalIcon = promo.ApprovalStatus == "Approved" ? "fa-check-circle" : 
-                                                      (promo.ApprovalStatus == "Rejected" ? "fa-times-circle" : "fa-clock");
+                                    var approvalClass = promo.ApprovalStatus == "Approved" ? "bg-success text-success" : 
+                                                       (promo.ApprovalStatus == "Rejected" ? "bg-danger text-danger" : "bg-warning text-warning");
+                                    var approvalIcon = promo.ApprovalStatus == "Approved" ? "fa-check-double" : 
+                                                      (promo.ApprovalStatus == "Rejected" ? "fa-times-circle" : "fa-history");
+
+                                    var sClass = status == "Active" ? "bg-success text-success" : 
+                                                (status == "Scheduled" ? "bg-info text-info" : "bg-secondary text-secondary");
+                                    var sIcon = status == "Active" ? "fa-play-circle" : 
+                                               (status == "Scheduled" ? "fa-calendar-check" : "fa-stop-circle");
                                 }
-                                <div class="d-flex flex-column gap-1">
-                                    <span class="badge rounded-pill @approvalBadge px-2 py-1 x-small fw-bold" style="width: fit-content;">
+                                <div class="d-flex flex-column gap-2 py-1">
+                                    <span class="badge rounded-pill @approvalClass bg-opacity-10 border @(approvalClass.Replace("text-", "border-")) border-opacity-10 px-2 py-1 x-small fw-bold" style="width: fit-content;">
                                         <i class="fas @approvalIcon me-1"></i>@promo.ApprovalStatus.ToUpper()
                                     </span>
                                     @if (promo.ApprovalStatus == "Approved")
                                     {
-                                        <span class="badge rounded-pill @statusClass px-2 py-1 x-small fw-bold" style="width: fit-content;">@status.ToUpper()</span>
+                                        <span class="badge rounded-pill @sClass bg-opacity-10 border @(sClass.Replace("text-", "border-")) border-opacity-10 px-2 py-1 x-small fw-bold" style="width: fit-content;">
+                                            <i class="fas @sIcon me-1"></i>@status.ToUpper()
+                                        </span>
                                     }
                                 </div>
                             </td>

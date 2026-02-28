@@ -73,14 +73,14 @@
 
 
 
-    <!-- Main Content Grid -->
+    <!-- Main Analytics Row -->
     <div class="row g-4 mb-4">
-        <!-- Sales Velocity -->
-        <div class="col-lg-8">
+        <!-- Sales Revenue Overview -->
+        <div class="col-lg-6">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
                 <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0">Sales Performance Velocity</h6>
-                    <div class="badge bg-light text-dark border">7 Day Window</div>
+                    <h6 class="fw-bold mb-0 text-slate-700">Sales Revenue Overview</h6>
+                    <a href="@Url.Action("Reports")" class="btn btn-link btn-sm text-decoration-none p-0 text-primary fw-bold">Analytics <i class="fas fa-arrow-right ms-1 small"></i></a>
                 </div>
                 <div class="card-body p-4">
                     <div style="height: 300px;">
@@ -90,12 +90,29 @@
             </div>
         </div>
 
-        <!-- Alerts -->
-        <div class="col-lg-4">
+        <!-- Consumer Throughput Analysis -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                <div class="card-header bg-white py-3 px-4">
+                    <h6 class="fw-bold mb-0 text-slate-700">Consumer Throughput Analysis (Peak Hours)</h6>
+                </div>
+                <div class="card-body p-4">
+                    <div style="height: 300px;">
+                        <canvas id="peakHoursChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Operations Row -->
+    <div class="row g-4 mb-4">
+        <!-- Critical Operational Alerts -->
+        <div class="col-lg-6">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 bg-white">
                 <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold mb-0 text-dark">Critical Operational Alerts</h6>
-                    <span class="badge bg-light text-muted fw-normal">Priority</span>
+                    <span class="badge bg-light text-muted fw-normal border">System Intelligence</span>
                 </div>
                 <div class="card-body p-4 pt-0">
                     <div class="alert-list">
@@ -103,7 +120,7 @@
                         {
                             <div class="d-flex align-items-center gap-3 p-3 mb-2 rounded-3 hover-bg-light transition-all border border-light">
                                 <div class="alert-icon bg-light text-dark rounded-circle d-flex align-items-center justify-content-center border" style="width: 36px; height: 36px;">
-                                    <i class="fas fa-exclamation-triangle small"></i>
+                                    <i class="fas fa-exclamation-triangle small text-warning"></i>
                                 </div>
                                 <div class="flex-grow-1">
                                     <p class="mb-0 fw-bold small text-dark">@alert.Name (Low Stock)</p>
@@ -125,40 +142,23 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Secondary Insights Row -->
-    <div class="row g-4">
-        <!-- Peak Hours -->
+        <!-- Recent Operational Logs -->
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-header bg-white py-3 px-4">
-                    <h6 class="fw-bold mb-0">Consumer Throughput Analysis (Peak Hours)</h6>
-                </div>
-                <div class="card-body p-4">
-                    <div style="height: 250px;">
-                        <canvas id="peakHoursChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Logs -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
                 <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0">Recent Operational Logs</h6>
+                    <h6 class="fw-bold mb-0 text-slate-700">Recent Operational Logs</h6>
                     <a asp-action="Transactions" class="text-primary xx-small fw-bold text-decoration-none">Full Audit <i class="fas fa-arrow-right ms-1"></i></a>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
+                            <thead class="bg-light bg-opacity-50">
                                 <tr>
-                                    <th class="ps-4 border-0 x-small fw-bold">ID</th>
-                                    <th class="border-0 x-small fw-bold">Value</th>
-                                    <th class="border-0 x-small fw-bold">Status</th>
-                                    <th class="border-0 x-small fw-bold text-end pe-4">Timestamp</th>
+                                    <th class="ps-4 border-0 x-small fw-bold text-muted">ID</th>
+                                    <th class="border-0 x-small fw-bold text-muted">Value</th>
+                                    <th class="border-0 x-small fw-bold text-muted">Status</th>
+                                    <th class="border-0 x-small fw-bold text-muted text-end pe-4">Timestamp</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -166,13 +166,17 @@
                                 {
                                     <tr>
                                         <td class="ps-4">
-                                            <span class="small fw-bold">#@order.OrderID.ToString().Substring(0, 5)</span>
+                                            <span class="small fw-bold text-dark">#@order.OrderID.ToString().Substring(0, 5)</span>
                                         </td>
-                                        <td><span class="small fw-semibold">₱@order.FinalAmount.ToString("N2")</span></td>
+                                        <td><span class="small fw-semibold text-primary">₱@order.FinalAmount.ToString("N2")</span></td>
                                         <td>
-                                            <span class="badge @(order.PaymentStatus == "Paid" ? "bg-success" : "bg-warning") bg-opacity-10 @(order.PaymentStatus == "Paid" ? "text-success" : "text-warning") border rounded-pill xx-small">@order.PaymentStatus</span>
+                                            @{
+                                                var bClass = order.PaymentStatus == "Paid" || order.PaymentStatus == "Completed" ? "bg-success" : "bg-warning";
+                                                var tClass = order.PaymentStatus == "Paid" || order.PaymentStatus == "Completed" ? "text-success" : "text-warning";
+                                            }
+                                            <span class="badge @bClass bg-opacity-10 @tClass border rounded-pill xx-small">@order.PaymentStatus</span>
                                         </td>
-                                        <td class="text-end pe-4"><span class="text-muted xx-small">@order.OrderDate.ToString("t")</span></td>
+                                        <td class="text-end pe-4"><span class="text-muted xx-small">@order.OrderDate.ToString("hh:mm tt")</span></td>
                                     </tr>
                                 }
                             </tbody>
@@ -182,6 +186,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <style>

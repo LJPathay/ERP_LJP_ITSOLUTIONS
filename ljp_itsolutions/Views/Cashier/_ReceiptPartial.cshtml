@@ -42,18 +42,18 @@
 
         <!-- Items -->
         <div class="receipt-items px-4 mb-3">
-            @{ int i = 1; }
+            <div class="separator">QTY | ITEM             | PRICE | TOTAL </div>
+            <div class="separator">------------------------------------------</div>
             @foreach (var item in Model.OrderDetails)
             {
                 <div class="item-entry">
-                    <div class="item-name">@i. @item.Product?.ProductName</div>
-                    <div class="item-cost-row">
-                        <span class="cost-label">Cost</span>
-                        <span class="dots"></span>
-                        <span class="cost-value">₱@item.Subtotal.ToString("N2")</span>
+                    <div class="d-flex justify-content-between">
+                        <span class="small" style="width: 30px;">@item.Quantity.ToString("D2")</span>
+                        <span class="small flex-grow-1">@item.Product?.ProductName.Substring(0, Math.Min(item.Product.ProductName.Length, 15))</span>
+                        <span class="small text-end" style="width: 70px;">₱@item.UnitPrice.ToString("N2")</span>
+                        <span class="small text-end fw-bold" style="width: 80px;">₱@item.Subtotal.ToString("N2")</span>
                     </div>
                 </div>
-                i++;
             }
         </div>
 

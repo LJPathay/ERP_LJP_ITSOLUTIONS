@@ -596,6 +596,12 @@ namespace ljp_itsolutions.Services
             var yesterday = DateTime.Today.AddDays(-1);
             var customersYesterday = await _db.Customers.CountAsync(c => c.CustomerID != 0); 
             
+            var customers = await _db.Customers.ToListAsync();
+            var goldCount = customers.Count(c => c.Points >= 500);
+            var silverCount = customers.Count(c => c.Points >= 300 && c.Points < 500);
+            var bronzeCount = customers.Count(c => c.Points >= 100 && c.Points < 300);
+            var memberCount = customers.Count(c => c.Points < 100);
+
             return new MarketingDashboardData
             {
                 AudiencePenetration = totalCustomers,
@@ -608,6 +614,8 @@ namespace ljp_itsolutions.Services
                 PerformanceData = chartData,
                 NewPatronsCount = newCustomersCount,
                 ReturningPatronsCount = returningCustomersCount,
+                TierLabels = new List<string> { "Gold (500+)", "Silver (300+)", "Bronze (100+)", "Member (<100)" },
+                TierData = new List<int> { goldCount, silverCount, bronzeCount, memberCount },
                 VIPPerformance = topCustomers
             };
         }

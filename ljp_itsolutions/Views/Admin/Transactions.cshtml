@@ -119,6 +119,17 @@
                 </tbody>
             </table>
         </div>
+        <!-- Pagination Controls -->
+        <div class="card-footer bg-white border-top py-3 px-4 d-flex justify-content-between align-items-center">
+            <div class="text-muted xx-small fw-bold text-uppercase tracking-wider">
+                Showing <span id="start-index">0</span>-<span id="end-index">0</span> of <span id="total-count">0</span> transactions
+            </div>
+            <nav aria-label="Transaction navigation">
+                <ul class="pagination pagination-sm mb-0 gap-1 pagination-custom" id="pagination-container">
+                    <!-- Pagination injected by JS -->
+                </ul>
+            </nav>
+        </div>
     </div>
 </div>
 
@@ -215,27 +226,107 @@
         const dateFilter = document.getElementById('dateFilter');
         const rows = document.querySelectorAll('.transaction-row');
 
+        let currentPage = 1;
+        const rowsPerPage = 15;
+        let filteredRows = [];
+
         function filterTransactions() {
             const term = searchInput.value.toLowerCase();
             const status = statusFilter.value;
             const date = dateFilter.value;
 
-            rows.forEach(row => {
+            const allRows = Array.from(rows);
+            filteredRows = allRows.filter(row => {
                 const text = row.textContent.toLowerCase();
                 const rowStatus = row.dataset.status;
-                const rowDate = row.dataset.date.split('T')[0]; // simple date match
+                const rowDate = row.dataset.date;
 
                 const matchesSearch = text.includes(term);
                 const matchesStatus = status === "" || rowStatus === status || (status === "Paid" && (rowStatus === "Completed" || rowStatus === "Paid"));
-                const matchesDate = date === "" || row.dataset.date.startsWith(date);
+                const matchesDate = date === "" || rowDate.startsWith(date);
 
-                row.style.display = (matchesSearch && matchesStatus && matchesDate) ? '' : 'none';
+                return matchesSearch && matchesStatus && matchesDate;
             });
+
+            currentPage = 1;
+            updatePagination();
         }
 
-        searchInput.addEventListener('keyup', filterTransactions);
+        function updatePagination() {
+            const totalItems = filteredRows.length;
+            const totalPages = Math.ceil(totalItems / rowsPerPage);
+            
+            if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = Math.min(start + rowsPerPage, totalItems);
+
+            // Hide all rows first
+            rows.forEach(row => row.style.display = 'none');
+
+            // Show current page rows
+            for (let i = start; i < end; i++) {
+                filteredRows[i].style.display = '';
+            }
+
+            // Update stats
+            document.getElementById('start-index').textContent = totalItems > 0 ? start + 1 : 0;
+            document.getElementById('end-index').textContent = end;
+            document.getElementById('total-count').textContent = totalItems;
+
+            renderPaginationControls(totalPages);
+        }
+
+        function renderPaginationControls(totalPages) {
+            const container = document.getElementById('pagination-container');
+            container.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            // Previous
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1})"><i class="fas fa-chevron-left x-small"></i></a>`;
+            container.appendChild(prevLi);
+
+            // Pages
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const li = document.createElement('li');
+                    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                    li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i})">${i}</a>`;
+                    container.appendChild(li);
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    const li = document.createElement('li');
+                    li.className = 'page-item disabled';
+                    li.innerHTML = '<span class="page-link bg-transparent">...</span>';
+                    container.appendChild(li);
+                }
+            }
+
+            // Next
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1})"><i class="fas fa-chevron-right x-small"></i></a>`;
+            container.appendChild(nextLi);
+        }
+
+        window.changePage = function(page) {
+            event.preventDefault();
+            if (page < 1 || page > Math.ceil(filteredRows.length / rowsPerPage)) return;
+            currentPage = page;
+            updatePagination();
+        };
+
+        searchInput.addEventListener('input', filterTransactions);
         statusFilter.addEventListener('change', filterTransactions);
         dateFilter.addEventListener('change', filterTransactions);
+
+        // Initial Load
+        document.addEventListener('DOMContentLoaded', () => {
+            filteredRows = Array.from(rows);
+            updatePagination();
+        });
 
         async function openOrderModal(id) {
             try {
@@ -315,6 +406,39 @@
         z-index: 10;
     }
     
+    /* Modern Pagination Design */
+    .pagination-custom .page-item { margin: 0 2px; }
+    .pagination-custom .page-link {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px !important;
+        font-weight: 700;
+        color: #0f172a !important;
+        border: none;
+        transition: all 0.2s ease;
+        background-color: #ffffff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+    
+    .pagination-custom .page-item.active .page-link {
+        background-color: #e67e22 !important; /* Orange from image */
+        color: #0f172a !important;
+    }
+    
+    .pagination-custom .page-item.disabled .page-link {
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
+        opacity: 0.5;
+    }
+    
+    .pagination-custom .page-item:not(.active):not(.disabled):hover .page-link {
+        background-color: #f8fafc;
+        transform: translateY(-1px);
+    }
+
     /* Custom Scrollbar */
     .table-responsive::-webkit-scrollbar {
         width: 6px;

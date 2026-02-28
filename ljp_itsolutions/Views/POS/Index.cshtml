@@ -199,16 +199,14 @@
                 </div>
             </div>
             <div class="modal-footer border-0 pt-0 flex-column gap-2">
-                <div class="input-group w-100 mb-2">
-                    <input type="email" id="receiptEmail" class="form-control" placeholder="customer@email.com">
-                    <button class="btn btn-outline-primary" type="button" onclick="sendEReceipt()" id="sendReceiptBtn">
-                        <i class="fas fa-paper-plane me-1"></i>Email
-                    </button>
+                <div class="alert alert-info py-2 px-3 border-0 rounded-4 x-small mb-2 shadow-sm d-flex align-items-center gap-2">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Electronic copy has been logged to the system audit.</span>
                 </div>
                 <button type="button" class="btn btn-primary w-100 py-2 fw-bold" onclick="printReceipt()">
                     <i class="fas fa-print me-2"></i>Print Receipt
                 </button>
-                <button type="button" class="btn btn-light w-100 py-2 border" data-bs-dismiss="modal">
+                <button type="button" class="btn btn-light w-100 py-2 border" data-bs-dismiss="modal" onclick="resetPOS()">
                     New Transaction
                 </button>
             </div>
@@ -294,12 +292,8 @@
         let currentOrderId = null;
         const TAX_RATE = @(ViewBag.TaxRate ?? 0.05);
 
-        // Cart loss protection
-        window.onbeforeunload = function() {
-            if (cart.length > 0) {
-                return "You have items in your cart. Are you sure you want to leave?";
-            }
-        };
+        // Removed cart loss protection to stop "Reload site?" warning as requested
+
 
         function addToCart(id, name, price) {
             const existing = cart.find(item => item.id === id);
@@ -619,15 +613,7 @@
                     const data = await response.json();
                     if (data.success) {
                         currentOrderId = data.orderId; 
-                        loadReceipt(data.orderId);
-                        
-                        if (selectedCustomerEmail) {
-                            const btn = document.getElementById('sendReceiptBtn');
-                            btn.innerHTML = '<i class="fas fa-check"></i> Auto-Sent';
-                            btn.classList.replace('btn-outline-primary', 'btn-success');
-                            btn.disabled = true;
-                            document.getElementById('receiptEmail').value = selectedCustomerEmail;
-                        }
+                        loadReceipt(data.orderId, data.receiptHtml);
                     } else {
                         alert('Order failed: ' + (data.message || 'Unknown error'));
                         receiptModal.hide();
@@ -644,16 +630,23 @@
             }
         }
 
-        async function loadReceipt(orderId) {
+        async function loadReceipt(orderId, preRenderedHtml = null) {
             const content = document.getElementById('receiptModalContent');
+            
+            if (preRenderedHtml) {
+                content.innerHTML = preRenderedHtml;
+                setTimeout(() => { printReceipt(); }, 50);
+                return;
+            }
+
             try {
                 const response = await fetch(`/Cashier/GetReceiptPartial/${orderId}`);
                 if (response.ok) {
                     content.innerHTML = await response.text();
-                    // Auto-print after a short delay for rendering
+                    // Auto-print after a very short delay for rendering
                     setTimeout(() => {
                         printReceipt();
-                    }, 500);
+                    }, 50);
                 } else {
                     content.innerHTML = '<div class="text-danger text-center">Failed to load receipt details.</div>';
                 }
@@ -664,54 +657,6 @@
 
 
 
-        async function sendEReceipt() {
-            if (!currentOrderId) {
-                alert('No active order context. Please try again.');
-                return;
-            }
-
-            const emailInput = document.getElementById('receiptEmail');
-            const btn = document.getElementById('sendReceiptBtn');
-            const email = emailInput.value.trim();
-
-            if (!email || !email.includes('@@')) {
-                alert('Please enter a valid email address.');
-                return;
-            }
-
-            const originalBtnHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-            btn.disabled = true;
-
-            try {
-                const response = await fetch('@Url.Action("SendReceipt", "Cashier")?orderId=' + currentOrderId + '&email=' + encodeURIComponent(email), {
-                    method: 'POST',
-                    headers: {
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-                    }
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    btn.innerHTML = '<i class="fas fa-check text-success"></i> Sent!';
-                    btn.classList.replace('btn-outline-primary', 'btn-outline-success');
-                    setTimeout(() => {
-                        emailInput.value = '';
-                        btn.innerHTML = originalBtnHtml;
-                        btn.classList.replace('btn-outline-success', 'btn-outline-primary');
-                        btn.disabled = false;
-                    }, 3000);
-                } else {
-                    alert(data.message || 'Failed to send receipt');
-                    btn.innerHTML = originalBtnHtml;
-                    btn.disabled = false;
-                }
-            } catch(e) {
-                alert('Network error while sending receipt.');
-                btn.innerHTML = originalBtnHtml;
-                btn.disabled = false;
-            }
-        }
 
         function printReceipt() {
             const printContent = document.getElementById('receiptModalContent').innerHTML;
@@ -833,8 +778,55 @@
             });
         });
 
+        function resetPOS() {
+            cart = [];
+            paymentMethod = 'Cash';
+            isRedeeming = false;
+            currentOrderId = null;
+            selectedCustomerEmail = null;
+            
+            // Clear inputs
+            const promoInput = document.getElementById('promoCode');
+            if (promoInput) promoInput.value = '';
+            
+            const cashInput = document.getElementById('cashReceived');
+            if (cashInput) cashInput.value = '';
+            
+            const changeLabel = document.getElementById('changeAmount');
+            if (changeLabel) changeLabel.innerText = '₱0.00';
+            
+            const searchInput = document.getElementById('customerSearch');
+            if (searchInput) searchInput.value = '';
+            
+            const customerIdInput = document.getElementById('selectedCustomerId');
+            if (customerIdInput) customerIdInput.value = '';
+            
+            const customerInfoDiv = document.getElementById('selectedCustomerInfo');
+            if (customerInfoDiv) customerInfoDiv.style.display = 'none';
+            
+            // Reset modal content for next use
+            const receiptContent = document.getElementById('receiptModalContent');
+            if (receiptContent) {
+                receiptContent.innerHTML = `
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading Receipt...</span>
+                        </div>
+                    </div>`;
+            }
+            
+            setPayment('Cash');
+            renderCart();
+            
+            // Clean up any stray backdrops
+            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+
         document.getElementById('receiptModal').addEventListener('hidden.bs.modal', function () {
-            location.reload();
+            resetPOS();
         });
     </script>
 }

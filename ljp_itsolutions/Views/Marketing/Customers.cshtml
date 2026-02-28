@@ -18,9 +18,10 @@
         <div class="col-md-3">
             <select id="tierFilter" class="form-select shadow-sm rounded-pill border py-2">
                 <option value="">All Loyalty Tiers</option>
-                <option value="Gold">Gold Tier (1000+)</option>
-                <option value="Silver">Silver Tier (500+)</option>
-                <option value="Bronze">Bronze Tier (0-500)</option>
+                <option value="Gold">Gold Tier (500+)</option>
+                <option value="Silver">Silver Tier (300+)</option>
+                <option value="Bronze">Bronze Tier (100+)</option>
+                <option value="Member">New Member (0-99)</option>
             </select>
         </div>
         <div class="col text-end">
@@ -49,8 +50,10 @@
                     <tbody>
                         @foreach (var customer in Model)
                         {
-                            var tier = customer.Points > 1000 ? "Gold" : (customer.Points > 500 ? "Silver" : "Bronze");
-                            var tierClass = customer.Points > 1000 ? "bg-warning text-dark" : (customer.Points > 500 ? "bg-secondary" : "bg-light text-dark border");
+                            var tier = customer.Points >= 500 ? "Gold" : (customer.Points >= 300 ? "Silver" : (customer.Points >= 100 ? "Bronze" : "Member"));
+                            var tierClass = tier == "Gold" ? "bg-warning text-dark" : 
+                                           (tier == "Silver" ? "bg-secondary text-white" : 
+                                           (tier == "Bronze" ? "bg-bronze text-white" : "bg-light text-dark border"));
                             
                             <tr class="customer-row" data-tier="@tier">
                                 <td class="ps-4">
@@ -310,8 +313,14 @@
                 $.ajax({
                     url: '@Url.Action("GenerateReward", "Marketing")',
                     type: 'POST',
+                    contentType: 'application/json',
                     headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').first().val() },
-                    data: { customerId: customerId },
+                    data: JSON.stringify({ 
+                        customerId: customerId,
+                        pointsToDeduct: 10,
+                        discountValue: 15,
+                        rewardName: "15% Loyalty Reward"
+                    }),
                     success: function(res) {
                         if (res.success) {
                             // Populate modal

@@ -220,7 +220,6 @@
 
         async function confirmApprove() {
             const id = document.getElementById('modalCampaignId').value;
-            if (!confirm('Confirm approval for POS activation?')) return;
 
             try {
                 const response = await fetch('@Url.Action("ApproveCampaign", "Manager")?id=' + id, {

@@ -10,11 +10,16 @@
             <div class="card border-0 shadow-lg receipt-card">
                 <div class="card-body p-0">
                     <!-- Receipt Header -->
-                    <div class="receipt-header text-center p-4 bg-light border-bottom">
-                        <img src="@Url.Content("~/images/logo.png")" alt="LJP IT SOLUTIONS" class="mb-3" style="height: 60px; filter: grayscale(1);" />
-                        <h4 class="fw-bold mb-1">LJP IT SOLUTIONS</h4>
-                        <p class="text-muted small mb-0">123 Coffee Lane, Tech City</p>
-                        <p class="text-muted small">Tel: (02) 123-4567</p>
+                    <div class="receipt-header p-4 bg-light border-bottom position-relative">
+                        <a href="javascript:history.back()" class="btn btn-sm btn-light rounded-circle shadow-sm position-absolute top-50 start-0 translate-middle ms-4 d-print-none" style="width: 32px; height: 32px; padding: 0; line-height: 32px;">
+                            <i class="fas fa-arrow-left small"></i>
+                        </a>
+                        <div class="text-center">
+                            <img src="@Url.Content("~/images/logo.png")" alt="LJP IT SOLUTIONS" class="mb-3" style="height: 60px; filter: grayscale(1);" />
+                            <h4 class="fw-bold mb-1">LJP IT SOLUTIONS</h4>
+                            <p class="text-muted small mb-0">123 Coffee Lane, Tech City</p>
+                            <p class="text-muted small">Tel: (02) 123-4567</p>
+                        </div>
                     </div>
 
                     <!-- Receipt Info -->
@@ -39,24 +44,25 @@
 
                     <!-- Items List -->
                     <div class="p-4 bg-white">
-                        <table class="table table-borderless table-sm mb-0">
-                            <thead>
+                        <table class="table table-sm mb-0">
+                            <thead class="bg-light">
                                 <tr class="border-bottom">
-                                    <th class="ps-0 py-2">Item</th>
-                                    <th class="text-center py-2">Qty</th>
-                                    <th class="text-end pe-0 py-2">Total</th>
+                                    <th class="ps-2 py-2 x-small text-uppercase fw-bold text-muted">Item Description</th>
+                                    <th class="text-center py-2 x-small text-uppercase fw-bold text-muted">Qty</th>
+                                    <th class="text-center py-2 x-small text-uppercase fw-bold text-muted">Price</th>
+                                    <th class="text-end pe-2 py-2 x-small text-uppercase fw-bold text-muted">Total</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var item in Model.OrderDetails)
                                 {
                                     <tr>
-                                        <td class="ps-0 py-2">
-                                            <div class="fw-bold">@item.Product?.ProductName</div>
-                                            <div class="text-muted x-small">₱@item.UnitPrice.ToString("F2") ea</div>
+                                        <td class="ps-2 py-2 align-middle">
+                                            <div class="fw-bold small">@item.Product?.ProductName</div>
                                         </td>
-                                        <td class="text-center py-2 align-middle">@item.Quantity</td>
-                                        <td class="text-end pe-0 py-2 align-middle fw-bold">₱@item.Subtotal.ToString("F2")</td>
+                                        <td class="text-center py-2 align-middle small">@item.Quantity</td>
+                                        <td class="text-center py-2 align-middle small text-muted">₱@item.UnitPrice.ToString("N2")</td>
+                                        <td class="text-end pe-2 py-2 align-middle fw-bold small">₱@item.Subtotal.ToString("N2")</td>
                                     </tr>
                                 }
                             </tbody>

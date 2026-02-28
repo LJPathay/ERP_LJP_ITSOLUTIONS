@@ -55,6 +55,8 @@ namespace ljp_itsolutions.Services
         public List<int> PerformanceData { get; set; } = new(); // chart data
         public int ReturningPatronsCount { get; set; }
         public int NewPatronsCount { get; set; }
+        public List<string> TierLabels { get; set; } = new();
+        public List<int> TierData { get; set; } = new();
         public List<CustomerBasicInfo> VIPPerformance { get; set; } = new(); // Top customers
     }
 

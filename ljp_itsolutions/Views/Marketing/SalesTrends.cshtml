@@ -13,11 +13,16 @@
         </div>
         <div class="col-md-6 d-flex justify-content-md-end gap-2">
             <form id="filterForm" method="get" class="d-flex gap-2 align-items-center">
-                <div class="input-group input-group-sm shadow-sm rounded-pill overflow-hidden border bg-white" style="max-width: 240px;">
+                <select name="type" id="typeFilter" class="form-select form-select-sm rounded-pill shadow-sm border bg-white x-small fw-bold px-3" onchange="updateDateInput()" style="width: 100px;">
+                    <option value="week" selected="@(ViewBag.SelectedType == "week")">Weekly</option>
+                    <option value="month" selected="@(ViewBag.SelectedType == "month")">Monthly</option>
+                    <option value="year" selected="@(ViewBag.SelectedType == "year")">Yearly</option>
+                </select>
+                <div class="input-group input-group-sm shadow-sm rounded-pill overflow-hidden border bg-white" style="max-width: 240px;" id="dateInputContainer">
                     <span class="input-group-text bg-transparent border-0 ps-3">
                         <i class="far fa-calendar-alt text-muted"></i>
                     </span>
-                    <input type="month" name="month" id="monthFilter" class="form-control border-0 shadow-none ps-2 py-2 x-small fw-bold" value="@(ViewBag.SelectedMonth ?? DateTime.Now.ToString("yyyy-MM"))">
+                    <input type="month" name="value" id="valueFilter" class="form-control border-0 shadow-none ps-2 py-2 x-small fw-bold" value="@ViewBag.SelectedValue">
                 </div>
                 <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm btn-sm fw-bold x-small">GENERATE INTEL</button>
             </form>
@@ -71,13 +76,15 @@
                         @foreach (var item in Model)
                         {
                             <tr>
-                                <td class="ps-4 fw-bold text-dark small">@item.Date.ToLongDateString()</td>
+                                <td class="ps-4 fw-bold text-dark small">
+                                    @(ViewBag.SelectedType == "year" ? item.Date.ToString("MMMM yyyy") : item.Date.ToLongDateString())
+                                </td>
                                 <td class="text-center">
-                                    <span class="badge bg-light text-dark border px-3">12</span>
+                                    <span class="badge bg-light text-dark border px-3">@item.Count</span>
                                 </td>
                                 <td class="text-center">
                                     <span class="text-muted small">₱</span>
-                                    <span class="fw-bold text-dark small">1,214.50</span>
+                                    <span class="fw-bold text-dark small">@item.AvgValue.ToString("N2")</span>
                                 </td>
                                 <td class="text-end pe-4">
                                     <span class="fw-bold text-success">₱@item.TotalSales.ToString("N2")</span>
@@ -112,7 +119,7 @@
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: @Html.Raw(Json.Serialize(Model.Select(m => m.Date.ToString("MMM dd")))),
+                labels: @Html.Raw(Json.Serialize(Model.Select(m => (ViewBag.SelectedType == "year" ? m.Date.ToString("MMM") : m.Date.ToString("MMM dd"))))),
                 datasets: [{
                     label: 'Gross Performance',
                     data: @Html.Raw(Json.Serialize(Model.Select(m => m.TotalSales))),
@@ -166,9 +173,39 @@
             }
         });
 
+        function updateDateInput() {
+            const type = document.getElementById('typeFilter').value;
+            const input = document.getElementById('valueFilter');
+            const today = new Date();
+            
+            if (type === 'year') {
+                input.type = 'number';
+                input.placeholder = 'YYYY';
+                if (!input.value || input.value.includes('-')) input.value = today.getFullYear();
+            } else if (type === 'week') {
+                input.type = 'week';
+                // Approximate current week
+                if (!input.value || !input.value.includes('-W')) {
+                     const d = new Date();
+                     d.setHours(0,0,0,0);
+                     d.setDate(d.getDate() + 4 - (d.getDay()||7));
+                     const yearStart = new Date(d.getFullYear(),0,1);
+                     const weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+                     input.value = `${d.getFullYear()}-W${weekNo.toString().padStart(2,'0')}`;
+                }
+            } else {
+                input.type = 'month';
+                if (!input.value || input.value.split('-').length !== 2) input.value = today.toISOString().slice(0, 7);
+            }
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', updateDateInput);
+
         function exportData() {
-            const month = document.getElementById('monthFilter').value;
-            window.location.href = `@Url.Action("ExportSalesTrends", "Marketing")?month=${month}`;
+            const type = document.getElementById('typeFilter').value;
+            const value = document.getElementById('valueFilter').value;
+            window.location.href = `@Url.Action("ExportSalesTrends", "Marketing")?type=${type}&value=${value}`;
         }
     </script>
 }

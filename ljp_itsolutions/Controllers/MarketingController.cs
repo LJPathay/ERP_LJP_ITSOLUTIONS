@@ -50,8 +50,12 @@ namespace ljp_itsolutions.Controllers
             var customer = await _db.Customers.FindAsync(req.CustomerId);
             if (customer == null) return NotFound();
 
-            if (customer.Points < req.PointsToDeduct)
-                return Json(new { success = false, message = $"Customer needs at least {req.PointsToDeduct} points for a reward." });
+            var pointsToDeduct = req.PointsToDeduct > 0 ? req.PointsToDeduct : 10;
+            var discountValue = req.DiscountValue > 0 ? req.DiscountValue : 15;
+            var rewardName = !string.IsNullOrEmpty(req.RewardName) ? req.RewardName : "15% Loyalty Reward";
+
+            if (customer.Points < pointsToDeduct)
+                return Json(new { success = false, message = $"Customer needs at least {pointsToDeduct} points for a reward." });
 
             // Build a promo code
             var cleanName = customer.FullName.Replace(" ", "").ToUpper();
@@ -63,7 +67,7 @@ namespace ljp_itsolutions.Controllers
             {
                 PromotionName = promoCode,
                 DiscountType  = "Percentage",
-                DiscountValue = req.DiscountValue,
+                DiscountValue = discountValue,
                 StartDate     = DateTime.UtcNow,
                 EndDate       = DateTime.UtcNow.AddDays(30),
                 IsActive      = true,
@@ -77,26 +81,26 @@ namespace ljp_itsolutions.Controllers
             _db.Promotions.Add(promotion);
 
             // Deduct points from customer
-            customer.Points -= req.PointsToDeduct;
+            customer.Points -= pointsToDeduct;
 
             // Log the redemption event
             _db.RewardRedemptions.Add(new RewardRedemption
             {
                 CustomerID      = customer.CustomerID,
-                RewardName      = req.RewardName,
-                PointsRedeemed  = req.PointsToDeduct,
+                RewardName      = rewardName,
+                PointsRedeemed  = pointsToDeduct,
                 RedemptionDate  = DateTime.Now
             });
 
             await _db.SaveChangesAsync();
-            await LogAudit("Generated VIP Loyalty Reward", $"Customer: {customer.FullName}, Code: {promoCode} for {req.RewardName}");
+            await LogAudit("Generated VIP Loyalty Reward", $"Customer: {customer.FullName}, Code: {promoCode} for {rewardName}");
 
             // Send reward code to customer email in background
             if (!string.IsNullOrEmpty(customer.Email))
             {
                 var capturedCustomer = customer;
                 var capturedCode     = promoCode;
-                var capturedDiscount = req.DiscountValue;
+                var capturedDiscount = discountValue;
                 _ = Task.Run(async () =>
                 {
                     try
@@ -302,15 +306,21 @@ namespace ljp_itsolutions.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
-            var customer = await _db.Customers.FindAsync(id);
-            if (customer != null)
+            var customer = await _db.Customers.Include(c => c.Orders).FirstOrDefaultAsync(c => c.CustomerID == id);
+            if (customer == null) return NotFound();
+
+            if (customer.Orders.Any())
             {
-                var custName = customer.FullName;
-                _db.Customers.Remove(customer);
-                await _db.SaveChangesAsync();
-                await LogAudit($"Deleted Customer: {custName}");
-                TempData["SuccessMessage"] = "Customer removed successfully.";
+                TempData["ErrorMessage"] = "Cannot delete customer with existing order history. Consider archiving or keeping the record for audit purposes.";
+                return RedirectToAction(nameof(Customers));
             }
+
+            var custName = customer.FullName;
+            _db.Customers.Remove(customer);
+            await _db.SaveChangesAsync();
+            await LogAudit($"Deleted Customer: {custName}");
+            TempData["SuccessMessage"] = "Customer removed successfully.";
+            
             return RedirectToAction(nameof(Customers));
         }
 
@@ -321,15 +331,16 @@ namespace ljp_itsolutions.Controllers
             // Data for Tier Distribution Chart
             var tiers = new
             {
-                Gold = customers.Count(c => c.Points > 1000),
-                Silver = customers.Count(c => c.Points > 500 && c.Points <= 1000),
-                Bronze = customers.Count(c => c.Points <= 500)
+                Gold = customers.Count(c => c.Points >= 500),
+                Silver = customers.Count(c => c.Points >= 300 && c.Points < 500),
+                Bronze = customers.Count(c => c.Points >= 100 && c.Points < 300),
+                Member = customers.Count(c => c.Points < 100)
             };
 
             var topHolders = customers.OrderByDescending(c => c.Points).Take(10).ToList();
 
-            ViewBag.TierLabels = new[] { "Gold (>1000)", "Silver (501-1000)", "Bronze (0-500)" };
-            ViewBag.TierData = new[] { tiers.Gold, tiers.Silver, tiers.Bronze };
+            ViewBag.TierLabels = new[] { "Gold (500+)", "Silver (300+)", "Bronze (100+)", "Member (<100)" };
+            ViewBag.TierData = new[] { tiers.Gold, tiers.Silver, tiers.Bronze, tiers.Member };
 
             return View(topHolders);
         }
@@ -344,27 +355,86 @@ namespace ljp_itsolutions.Controllers
         }
 
         //  Reports
-        public async Task<IActionResult> SalesTrends(string month)
+        public async Task<IActionResult> SalesTrends(string type = "month", string value = "")
         {
-            DateTime selectedMonth = DateTime.Today;
-            if (!string.IsNullOrEmpty(month) && DateTime.TryParse(month + "-01", out var parsedMonth))
+            DateTime startDate = DateTime.Today;
+            DateTime endDate = DateTime.Today;
+            string groupingFormat = "yyyy-MM-dd"; 
+
+            if (string.IsNullOrEmpty(value))
             {
-                selectedMonth = parsedMonth;
+                if (type == "month") value = DateTime.Today.ToString("yyyy-MM");
+                else if (type == "week") value = DateTime.Today.ToString("yyyy-'W'WW"); 
+                else if (type == "year") value = DateTime.Today.ToString("yyyy");
             }
 
-            var startOfMonth = new DateTime(selectedMonth.Year, selectedMonth.Month, 1);
-            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+            if (type == "year")
+            {
+                if (int.TryParse(value, out int year))
+                {
+                    startDate = new DateTime(year, 1, 1);
+                }
+                else
+                {
+                    startDate = new DateTime(DateTime.Today.Year, 1, 1);
+                    value = DateTime.Today.Year.ToString();
+                }
+                endDate = startDate.AddYears(1).AddDays(-1);
+                groupingFormat = "yyyy-MM"; // Group by month
+            }
+            else if (type == "week")
+            {
+                // Simple week handling: if value is YYYY-Www
+                if (!string.IsNullOrEmpty(value) && value.Contains("-W"))
+                {
+                    var parts = value.Split("-W");
+                    if (parts.Length == 2 && int.TryParse(parts[0], out int y) && int.TryParse(parts[1], out int w))
+                    {
+                        // Calculate first day of week
+                        startDate = new DateTime(y, 1, 1).AddDays((w - 1) * 7);
+                        while (startDate.DayOfWeek != DayOfWeek.Monday) startDate = startDate.AddDays(-1);
+                    }
+                }
+                else
+                {
+                    startDate = DateTime.Today;
+                    while (startDate.DayOfWeek != DayOfWeek.Monday) startDate = startDate.AddDays(-1);
+                    value = $"{startDate.Year}-W{System.Globalization.CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(startDate, System.Globalization.DateTimeFormatInfo.CurrentInfo.CalendarWeekRule, DayOfWeek.Monday):D2}";
+                }
+                endDate = startDate.AddDays(7).AddSeconds(-1);
+            }
+            else // month
+            {
+                if (!string.IsNullOrEmpty(value) && DateTime.TryParse(value + "-01", out var parsedMonth))
+                {
+                    startDate = parsedMonth;
+                }
+                else
+                {
+                    startDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                    value = DateTime.Today.ToString("yyyy-MM");
+                }
+                endDate = startDate.AddMonths(1).AddDays(-1);
+            }
 
-            var salesData = await _db.Orders
-                .Where(o => o.OrderDate >= startOfMonth && o.OrderDate <= endOfMonth && 
-                           (o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)" || o.PaymentStatus == "Completed"))
-                .GroupBy(o => o.OrderDate.Date)
-                .Select(g => new { Date = g.Key, TotalSales = g.Sum(o => o.FinalAmount) })
+            var query = _db.Orders
+                .Where(o => o.OrderDate >= startDate && o.OrderDate <= endDate && 
+                           (o.PaymentStatus == "Paid" || o.PaymentStatus == "Paid (Digital)" || o.PaymentStatus == "Completed"));
+
+            var salesData = await query
+                .GroupBy(o => type == "year" ? new DateTime(o.OrderDate.Year, o.OrderDate.Month, 1) : o.OrderDate.Date)
+                .Select(g => new { 
+                    Date = g.Key, 
+                    TotalSales = g.Sum(o => o.FinalAmount),
+                    Count = g.Count(),
+                    AvgValue = g.Average(o => o.FinalAmount)
+                })
                 .OrderBy(g => g.Date)
                 .ToListAsync();
 
-            ViewBag.SelectedMonth = selectedMonth.ToString("yyyy-MM");
-            return View(salesData);
+            ViewBag.SelectedType = type;
+            ViewBag.SelectedValue = value;
+            return View(salesData.Select(s => (dynamic)new { s.Date, s.TotalSales, s.Count, s.AvgValue }).ToList());
         }
 
         [HttpGet]
@@ -375,16 +445,31 @@ namespace ljp_itsolutions.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ExportSalesTrends(string month)
+        public async Task<IActionResult> ExportSalesTrends(string type = "month", string value = "")
         {
-            DateTime selectedMonth = DateTime.Today;
-            if (!string.IsNullOrEmpty(month) && DateTime.TryParse(month + "-01", out var parsedMonth))
+            DateTime startDate = DateTime.Today;
+            if (type == "year")
             {
-                selectedMonth = parsedMonth;
+                if (!int.TryParse(value, out int year)) year = DateTime.Today.Year;
+                startDate = new DateTime(year, 1, 1);
+            }
+            else if (type == "week")
+            {
+                if (!string.IsNullOrEmpty(value) && value.Contains("-W"))
+                {
+                    var parts = value.Split("-W");
+                    if (parts.Length == 2 && int.TryParse(parts[0], out int y) && int.TryParse(parts[1], out int w))
+                        startDate = new DateTime(y, 1, 1).AddDays((w - 1) * 7);
+                }
+                while (startDate.DayOfWeek != DayOfWeek.Monday) startDate = startDate.AddDays(-1);
+            }
+            else
+            {
+                if (!DateTime.TryParse(value + "-01", out startDate)) startDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
             }
 
-            byte[] buffer = await _analyticsService.GenerateSalesTrendsCSVAsync(selectedMonth);
-            return File(buffer, "text/csv", $"LJP_Sales_Trend_{selectedMonth:yyyyMM}.csv");
+            byte[] buffer = await _analyticsService.GenerateSalesTrendsCSVAsync(startDate);
+            return File(buffer, "text/csv", $"LJP_Sales_Trend_{type}_{value}.csv");
         }
     }
 }

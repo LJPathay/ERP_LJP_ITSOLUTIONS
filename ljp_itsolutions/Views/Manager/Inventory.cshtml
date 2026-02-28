@@ -649,10 +649,21 @@
                 
                 if (data) {
                     const ing = data.ingredient;
-                    const logs = data.logs;
+        const logs = data.logs;
+        
+        // Update edit button data attributes with fresh server data to prevent stale state
+        const editBtn = $(`.btn-edit-ingredient[data-id="${id}"]`);
+        if (editBtn.length) {
+            editBtn.data('name', ing.name || ing.Name);
+            editBtn.data('stock', ing.stockQuantity || ing.StockQuantity);
+            editBtn.data('threshold', ing.lowStockThreshold || ing.LowStockThreshold);
+            editBtn.data('unit', ing.unit || ing.Unit);
+            const rawExpiry = ing.expiryDate || ing.ExpiryDate;
+            editBtn.data('expiry', rawExpiry ? rawExpiry.split('T')[0] : '');
+        }
 
-                    $('#detail-name').text(ing.name || ing.Name);
-                    $('#detail-stock').text(`${(ing.stockQuantity || ing.StockQuantity || 0).toFixed(2)} ${ing.unit || ing.Unit}`);
+        $('#detail-name').text(ing.name || ing.Name);
+        $('#detail-stock').text(`${(ing.stockQuantity || ing.StockQuantity || 0).toFixed(2)} ${ing.unit || ing.Unit}`);
                     $('#detail-threshold').text(`${(ing.lowStockThreshold || ing.LowStockThreshold || 0).toFixed(2)} ${ing.unit || ing.Unit}`);
                     $('#detail-last-stocked').text((ing.lastStockedDate || ing.LastStockedDate) ? new Date(ing.lastStockedDate || ing.LastStockedDate).toLocaleDateString() : 'Never');
                     $('#detail-expiry').text((ing.expiryDate || ing.ExpiryDate) ? new Date(ing.expiryDate || ing.ExpiryDate).toLocaleDateString() : 'N/A');
