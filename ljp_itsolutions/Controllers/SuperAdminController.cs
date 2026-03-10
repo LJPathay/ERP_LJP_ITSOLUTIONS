@@ -80,6 +80,7 @@ namespace ljp_itsolutions.Controllers
             
             if (!string.IsNullOrEmpty(user.Password))
             {
+                // Algorithm: BCrypt / Identity V3 Password Hashing
                 user.Password = _hasher.HashPassword(user, user.Password);
             }
             else
@@ -257,6 +258,8 @@ namespace ljp_itsolutions.Controllers
                     Orders = await _db.Orders.AsNoTracking().Include(o => o.OrderDetails).ToListAsync(),
                     Settings = await _db.SystemSettings.AsNoTracking().ToListAsync()
                 };
+
+                // Algorithm: JSON Serialization Algorithm
                 var json = JsonSerializer.Serialize(backupData, new JsonSerializerOptions { WriteIndented = true, ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles });
                 await System.IO.File.WriteAllTextAsync(fullPath, json);
                 await LogAudit("Created system backup");

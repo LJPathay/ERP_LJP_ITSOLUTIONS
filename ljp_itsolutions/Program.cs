@@ -27,16 +27,14 @@ builder.Services.AddRateLimiter(options =>
             return System.Threading.RateLimiting.RateLimitPartition.GetNoLimiter("stat");
         }
 
-        // SlidingWindowLimiter: no reset blind spot — tracks requests continuously
-        // across overlapping segments so rapid bursts can never slip between windows.
         return System.Threading.RateLimiting.RateLimitPartition.GetSlidingWindowLimiter(
             partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             factory: partition => new System.Threading.RateLimiting.SlidingWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
-                PermitLimit = 30,       // max 30 page requests …
-                Window = TimeSpan.FromSeconds(10), // … per 10-second sliding window
-                SegmentsPerWindow = 5,  // window split into 5 × 2s micro-segments
+                PermitLimit = 30,  
+                Window = TimeSpan.FromSeconds(10), 
+                SegmentsPerWindow = 5,  
                 QueueLimit = 0
             });
     });

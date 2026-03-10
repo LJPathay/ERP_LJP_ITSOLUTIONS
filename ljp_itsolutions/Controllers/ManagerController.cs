@@ -71,9 +71,37 @@ namespace ljp_itsolutions.Controllers
 
         public async Task<IActionResult> Products()
         {
-            var products = await _db.Products.Include(p => p.Category).ToListAsync();
+            var products = await _db.Products
+                .Where(p => !p.IsArchived)
+                .Include(p => p.Category)
+                .ToListAsync();
             ViewBag.Categories = await _db.Categories.ToListAsync();
             return View(products);
+        }
+
+        public async Task<IActionResult> ArchivedProducts()
+        {
+            var products = await _db.Products
+                .Where(p => p.IsArchived)
+                .Include(p => p.Category)
+                .ToListAsync();
+            return View(products);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RestoreProduct(int id)
+        {
+            var product = await _db.Products.FindAsync(id);
+            if (product != null)
+            {
+                product.IsArchived = false;
+                _db.Products.Update(product);
+                await _db.SaveChangesAsync();
+                await LogAudit($"Restored Product: {product.ProductName}");
+                TempData["SuccessMessage"] = $"Product '{product.ProductName}' has been restored!";
+            }
+            return RedirectToAction("ArchivedProducts");
         }
 
         [HttpPost]
@@ -608,6 +636,7 @@ namespace ljp_itsolutions.Controllers
                 existing.LowStockThreshold = ingredient.LowStockThreshold;
                 existing.ExpiryDate = ingredient.ExpiryDate;
                 
+                // Algorithm: Threshold Intersection Algorithm
                 // Trigger Persistent Notification if Low Stock
                 if (existing.StockQuantity <= existing.LowStockThreshold)
                 {
@@ -626,6 +655,7 @@ namespace ljp_itsolutions.Controllers
                     _ = Task.Run(async () => {
                         try {
                             using (var scope = _scopeFactory.CreateScope()) {
+                                // Algorithm: Priority Notification Algorithm (Email Alert)
                                 var scopedReceiptService = scope.ServiceProvider.GetRequiredService<IReceiptService>();
                                 await scopedReceiptService.SendLowStockAlertAsync(existing.IngredientID);
                             }

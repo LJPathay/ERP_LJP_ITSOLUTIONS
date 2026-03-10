@@ -351,6 +351,7 @@ namespace ljp_itsolutions.Controllers
 
         public async Task<IActionResult> LoyaltyOverview()
         {
+            // Algorithm: Tier Distribution Logic
             var customers = await _db.Customers.ToListAsync();
             
             // Data for Tier Distribution Chart
@@ -454,6 +455,7 @@ namespace ljp_itsolutions.Controllers
 
             var orders = await query.ToListAsync();
 
+            // Algorithm: Time-Series Aggregation Algorithm (Revenue Velocity)
             var viewModelList = orders
                 .GroupBy(o => type == "year" ? new DateTime(o.OrderDate.Year, o.OrderDate.Month, 1) : o.OrderDate.Date)
                 .Select(g => new SalesTrendViewModel { 

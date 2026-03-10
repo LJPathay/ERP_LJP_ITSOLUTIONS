@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ljp_itsolutions.Controllers
 {
-    // ── Response DTOs ─────────────────────────────────────────────────────────
 
     public class RecipeIngredientDto
     {
@@ -22,11 +21,6 @@ namespace ljp_itsolutions.Controllers
         public List<RecipeIngredientDto> Ingredients { get; set; } = new();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// REST API that exposes the recipe template catalogue stored in the database.
-    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     [Authorize] 
@@ -40,7 +34,7 @@ namespace ljp_itsolutions.Controllers
         }
 
         // ── GET /api/recipes ──────────────────────────────────────────────────
-        /// <summary>Returns the full recipe template catalogue from the database.</summary>
+        /// summary>Returns the full recipe template catalogue from the database.
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -65,8 +59,7 @@ namespace ljp_itsolutions.Controllers
 
             return Ok(ToDto(template));
         }
-
-        // ── GET /api/recipes/lookup?name=Vanilla+Latte ────────────────────────
+        // Fetching the recipe of the product
         [HttpGet("lookup")]
         public async Task<IActionResult> Lookup([FromQuery] string name)
         {

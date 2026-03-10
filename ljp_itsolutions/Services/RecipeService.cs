@@ -37,9 +37,6 @@ namespace ljp_itsolutions.Services
 
             try
             {
-                // Build the base URL from the current request so the service works in
-                // both dev (http://localhost:xxxx) and production (https://...) without
-                // any hard-coded URLs.
                 var request    = _httpContextAccessor.HttpContext?.Request;
                 var baseUrl    = request != null
                     ? $"{request.Scheme}://{request.Host}"
@@ -60,7 +57,6 @@ namespace ljp_itsolutions.Services
 
                 var json = await response.Content.ReadAsStringAsync();
 
-                // Deserialise the RecipeDto returned by RecipesController
                 var apiRecipe = JsonSerializer.Deserialize<ApiRecipeResponse>(json,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 

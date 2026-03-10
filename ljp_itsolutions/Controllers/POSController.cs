@@ -6,7 +6,6 @@ using System.Security.Claims;
 
 namespace ljp_itsolutions.Controllers
 {
-    // Role Authorization. Only authenticated users mapped to one of these explicit strings in UserRoles.cs can load the POS page.
     [Authorize(Roles = "Cashier,Admin,Manager,SuperAdmin")]
     public class POSController : Controller
     {
@@ -24,7 +23,7 @@ namespace ljp_itsolutions.Controllers
             if (!Guid.TryParse(userIdStr, out var userId))
                 return Challenge();
 
-            // Shift Validation. The POS application checks against the database to confirm the user has an active shift before allowing them to access the cart.
+            // Shift Validation. Should start a shift before accessing to POS. if not you will redirected to Shift Management page with an error message.
             var currentShift = await _db.CashShifts.FirstOrDefaultAsync(s => s.CashierID == userId && !s.IsClosed);
             if (currentShift == null)
             {

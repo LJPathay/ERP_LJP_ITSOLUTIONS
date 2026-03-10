@@ -13,7 +13,7 @@ namespace ljp_itsolutions.Controllers
         {
             _db = db;
         }
-
+        /// Audit Logging
         protected async Task LogAudit(string action, string? details = null, Guid? userId = null)
         {
             try

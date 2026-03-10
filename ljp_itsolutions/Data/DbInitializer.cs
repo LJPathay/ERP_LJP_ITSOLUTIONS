@@ -272,5 +272,106 @@ namespace ljp_itsolutions.Data
                 }
             });
         }
+
+        public static void ImportFromBackup(IServiceProvider serviceProvider, string jsonPath)
+        {
+            using var scope = serviceProvider.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            
+            if (!File.Exists(jsonPath))
+            {
+                Console.WriteLine($"Backup file not found at: {jsonPath}");
+                return;
+            }
+
+            try
+            {
+                var json = File.ReadAllText(jsonPath);
+                var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var backup = System.Text.Json.JsonSerializer.Deserialize<BackupData>(json, options);
+
+                if (backup == null) return;
+
+                // 1. Import Users
+                if (backup.Users != null)
+                {
+                    foreach (var u in backup.Users)
+                    {
+                        if (!db.Users.Any(existing => existing.UserID == u.UserID || existing.Username == u.Username))
+                        {
+                            db.Users.Add(u);
+                        }
+                    }
+                    db.SaveChanges();
+                }
+
+                // 2. Import Products
+                if (backup.Products != null)
+                {
+                    // For products, we might need IDENTITY_INSERT if we want to keep IDs
+                    // But for now, we'll just add them if they don't exist by name
+                    foreach (var p in backup.Products)
+                    {
+                        if (!db.Products.Any(existing => existing.ProductName == p.ProductName))
+                        {
+                            // Resetting ID to 0 to let DB generate it if identity is on
+                            // unless we want to keep the exact IDs
+                            var newProduct = new Product
+                            {
+                                ProductName = p.ProductName,
+                                CategoryID = p.CategoryID,
+                                Price = p.Price,
+                                StockQuantity = p.StockQuantity,
+                                LowStockThreshold = p.LowStockThreshold,
+                                ImageURL = p.ImageURL,
+                                IsAvailable = p.IsAvailable,
+                                IsArchived = p.IsArchived
+                            };
+                            db.Products.Add(newProduct);
+                        }
+                    }
+                    db.SaveChanges();
+                }
+
+                // 3. Import Orders (requires existing Users)
+                if (backup.Orders != null)
+                {
+                    foreach (var o in backup.Orders)
+                    {
+                        if (!db.Orders.Any(existing => existing.OrderID == o.OrderID))
+                        {
+                            // Ensure the cashier exists (fallback to superadmin if not)
+                            if (!db.Users.Any(u => u.UserID == o.CashierID))
+                            {
+                                var defaultAdmin = db.Users.FirstOrDefault(u => u.Role == UserRoles.SuperAdmin);
+                                if (defaultAdmin != null) o.CashierID = defaultAdmin.UserID;
+                            }
+
+                            // Remove navigation properties that might cause tracking issues
+                            o.Cashier = null!;
+                            o.Customer = null;
+                            o.Promotion = null;
+                            
+                            db.Orders.Add(o);
+                        }
+                    }
+                    db.SaveChanges();
+                }
+
+                Console.WriteLine("Backup import completed successfully.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Import error: {ex.Message}");
+            }
+        }
+    }
+
+    public class BackupData
+    {
+        public string? GeneratedAt { get; set; }
+        public List<User>? Users { get; set; }
+        public List<Product>? Products { get; set; }
+        public List<Order>? Orders { get; set; }
     }
 }

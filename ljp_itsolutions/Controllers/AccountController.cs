@@ -90,7 +90,7 @@ namespace ljp_itsolutions.Controllers
                 ModelState.AddModelError(string.Empty, "Invalid credentials");
                 return View(model);
             }
- 
+            /// Brute-Force Lockout System
             var verify = _hasher.VerifyHashedPassword(user, user.Password, model.Password);
             if (verify == Microsoft.AspNetCore.Identity.PasswordVerificationResult.Failed)
             {
